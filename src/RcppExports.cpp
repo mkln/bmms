@@ -6,55 +6,1421 @@
 
 using namespace Rcpp;
 
-// rcpparma_hello_world
-arma::mat rcpparma_hello_world();
-RcppExport SEXP _bmms_rcpparma_hello_world() {
+// model_mlik_ratio
+double model_mlik_ratio(const arma::vec& y, const arma::vec& Xgbg, int g, int q_o, const arma::vec& Xgbg_a, int g_a, int q_a);
+RcppExport SEXP _bmms_model_mlik_ratio(SEXP ySEXP, SEXP XgbgSEXP, SEXP gSEXP, SEXP q_oSEXP, SEXP Xgbg_aSEXP, SEXP g_aSEXP, SEXP q_aSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpparma_hello_world());
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Xgbg(XgbgSEXP);
+    Rcpp::traits::input_parameter< int >::type g(gSEXP);
+    Rcpp::traits::input_parameter< int >::type q_o(q_oSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Xgbg_a(Xgbg_aSEXP);
+    Rcpp::traits::input_parameter< int >::type g_a(g_aSEXP);
+    Rcpp::traits::input_parameter< int >::type q_a(q_aSEXP);
+    rcpp_result_gen = Rcpp::wrap(model_mlik_ratio(y, Xgbg, g, q_o, Xgbg_a, g_a, q_a));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparma_outerproduct
-arma::mat rcpparma_outerproduct(const arma::colvec& x);
-RcppExport SEXP _bmms_rcpparma_outerproduct(SEXP xSEXP) {
+// VSModule_export
+Rcpp::List VSModule_export(int s, const arma::vec y, const arma::mat X, int MCMC, double g, double sprior, bool fixsigma, bool binary);
+RcppExport SEXP _bmms_VSModule_export(SEXP sSEXP, SEXP ySEXP, SEXP XSEXP, SEXP MCMCSEXP, SEXP gSEXP, SEXP spriorSEXP, SEXP fixsigmaSEXP, SEXP binarySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_outerproduct(x));
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type MCMC(MCMCSEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< double >::type sprior(spriorSEXP);
+    Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
+    Rcpp::traits::input_parameter< bool >::type binary(binarySEXP);
+    rcpp_result_gen = Rcpp::wrap(VSModule_export(s, y, X, MCMC, g, sprior, fixsigma, binary));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparma_innerproduct
-double rcpparma_innerproduct(const arma::colvec& x);
-RcppExport SEXP _bmms_rcpparma_innerproduct(SEXP xSEXP) {
+// ModularVS_export
+Rcpp::List ModularVS_export(const arma::vec& y, const arma::field<arma::mat>& Xall, const arma::field<arma::vec>& starting, int MCMC, double gg, arma::vec ss, bool binary);
+RcppExport SEXP _bmms_ModularVS_export(SEXP ySEXP, SEXP XallSEXP, SEXP startingSEXP, SEXP MCMCSEXP, SEXP ggSEXP, SEXP ssSEXP, SEXP binarySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_innerproduct(x));
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type Xall(XallSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type starting(startingSEXP);
+    Rcpp::traits::input_parameter< int >::type MCMC(MCMCSEXP);
+    Rcpp::traits::input_parameter< double >::type gg(ggSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ss(ssSEXP);
+    Rcpp::traits::input_parameter< bool >::type binary(binarySEXP);
+    rcpp_result_gen = Rcpp::wrap(ModularVS_export(y, Xall, starting, MCMC, gg, ss, binary));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparma_bothproducts
-Rcpp::List rcpparma_bothproducts(const arma::colvec& x);
-RcppExport SEXP _bmms_rcpparma_bothproducts(SEXP xSEXP) {
+// X2Dgrid
+arma::mat X2Dgrid(arma::vec x1, arma::vec x2);
+RcppExport SEXP _bmms_X2Dgrid(SEXP x1SEXP, SEXP x2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_bothproducts(x));
+    Rcpp::traits::input_parameter< arma::vec >::type x1(x1SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x2(x2SEXP);
+    rcpp_result_gen = Rcpp::wrap(X2Dgrid(x1, x2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_bern
+double rndpp_bern(double p);
+RcppExport SEXP _bmms_rndpp_bern(SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_bern(p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// split_struct_ratio
+double split_struct_ratio(arma::vec prop_split, arma::vec orig_split, int p, double param);
+RcppExport SEXP _bmms_split_struct_ratio(SEXP prop_splitSEXP, SEXP orig_splitSEXP, SEXP pSEXP, SEXP paramSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type prop_split(prop_splitSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type orig_split(orig_splitSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type param(paramSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_struct_ratio(prop_split, orig_split, p, param));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_setdiff
+arma::vec bmms_setdiff(arma::vec& x, arma::vec& y);
+RcppExport SEXP _bmms_bmms_setdiff(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_setdiff(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_unif_int
+int rndpp_unif_int(int max);
+RcppExport SEXP _bmms_rndpp_unif_int(SEXP maxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type max(maxSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_unif_int(max));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_discrete
+int rndpp_discrete(arma::vec probs);
+RcppExport SEXP _bmms_rndpp_discrete(SEXP probsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type probs(probsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_discrete(probs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_gamma
+double rndpp_gamma(double alpha, double beta);
+RcppExport SEXP _bmms_rndpp_gamma(SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_gamma(alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_normal
+double rndpp_normal(double mean, double sigma);
+RcppExport SEXP _bmms_rndpp_normal(SEXP meanSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_normal(mean, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_mvnormal
+arma::mat rndpp_mvnormal(int n, const arma::vec& mean, const arma::mat& sigma);
+RcppExport SEXP _bmms_rndpp_mvnormal(SEXP nSEXP, SEXP meanSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_mvnormal(n, mean, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// col_eq_check
+arma::vec col_eq_check(arma::mat A);
+RcppExport SEXP _bmms_col_eq_check(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(col_eq_check(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// col_sums
+arma::vec col_sums(arma::mat matty);
+RcppExport SEXP _bmms_col_sums(SEXP mattySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type matty(mattySEXP);
+    rcpp_result_gen = Rcpp::wrap(col_sums(matty));
+    return rcpp_result_gen;
+END_RCPP
+}
+// single_split
+arma::mat single_split(arma::mat Jcoarse, int where, int p);
+RcppExport SEXP _bmms_single_split(SEXP JcoarseSEXP, SEXP whereSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Jcoarse(JcoarseSEXP);
+    Rcpp::traits::input_parameter< int >::type where(whereSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(single_split(Jcoarse, where, p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multi_split
+arma::mat multi_split(arma::mat Jcoarse, arma::vec where, int p);
+RcppExport SEXP _bmms_multi_split(SEXP JcoarseSEXP, SEXP whereSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Jcoarse(JcoarseSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type where(whereSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(multi_split(Jcoarse, where, p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// exclude
+arma::mat exclude(arma::mat test, arma::vec excl);
+RcppExport SEXP _bmms_exclude(SEXP testSEXP, SEXP exclSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type test(testSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type excl(exclSEXP);
+    rcpp_result_gen = Rcpp::wrap(exclude(test, excl));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splitsub_to_splitmask
+arma::mat splitsub_to_splitmask(const arma::field<arma::mat>& splits, int p1, int p2);
+RcppExport SEXP _bmms_splitsub_to_splitmask(SEXP splitsSEXP, SEXP p1SEXP, SEXP p2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type p1(p1SEXP);
+    Rcpp::traits::input_parameter< int >::type p2(p2SEXP);
+    rcpp_result_gen = Rcpp::wrap(splitsub_to_splitmask(splits, p1, p2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splitmask_to_splitsub
+arma::field<arma::mat> splitmask_to_splitsub(const arma::mat& splitmask);
+RcppExport SEXP _bmms_splitmask_to_splitsub(SEXP splitmaskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type splitmask(splitmaskSEXP);
+    rcpp_result_gen = Rcpp::wrap(splitmask_to_splitsub(splitmask));
+    return rcpp_result_gen;
+END_RCPP
+}
+// row_intersection
+arma::mat row_intersection(const arma::mat& mat1, const arma::mat& mat2);
+RcppExport SEXP _bmms_row_intersection(SEXP mat1SEXP, SEXP mat2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type mat1(mat1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mat2(mat2SEXP);
+    rcpp_result_gen = Rcpp::wrap(row_intersection(mat1, mat2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// row_difference
+arma::mat row_difference(arma::mat mat1, const arma::mat& mat2);
+RcppExport SEXP _bmms_row_difference(SEXP mat1SEXP, SEXP mat2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mat1(mat1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mat2(mat2SEXP);
+    rcpp_result_gen = Rcpp::wrap(row_difference(mat1, mat2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splits_augmentation
+arma::field<arma::mat> splits_augmentation(arma::field<arma::mat> splits);
+RcppExport SEXP _bmms_splits_augmentation(SEXP splitsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
+    rcpp_result_gen = Rcpp::wrap(splits_augmentation(splits));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splitsub_to_groupmask
+arma::mat splitsub_to_groupmask(arma::field<arma::mat> splits, int p1, int p2);
+RcppExport SEXP _bmms_splitsub_to_groupmask(SEXP splitsSEXP, SEXP p1SEXP, SEXP p2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type p1(p1SEXP);
+    Rcpp::traits::input_parameter< int >::type p2(p2SEXP);
+    rcpp_result_gen = Rcpp::wrap(splitsub_to_groupmask(splits, p1, p2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mat_unique
+arma::vec mat_unique(const arma::mat& A);
+RcppExport SEXP _bmms_mat_unique(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(mat_unique(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mask_oneval
+arma::mat mask_oneval(const arma::mat& A, const arma::mat& mask, int val);
+RcppExport SEXP _bmms_mask_oneval(SEXP ASEXP, SEXP maskSEXP, SEXP valSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< int >::type val(valSEXP);
+    rcpp_result_gen = Rcpp::wrap(mask_oneval(A, mask, val));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mask_oneval_sum
+double mask_oneval_sum(const arma::mat& A, const arma::mat& mask, int val);
+RcppExport SEXP _bmms_mask_oneval_sum(SEXP ASEXP, SEXP maskSEXP, SEXP valSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< int >::type val(valSEXP);
+    rcpp_result_gen = Rcpp::wrap(mask_oneval_sum(A, mask, val));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mask_cube_slice
+double mask_cube_slice(const arma::cube& C, int slice, const arma::mat& mask, int val);
+RcppExport SEXP _bmms_mask_cube_slice(SEXP CSEXP, SEXP sliceSEXP, SEXP maskSEXP, SEXP valSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type C(CSEXP);
+    Rcpp::traits::input_parameter< int >::type slice(sliceSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< int >::type val(valSEXP);
+    rcpp_result_gen = Rcpp::wrap(mask_cube_slice(C, slice, mask, val));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mat_to_vec_by_region
+arma::vec mat_to_vec_by_region(const arma::mat& A, const arma::mat& mask, arma::vec unique_regions);
+RcppExport SEXP _bmms_mat_to_vec_by_region(SEXP ASEXP, SEXP maskSEXP, SEXP unique_regionsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type unique_regions(unique_regionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(mat_to_vec_by_region(A, mask, unique_regions));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cube_to_mat_by_region
+arma::mat cube_to_mat_by_region(const arma::cube& C, const arma::mat& mask, arma::vec unique_regions);
+RcppExport SEXP _bmms_cube_to_mat_by_region(SEXP CSEXP, SEXP maskSEXP, SEXP unique_regionsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type C(CSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type unique_regions(unique_regionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cube_to_mat_by_region(C, mask, unique_regions));
+    return rcpp_result_gen;
+END_RCPP
+}
+// unmask_vector
+arma::mat unmask_vector(const arma::vec& beta, const arma::vec& regions, const arma::mat& mask);
+RcppExport SEXP _bmms_unmask_vector(SEXP betaSEXP, SEXP regionsSEXP, SEXP maskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type regions(regionsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask(maskSEXP);
+    rcpp_result_gen = Rcpp::wrap(unmask_vector(beta, regions, mask));
+    return rcpp_result_gen;
+END_RCPP
+}
+// load_splits
+arma::field<arma::mat> load_splits(int maxlevs);
+RcppExport SEXP _bmms_load_splits(SEXP maxlevsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type maxlevs(maxlevsSEXP);
+    rcpp_result_gen = Rcpp::wrap(load_splits(maxlevs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// merge_splits
+arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::field<arma::mat> new_splits);
+RcppExport SEXP _bmms_merge_splits(SEXP old_splitsSEXP, SEXP new_splitsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::field<arma::mat>& >::type old_splits(old_splitsSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type new_splits(new_splitsSEXP);
+    rcpp_result_gen = Rcpp::wrap(merge_splits(old_splits, new_splits));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cube_mean
+arma::mat cube_mean(arma::cube X, int dim);
+RcppExport SEXP _bmms_cube_mean(SEXP XSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(cube_mean(X, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cube_sum
+arma::mat cube_sum(arma::cube X, int dim);
+RcppExport SEXP _bmms_cube_sum(SEXP XSEXP, SEXP dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type dim(dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(cube_sum(X, dim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splitmask_focus
+arma::mat splitmask_focus(const arma::mat& mask_of_splits, arma::vec onesplit, int radius_int);
+RcppExport SEXP _bmms_splitmask_focus(SEXP mask_of_splitsSEXP, SEXP onesplitSEXP, SEXP radius_intSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_of_splits(mask_of_splitsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type onesplit(onesplitSEXP);
+    Rcpp::traits::input_parameter< int >::type radius_int(radius_intSEXP);
+    rcpp_result_gen = Rcpp::wrap(splitmask_focus(mask_of_splits, onesplit, radius_int));
+    return rcpp_result_gen;
+END_RCPP
+}
+// number_availables
+int number_availables(const arma::mat& splitmask_focus);
+RcppExport SEXP _bmms_number_availables(SEXP splitmask_focusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type splitmask_focus(splitmask_focusSEXP);
+    rcpp_result_gen = Rcpp::wrap(number_availables(splitmask_focus));
+    return rcpp_result_gen;
+END_RCPP
+}
+// split_move2d
+arma::mat split_move2d(const arma::mat& mask_of_splits, const arma::mat& mask_nosplits, arma::vec onesplit, double& to_from_ratio, int radius_int);
+RcppExport SEXP _bmms_split_move2d(SEXP mask_of_splitsSEXP, SEXP mask_nosplitsSEXP, SEXP onesplitSEXP, SEXP to_from_ratioSEXP, SEXP radius_intSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_of_splits(mask_of_splitsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_nosplits(mask_nosplitsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type onesplit(onesplitSEXP);
+    Rcpp::traits::input_parameter< double& >::type to_from_ratio(to_from_ratioSEXP);
+    Rcpp::traits::input_parameter< int >::type radius_int(radius_intSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_move2d(mask_of_splits, mask_nosplits, onesplit, to_from_ratio, radius_int));
+    return rcpp_result_gen;
+END_RCPP
+}
+// index_to_subscript
+arma::mat index_to_subscript(arma::uvec index, arma::mat m);
+RcppExport SEXP _bmms_index_to_subscript(SEXP indexSEXP, SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::uvec >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(index_to_subscript(index, m));
+    return rcpp_result_gen;
+END_RCPP
+}
+// split_add2d
+arma::mat split_add2d(arma::mat mask_of_splits, arma::mat mask_nosplits, int lev, double& to_from_ratio);
+RcppExport SEXP _bmms_split_add2d(SEXP mask_of_splitsSEXP, SEXP mask_nosplitsSEXP, SEXP levSEXP, SEXP to_from_ratioSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mask_of_splits(mask_of_splitsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mask_nosplits(mask_nosplitsSEXP);
+    Rcpp::traits::input_parameter< int >::type lev(levSEXP);
+    Rcpp::traits::input_parameter< double& >::type to_from_ratio(to_from_ratioSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_add2d(mask_of_splits, mask_nosplits, lev, to_from_ratio));
+    return rcpp_result_gen;
+END_RCPP
+}
+// split_drop2d
+arma::mat split_drop2d(arma::mat mask_of_splits, const arma::mat& mask_nosplits, int lev, double& to_from_ratio);
+RcppExport SEXP _bmms_split_drop2d(SEXP mask_of_splitsSEXP, SEXP mask_nosplitsSEXP, SEXP levSEXP, SEXP to_from_ratioSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mask_of_splits(mask_of_splitsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_nosplits(mask_nosplitsSEXP);
+    Rcpp::traits::input_parameter< int >::type lev(levSEXP);
+    Rcpp::traits::input_parameter< double& >::type to_from_ratio(to_from_ratioSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_drop2d(mask_of_splits, mask_nosplits, lev, to_from_ratio));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stage_drop2d
+void stage_drop2d(arma::mat mask_of_splits, const arma::mat& mask_nosplits, int lev, double& to_from_ratio);
+RcppExport SEXP _bmms_stage_drop2d(SEXP mask_of_splitsSEXP, SEXP mask_nosplitsSEXP, SEXP levSEXP, SEXP to_from_ratioSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mask_of_splits(mask_of_splitsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_nosplits(mask_nosplitsSEXP);
+    Rcpp::traits::input_parameter< int >::type lev(levSEXP);
+    Rcpp::traits::input_parameter< double& >::type to_from_ratio(to_from_ratioSEXP);
+    stage_drop2d(mask_of_splits, mask_nosplits, lev, to_from_ratio);
+    return R_NilValue;
+END_RCPP
+}
+// proposal_move
+arma::mat proposal_move(const arma::mat& current_split_mask, const arma::mat& mask_nosplits, const arma::field<arma::mat>& current_splits, int which_lev, int which_split, int radius);
+RcppExport SEXP _bmms_proposal_move(SEXP current_split_maskSEXP, SEXP mask_nosplitsSEXP, SEXP current_splitsSEXP, SEXP which_levSEXP, SEXP which_splitSEXP, SEXP radiusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type current_split_mask(current_split_maskSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_nosplits(mask_nosplitsSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type current_splits(current_splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type which_lev(which_levSEXP);
+    Rcpp::traits::input_parameter< int >::type which_split(which_splitSEXP);
+    Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(proposal_move(current_split_mask, mask_nosplits, current_splits, which_lev, which_split, radius));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_soi
+Rcpp::List bmms_soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits, arma::mat mask_forbid, double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius, int max_stages, int start_movinglev, int partnum, bool save, bool save_splitmask);
+RcppExport SEXP _bmms_bmms_soi(SEXP ySEXP, SEXP XSEXP, SEXP splitsSEXP, SEXP mask_forbidSEXP, SEXP lambda_splitsSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP max_stagesSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_splitmaskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_splits(lambda_splitsSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
+    Rcpp::traits::input_parameter< int >::type max_stages(max_stagesSEXP);
+    Rcpp::traits::input_parameter< int >::type start_movinglev(start_movinglevSEXP);
+    Rcpp::traits::input_parameter< int >::type partnum(partnumSEXP);
+    Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
+    Rcpp::traits::input_parameter< bool >::type save_splitmask(save_splitmaskSEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_soi(y, X, splits, mask_forbid, lambda_splits, lambda_ridge, mcmc, burn, radius, max_stages, start_movinglev, partnum, save, save_splitmask));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_soi_binary
+Rcpp::List bmms_soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits, arma::mat mask_forbid, double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius, int max_stages, int start_movinglev, int partnum, bool save, bool save_splitmask, bool fixsigma);
+RcppExport SEXP _bmms_bmms_soi_binary(SEXP ySEXP, SEXP XSEXP, SEXP splitsSEXP, SEXP mask_forbidSEXP, SEXP lambda_splitsSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP max_stagesSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_splitmaskSEXP, SEXP fixsigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_splits(lambda_splitsSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
+    Rcpp::traits::input_parameter< int >::type max_stages(max_stagesSEXP);
+    Rcpp::traits::input_parameter< int >::type start_movinglev(start_movinglevSEXP);
+    Rcpp::traits::input_parameter< int >::type partnum(partnumSEXP);
+    Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
+    Rcpp::traits::input_parameter< bool >::type save_splitmask(save_splitmaskSEXP);
+    Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_soi_binary(y, X, splits, mask_forbid, lambda_splits, lambda_ridge, mcmc, burn, radius, max_stages, start_movinglev, partnum, save, save_splitmask, fixsigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_stdmvnormal
+arma::mat rndpp_stdmvnormal(int n, int dimension);
+RcppExport SEXP _bmms_rndpp_stdmvnormal(SEXP nSEXP, SEXP dimensionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type dimension(dimensionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_stdmvnormal(n, dimension));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_mvt
+arma::mat rndpp_mvt(int n, const arma::vec& mu, const arma::mat& sigma, double df);
+RcppExport SEXP _bmms_rndpp_mvt(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP dfSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type df(dfSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_mvt(n, mu, sigma, df));
+    return rcpp_result_gen;
+END_RCPP
+}
+// my_bayeslm
+Rcpp::List my_bayeslm(arma::vec y, arma::mat X, bool fixs);
+RcppExport SEXP _bmms_my_bayeslm(SEXP ySEXP, SEXP XSEXP, SEXP fixsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< bool >::type fixs(fixsSEXP);
+    rcpp_result_gen = Rcpp::wrap(my_bayeslm(y, X, fixs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lambda_prior_mhr
+double lambda_prior_mhr(double lambda_now, double lambda_prop);
+RcppExport SEXP _bmms_lambda_prior_mhr(SEXP lambda_nowSEXP, SEXP lambda_propSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type lambda_now(lambda_nowSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_prop(lambda_propSEXP);
+    rcpp_result_gen = Rcpp::wrap(lambda_prior_mhr(lambda_now, lambda_prop));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lambda_lik_mhr
+double lambda_lik_mhr(double lambda, double lambda_prop, int p, double mfact);
+RcppExport SEXP _bmms_lambda_lik_mhr(SEXP lambdaSEXP, SEXP lambda_propSEXP, SEXP pSEXP, SEXP mfactSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_prop(lambda_propSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type mfact(mfactSEXP);
+    rcpp_result_gen = Rcpp::wrap(lambda_lik_mhr(lambda, lambda_prop, p, mfact));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lreg_lik_mhr
+double lreg_lik_mhr(arma::vec& y, arma::mat& x, arma::vec b_prop, arma::vec b, double sigmasq_prop, double sigmasq);
+RcppExport SEXP _bmms_lreg_lik_mhr(SEXP ySEXP, SEXP xSEXP, SEXP b_propSEXP, SEXP bSEXP, SEXP sigmasq_propSEXP, SEXP sigmasqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type b_prop(b_propSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type sigmasq_prop(sigmasq_propSEXP);
+    Rcpp::traits::input_parameter< double >::type sigmasq(sigmasqSEXP);
+    rcpp_result_gen = Rcpp::wrap(lreg_lik_mhr(y, x, b_prop, b, sigmasq_prop, sigmasq));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bayes_ridge
+Rcpp::List bayes_ridge(arma::vec y, arma::mat X, int mcmc, int burn);
+RcppExport SEXP _bmms_bayes_ridge(SEXP ySEXP, SEXP XSEXP, SEXP mcmcSEXP, SEXP burnSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    rcpp_result_gen = Rcpp::wrap(bayes_ridge(y, X, mcmc, burn));
+    return rcpp_result_gen;
+END_RCPP
+}
+// hat_alt
+arma::mat hat_alt(const arma::mat& X);
+RcppExport SEXP _bmms_hat_alt(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(hat_alt(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// hat
+arma::mat hat(const arma::mat& X);
+RcppExport SEXP _bmms_hat(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(hat(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// m0mvnorm_dens
+double m0mvnorm_dens(const arma::vec& x, const arma::mat& Si);
+RcppExport SEXP _bmms_m0mvnorm_dens(SEXP xSEXP, SEXP SiSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Si(SiSEXP);
+    rcpp_result_gen = Rcpp::wrap(m0mvnorm_dens(x, Si));
+    return rcpp_result_gen;
+END_RCPP
+}
+// clm_marglik
+double clm_marglik(const arma::vec& y, const arma::mat& Mi, const arma::mat& Si, double muSimu, double a, double b);
+RcppExport SEXP _bmms_clm_marglik(SEXP ySEXP, SEXP MiSEXP, SEXP SiSEXP, SEXP muSimuSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Mi(MiSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Si(SiSEXP);
+    Rcpp::traits::input_parameter< double >::type muSimu(muSimuSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(clm_marglik(y, Mi, Si, muSimu, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// m0mvnorm_dens_gratio
+double m0mvnorm_dens_gratio(double yy, double yPxy, double g, double p);
+RcppExport SEXP _bmms_m0mvnorm_dens_gratio(SEXP yySEXP, SEXP yPxySEXP, SEXP gSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type yy(yySEXP);
+    Rcpp::traits::input_parameter< double >::type yPxy(yPxySEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(m0mvnorm_dens_gratio(yy, yPxy, g, p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// clm_marglik_gratio
+double clm_marglik_gratio(double yy, double yPxy, double g, int n, double p, double a, double b);
+RcppExport SEXP _bmms_clm_marglik_gratio(SEXP yySEXP, SEXP yPxySEXP, SEXP gSEXP, SEXP nSEXP, SEXP pSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type yy(yySEXP);
+    Rcpp::traits::input_parameter< double >::type yPxy(yPxySEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(clm_marglik_gratio(yy, yPxy, g, n, p, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lm_gprior
+Rcpp::List lm_gprior(const arma::vec& y, const arma::mat& X, double g, bool fixs);
+RcppExport SEXP _bmms_lm_gprior(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP fixsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< bool >::type fixs(fixsSEXP);
+    rcpp_result_gen = Rcpp::wrap(lm_gprior(y, X, g, fixs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// boolbern
+bool boolbern(double p);
+RcppExport SEXP _bmms_boolbern(SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(boolbern(p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bvs
+Rcpp::List bvs(const arma::vec& y, const arma::mat& X, const arma::vec& prior, int mcmc, double g, double model_prior_par, bool fixs);
+RcppExport SEXP _bmms_bvs(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP mcmcSEXP, SEXP gSEXP, SEXP model_prior_parSEXP, SEXP fixsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type prior(priorSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< double >::type model_prior_par(model_prior_parSEXP);
+    Rcpp::traits::input_parameter< bool >::type fixs(fixsSEXP);
+    rcpp_result_gen = Rcpp::wrap(bvs(y, X, prior, mcmc, g, model_prior_par, fixs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_sample1_comp
+int rndpp_sample1_comp(arma::vec x, int p, int current_split, double decay);
+RcppExport SEXP _bmms_rndpp_sample1_comp(SEXP xSEXP, SEXP pSEXP, SEXP current_splitSEXP, SEXP decaySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type current_split(current_splitSEXP);
+    Rcpp::traits::input_parameter< double >::type decay(decaySEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_sample1_comp(x, p, current_split, decay));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_shuffle
+arma::vec rndpp_shuffle(const arma::vec& x);
+RcppExport SEXP _bmms_rndpp_shuffle(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_shuffle(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sample_index
+arma::uvec sample_index(const int& n, const int& vsize);
+RcppExport SEXP _bmms_sample_index(SEXP nSEXP, SEXP vsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int& >::type vsize(vsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_index(n, vsize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sample_one_int
+int sample_one_int(const int& vsize);
+RcppExport SEXP _bmms_sample_one_int(SEXP vsizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int& >::type vsize(vsizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_one_int(vsize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// reshaper
+arma::mat reshaper(arma::field<arma::mat> J_field, int s);
+RcppExport SEXP _bmms_reshaper(SEXP J_fieldSEXP, SEXP sSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type J_field(J_fieldSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    rcpp_result_gen = Rcpp::wrap(reshaper(J_field, s));
+    return rcpp_result_gen;
+END_RCPP
+}
+// totsplit_prior_ratio
+double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop);
+RcppExport SEXP _bmms_totsplit_prior_ratio(SEXP tot_split_propSEXP, SEXP tot_split_origSEXP, SEXP norpSEXP, SEXP ssSEXP, SEXP lambda_propSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type tot_split_prop(tot_split_propSEXP);
+    Rcpp::traits::input_parameter< int >::type tot_split_orig(tot_split_origSEXP);
+    Rcpp::traits::input_parameter< int >::type norp(norpSEXP);
+    Rcpp::traits::input_parameter< int >::type ss(ssSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_prop(lambda_propSEXP);
+    rcpp_result_gen = Rcpp::wrap(totsplit_prior_ratio(tot_split_prop, tot_split_orig, norp, ss, lambda_prop));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splitpar_prior
+double splitpar_prior(double x, int tot_split, int norp, int ss);
+RcppExport SEXP _bmms_splitpar_prior(SEXP xSEXP, SEXP tot_splitSEXP, SEXP norpSEXP, SEXP ssSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type tot_split(tot_splitSEXP);
+    Rcpp::traits::input_parameter< int >::type norp(norpSEXP);
+    Rcpp::traits::input_parameter< int >::type ss(ssSEXP);
+    rcpp_result_gen = Rcpp::wrap(splitpar_prior(x, tot_split, norp, ss));
+    return rcpp_result_gen;
+END_RCPP
+}
+// totstage_prior_ratio
+double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction);
+RcppExport SEXP _bmms_totstage_prior_ratio(SEXP tot_stage_propSEXP, SEXP tot_stage_origSEXP, SEXP norpSEXP, SEXP curr_n_splitsSEXP, SEXP directionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type tot_stage_prop(tot_stage_propSEXP);
+    Rcpp::traits::input_parameter< int >::type tot_stage_orig(tot_stage_origSEXP);
+    Rcpp::traits::input_parameter< int >::type norp(norpSEXP);
+    Rcpp::traits::input_parameter< int >::type curr_n_splits(curr_n_splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type direction(directionSEXP);
+    rcpp_result_gen = Rcpp::wrap(totstage_prior_ratio(tot_stage_prop, tot_stage_orig, norp, curr_n_splits, direction));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splits_truncate
+arma::field<arma::vec> splits_truncate(arma::field<arma::vec> splits, int k);
+RcppExport SEXP _bmms_splits_truncate(SEXP splitsSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::field<arma::vec> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(splits_truncate(splits, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_learn
+Rcpp::List bmms_learn(arma::vec& y, arma::mat& X, int max_stages, double lambda, unsigned int mcmc, unsigned int burn, bool silent);
+RcppExport SEXP _bmms_bmms_learn(SEXP ySEXP, SEXP XSEXP, SEXP max_stagesSEXP, SEXP lambdaSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP silentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type max_stages(max_stagesSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_learn(y, X, max_stages, lambda, mcmc, burn, silent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_learn_fixk
+Rcpp::List bmms_learn_fixk(arma::vec& y, arma::mat& X, arma::field<arma::vec> start_splits, double lambda, int ii, int ll, unsigned int mcmc, unsigned int burn, bool silent);
+RcppExport SEXP _bmms_bmms_learn_fixk(SEXP ySEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP lambdaSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP silentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::vec> >::type start_splits(start_splitsSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< int >::type ii(iiSEXP);
+    Rcpp::traits::input_parameter< int >::type ll(llSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_learn_fixk(y, X, start_splits, lambda, ii, ll, mcmc, burn, silent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_moveonly
+Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X, arma::field<arma::vec> start_splits, int ii, int ll, unsigned int mcmc, unsigned int burn, bool silent);
+RcppExport SEXP _bmms_bmms_moveonly(SEXP ySEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP silentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::vec> >::type start_splits(start_splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type ii(iiSEXP);
+    Rcpp::traits::input_parameter< int >::type ll(llSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_moveonly(y, X, start_splits, ii, ll, mcmc, burn, silent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bMMs
+Rcpp::List bMMs(arma::vec& y, arma::mat& X, double g, int mcmc, int burn, arma::field<arma::vec> splits, bool silent);
+RcppExport SEXP _bmms_bMMs(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP splitsSEXP, SEXP silentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::vec> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
+    rcpp_result_gen = Rcpp::wrap(bMMs(y, X, g, mcmc, burn, splits, silent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pnorm01_vec
+arma::vec pnorm01_vec(const arma::vec& x, int lower, int logged);
+RcppExport SEXP _bmms_pnorm01_vec(SEXP xSEXP, SEXP lowerSEXP, SEXP loggedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< int >::type logged(loggedSEXP);
+    rcpp_result_gen = Rcpp::wrap(pnorm01_vec(x, lower, logged));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qnorm01_vec
+arma::vec qnorm01_vec(const arma::vec& x, int lower, int logged);
+RcppExport SEXP _bmms_qnorm01_vec(SEXP xSEXP, SEXP lowerSEXP, SEXP loggedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< int >::type logged(loggedSEXP);
+    rcpp_result_gen = Rcpp::wrap(qnorm01_vec(x, lower, logged));
+    return rcpp_result_gen;
+END_RCPP
+}
+// log1p_vec
+arma::vec log1p_vec(const arma::vec& x);
+RcppExport SEXP _bmms_log1p_vec(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(log1p_vec(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// usetdiff
+arma::uvec usetdiff(const arma::uvec& x, const arma::uvec& y);
+RcppExport SEXP _bmms_usetdiff(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::uvec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(usetdiff(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lnNpr_cpp
+arma::vec lnNpr_cpp(const arma::vec& a, const arma::vec& b);
+RcppExport SEXP _bmms_lnNpr_cpp(SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(lnNpr_cpp(a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cholperm_cpp
+arma::field<arma::mat> cholperm_cpp(arma::mat Sig, arma::vec l, arma::vec u);
+RcppExport SEXP _bmms_cholperm_cpp(SEXP SigSEXP, SEXP lSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type l(lSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(cholperm_cpp(Sig, l, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gradpsi_cpp
+arma::mat gradpsi_cpp(const arma::vec& y, const arma::mat& L, const arma::vec& l, const arma::vec& u, arma::vec& grad);
+RcppExport SEXP _bmms_gradpsi_cpp(SEXP ySEXP, SEXP LSEXP, SEXP lSEXP, SEXP uSEXP, SEXP gradSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type L(LSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type grad(gradSEXP);
+    rcpp_result_gen = Rcpp::wrap(gradpsi_cpp(y, L, l, u, grad));
+    return rcpp_result_gen;
+END_RCPP
+}
+// armasolve
+arma::vec armasolve(arma::mat A, arma::vec grad);
+RcppExport SEXP _bmms_armasolve(SEXP ASEXP, SEXP gradSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type grad(gradSEXP);
+    rcpp_result_gen = Rcpp::wrap(armasolve(A, grad));
+    return rcpp_result_gen;
+END_RCPP
+}
+// nleq
+arma::vec nleq(const arma::vec& l, const arma::vec& u, const arma::mat& L);
+RcppExport SEXP _bmms_nleq(SEXP lSEXP, SEXP uSEXP, SEXP LSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type L(LSEXP);
+    rcpp_result_gen = Rcpp::wrap(nleq(l, u, L));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ntail_cpp
+arma::vec ntail_cpp(const arma::vec& l, const arma::vec& u);
+RcppExport SEXP _bmms_ntail_cpp(SEXP lSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(ntail_cpp(l, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// trnd_cpp
+arma::vec trnd_cpp(const arma::vec& l, const arma::vec& u);
+RcppExport SEXP _bmms_trnd_cpp(SEXP lSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(trnd_cpp(l, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tn_cpp
+arma::vec tn_cpp(const arma::vec& l, const arma::vec& u);
+RcppExport SEXP _bmms_tn_cpp(SEXP lSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(tn_cpp(l, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// trandn_cpp
+arma::vec trandn_cpp(const arma::vec& l, const arma::vec& u);
+RcppExport SEXP _bmms_trandn_cpp(SEXP lSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(trandn_cpp(l, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mvnrnd_cpp
+arma::mat mvnrnd_cpp(int n, const arma::mat& L, const arma::vec& l, const arma::vec& u, arma::vec mu, arma::vec& logpr);
+RcppExport SEXP _bmms_mvnrnd_cpp(SEXP nSEXP, SEXP LSEXP, SEXP lSEXP, SEXP uSEXP, SEXP muSEXP, SEXP logprSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type L(LSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type logpr(logprSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvnrnd_cpp(n, L, l, u, mu, logpr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// psy_cpp
+double psy_cpp(arma::vec x, const arma::mat& L, arma::vec l, arma::vec u, arma::vec mu);
+RcppExport SEXP _bmms_psy_cpp(SEXP xSEXP, SEXP LSEXP, SEXP lSEXP, SEXP uSEXP, SEXP muSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type L(LSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type l(lSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mu(muSEXP);
+    rcpp_result_gen = Rcpp::wrap(psy_cpp(x, L, l, u, mu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mvrandn_cpp
+arma::mat mvrandn_cpp(const arma::vec& l_in, const arma::vec& u_in, const arma::mat& Sig, int n);
+RcppExport SEXP _bmms_mvrandn_cpp(SEXP l_inSEXP, SEXP u_inSEXP, SEXP SigSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type l_in(l_inSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u_in(u_inSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvrandn_cpp(l_in, u_in, Sig, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mvtruncnormal
+arma::mat mvtruncnormal(const arma::vec& mean, const arma::vec& l_in, const arma::vec& u_in, const arma::mat& Sig, int n);
+RcppExport SEXP _bmms_mvtruncnormal(SEXP meanSEXP, SEXP l_inSEXP, SEXP u_inSEXP, SEXP SigSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type l_in(l_inSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u_in(u_inSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sig(SigSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvtruncnormal(mean, l_in, u_in, Sig, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mvtruncnormal_eye1
+arma::mat mvtruncnormal_eye1(const arma::vec& mean, const arma::vec& l_in, const arma::vec& u_in);
+RcppExport SEXP _bmms_mvtruncnormal_eye1(SEXP meanSEXP, SEXP l_inSEXP, SEXP u_inSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type l_in(l_inSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type u_in(u_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvtruncnormal_eye1(mean, l_in, u_in));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_mvnormal2
+arma::mat rndpp_mvnormal2(int n, const arma::vec& mu, const arma::mat& sigma);
+RcppExport SEXP _bmms_rndpp_mvnormal2(SEXP nSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_mvnormal2(n, mu, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rndpp_mvnormalnew
+arma::mat rndpp_mvnormalnew(int n, const arma::vec& mean, const arma::mat& sigma);
+RcppExport SEXP _bmms_rndpp_mvnormalnew(SEXP nSEXP, SEXP meanSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(rndpp_mvnormalnew(n, mean, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_S
+arma::mat get_S(const arma::vec& y, const arma::mat& X);
+RcppExport SEXP _bmms_get_S(SEXP ySEXP, SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_S(y, X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_Ddiag
+arma::mat get_Ddiag(const arma::mat& Sigma, const arma::mat& S);
+RcppExport SEXP _bmms_get_Ddiag(SEXP SigmaSEXP, SEXP SSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_Ddiag(Sigma, S));
+    return rcpp_result_gen;
+END_RCPP
+}
+// diag_default_mult
+arma::mat diag_default_mult(const arma::mat& A, const arma::vec& D);
+RcppExport SEXP _bmms_diag_default_mult(SEXP ASEXP, SEXP DSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type D(DSEXP);
+    rcpp_result_gen = Rcpp::wrap(diag_default_mult(A, D));
+    return rcpp_result_gen;
+END_RCPP
+}
+// diag_custom_mult
+arma::mat diag_custom_mult(const arma::mat& A, const arma::vec& D);
+RcppExport SEXP _bmms_diag_custom_mult(SEXP ASEXP, SEXP DSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type D(DSEXP);
+    rcpp_result_gen = Rcpp::wrap(diag_custom_mult(A, D));
+    return rcpp_result_gen;
+END_RCPP
+}
+// beta_post_sample
+arma::mat beta_post_sample(const arma::vec& mu, const arma::mat& Sigma, const arma::mat& S, const arma::vec& Ddiag, int sample_size);
+RcppExport SEXP _bmms_beta_post_sample(SEXP muSEXP, SEXP SigmaSEXP, SEXP SSEXP, SEXP DdiagSEXP, SEXP sample_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type Ddiag(DdiagSEXP);
+    Rcpp::traits::input_parameter< int >::type sample_size(sample_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(beta_post_sample(mu, Sigma, S, Ddiag, sample_size));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bmms_rcpparma_hello_world", (DL_FUNC) &_bmms_rcpparma_hello_world, 0},
-    {"_bmms_rcpparma_outerproduct", (DL_FUNC) &_bmms_rcpparma_outerproduct, 1},
-    {"_bmms_rcpparma_innerproduct", (DL_FUNC) &_bmms_rcpparma_innerproduct, 1},
-    {"_bmms_rcpparma_bothproducts", (DL_FUNC) &_bmms_rcpparma_bothproducts, 1},
+    {"_bmms_model_mlik_ratio", (DL_FUNC) &_bmms_model_mlik_ratio, 7},
+    {"_bmms_VSModule_export", (DL_FUNC) &_bmms_VSModule_export, 8},
+    {"_bmms_ModularVS_export", (DL_FUNC) &_bmms_ModularVS_export, 7},
+    {"_bmms_X2Dgrid", (DL_FUNC) &_bmms_X2Dgrid, 2},
+    {"_bmms_rndpp_bern", (DL_FUNC) &_bmms_rndpp_bern, 1},
+    {"_bmms_split_struct_ratio", (DL_FUNC) &_bmms_split_struct_ratio, 4},
+    {"_bmms_bmms_setdiff", (DL_FUNC) &_bmms_bmms_setdiff, 2},
+    {"_bmms_rndpp_unif_int", (DL_FUNC) &_bmms_rndpp_unif_int, 1},
+    {"_bmms_rndpp_discrete", (DL_FUNC) &_bmms_rndpp_discrete, 1},
+    {"_bmms_rndpp_gamma", (DL_FUNC) &_bmms_rndpp_gamma, 2},
+    {"_bmms_rndpp_normal", (DL_FUNC) &_bmms_rndpp_normal, 2},
+    {"_bmms_rndpp_mvnormal", (DL_FUNC) &_bmms_rndpp_mvnormal, 3},
+    {"_bmms_col_eq_check", (DL_FUNC) &_bmms_col_eq_check, 1},
+    {"_bmms_col_sums", (DL_FUNC) &_bmms_col_sums, 1},
+    {"_bmms_single_split", (DL_FUNC) &_bmms_single_split, 3},
+    {"_bmms_multi_split", (DL_FUNC) &_bmms_multi_split, 3},
+    {"_bmms_exclude", (DL_FUNC) &_bmms_exclude, 2},
+    {"_bmms_splitsub_to_splitmask", (DL_FUNC) &_bmms_splitsub_to_splitmask, 3},
+    {"_bmms_splitmask_to_splitsub", (DL_FUNC) &_bmms_splitmask_to_splitsub, 1},
+    {"_bmms_row_intersection", (DL_FUNC) &_bmms_row_intersection, 2},
+    {"_bmms_row_difference", (DL_FUNC) &_bmms_row_difference, 2},
+    {"_bmms_splits_augmentation", (DL_FUNC) &_bmms_splits_augmentation, 1},
+    {"_bmms_splitsub_to_groupmask", (DL_FUNC) &_bmms_splitsub_to_groupmask, 3},
+    {"_bmms_mat_unique", (DL_FUNC) &_bmms_mat_unique, 1},
+    {"_bmms_mask_oneval", (DL_FUNC) &_bmms_mask_oneval, 3},
+    {"_bmms_mask_oneval_sum", (DL_FUNC) &_bmms_mask_oneval_sum, 3},
+    {"_bmms_mask_cube_slice", (DL_FUNC) &_bmms_mask_cube_slice, 4},
+    {"_bmms_mat_to_vec_by_region", (DL_FUNC) &_bmms_mat_to_vec_by_region, 3},
+    {"_bmms_cube_to_mat_by_region", (DL_FUNC) &_bmms_cube_to_mat_by_region, 3},
+    {"_bmms_unmask_vector", (DL_FUNC) &_bmms_unmask_vector, 3},
+    {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 1},
+    {"_bmms_merge_splits", (DL_FUNC) &_bmms_merge_splits, 2},
+    {"_bmms_cube_mean", (DL_FUNC) &_bmms_cube_mean, 2},
+    {"_bmms_cube_sum", (DL_FUNC) &_bmms_cube_sum, 2},
+    {"_bmms_splitmask_focus", (DL_FUNC) &_bmms_splitmask_focus, 3},
+    {"_bmms_number_availables", (DL_FUNC) &_bmms_number_availables, 1},
+    {"_bmms_split_move2d", (DL_FUNC) &_bmms_split_move2d, 5},
+    {"_bmms_index_to_subscript", (DL_FUNC) &_bmms_index_to_subscript, 2},
+    {"_bmms_split_add2d", (DL_FUNC) &_bmms_split_add2d, 4},
+    {"_bmms_split_drop2d", (DL_FUNC) &_bmms_split_drop2d, 4},
+    {"_bmms_stage_drop2d", (DL_FUNC) &_bmms_stage_drop2d, 4},
+    {"_bmms_proposal_move", (DL_FUNC) &_bmms_proposal_move, 6},
+    {"_bmms_bmms_soi", (DL_FUNC) &_bmms_bmms_soi, 14},
+    {"_bmms_bmms_soi_binary", (DL_FUNC) &_bmms_bmms_soi_binary, 15},
+    {"_bmms_rndpp_stdmvnormal", (DL_FUNC) &_bmms_rndpp_stdmvnormal, 2},
+    {"_bmms_rndpp_mvt", (DL_FUNC) &_bmms_rndpp_mvt, 4},
+    {"_bmms_my_bayeslm", (DL_FUNC) &_bmms_my_bayeslm, 3},
+    {"_bmms_lambda_prior_mhr", (DL_FUNC) &_bmms_lambda_prior_mhr, 2},
+    {"_bmms_lambda_lik_mhr", (DL_FUNC) &_bmms_lambda_lik_mhr, 4},
+    {"_bmms_lreg_lik_mhr", (DL_FUNC) &_bmms_lreg_lik_mhr, 6},
+    {"_bmms_bayes_ridge", (DL_FUNC) &_bmms_bayes_ridge, 4},
+    {"_bmms_hat_alt", (DL_FUNC) &_bmms_hat_alt, 1},
+    {"_bmms_hat", (DL_FUNC) &_bmms_hat, 1},
+    {"_bmms_m0mvnorm_dens", (DL_FUNC) &_bmms_m0mvnorm_dens, 2},
+    {"_bmms_clm_marglik", (DL_FUNC) &_bmms_clm_marglik, 6},
+    {"_bmms_m0mvnorm_dens_gratio", (DL_FUNC) &_bmms_m0mvnorm_dens_gratio, 4},
+    {"_bmms_clm_marglik_gratio", (DL_FUNC) &_bmms_clm_marglik_gratio, 7},
+    {"_bmms_lm_gprior", (DL_FUNC) &_bmms_lm_gprior, 4},
+    {"_bmms_boolbern", (DL_FUNC) &_bmms_boolbern, 1},
+    {"_bmms_bvs", (DL_FUNC) &_bmms_bvs, 7},
+    {"_bmms_rndpp_sample1_comp", (DL_FUNC) &_bmms_rndpp_sample1_comp, 4},
+    {"_bmms_rndpp_shuffle", (DL_FUNC) &_bmms_rndpp_shuffle, 1},
+    {"_bmms_sample_index", (DL_FUNC) &_bmms_sample_index, 2},
+    {"_bmms_sample_one_int", (DL_FUNC) &_bmms_sample_one_int, 1},
+    {"_bmms_reshaper", (DL_FUNC) &_bmms_reshaper, 2},
+    {"_bmms_totsplit_prior_ratio", (DL_FUNC) &_bmms_totsplit_prior_ratio, 5},
+    {"_bmms_splitpar_prior", (DL_FUNC) &_bmms_splitpar_prior, 4},
+    {"_bmms_totstage_prior_ratio", (DL_FUNC) &_bmms_totstage_prior_ratio, 5},
+    {"_bmms_splits_truncate", (DL_FUNC) &_bmms_splits_truncate, 2},
+    {"_bmms_bmms_learn", (DL_FUNC) &_bmms_bmms_learn, 7},
+    {"_bmms_bmms_learn_fixk", (DL_FUNC) &_bmms_bmms_learn_fixk, 9},
+    {"_bmms_bmms_moveonly", (DL_FUNC) &_bmms_bmms_moveonly, 8},
+    {"_bmms_bMMs", (DL_FUNC) &_bmms_bMMs, 7},
+    {"_bmms_pnorm01_vec", (DL_FUNC) &_bmms_pnorm01_vec, 3},
+    {"_bmms_qnorm01_vec", (DL_FUNC) &_bmms_qnorm01_vec, 3},
+    {"_bmms_log1p_vec", (DL_FUNC) &_bmms_log1p_vec, 1},
+    {"_bmms_usetdiff", (DL_FUNC) &_bmms_usetdiff, 2},
+    {"_bmms_lnNpr_cpp", (DL_FUNC) &_bmms_lnNpr_cpp, 2},
+    {"_bmms_cholperm_cpp", (DL_FUNC) &_bmms_cholperm_cpp, 3},
+    {"_bmms_gradpsi_cpp", (DL_FUNC) &_bmms_gradpsi_cpp, 5},
+    {"_bmms_armasolve", (DL_FUNC) &_bmms_armasolve, 2},
+    {"_bmms_nleq", (DL_FUNC) &_bmms_nleq, 3},
+    {"_bmms_ntail_cpp", (DL_FUNC) &_bmms_ntail_cpp, 2},
+    {"_bmms_trnd_cpp", (DL_FUNC) &_bmms_trnd_cpp, 2},
+    {"_bmms_tn_cpp", (DL_FUNC) &_bmms_tn_cpp, 2},
+    {"_bmms_trandn_cpp", (DL_FUNC) &_bmms_trandn_cpp, 2},
+    {"_bmms_mvnrnd_cpp", (DL_FUNC) &_bmms_mvnrnd_cpp, 6},
+    {"_bmms_psy_cpp", (DL_FUNC) &_bmms_psy_cpp, 5},
+    {"_bmms_mvrandn_cpp", (DL_FUNC) &_bmms_mvrandn_cpp, 4},
+    {"_bmms_mvtruncnormal", (DL_FUNC) &_bmms_mvtruncnormal, 5},
+    {"_bmms_mvtruncnormal_eye1", (DL_FUNC) &_bmms_mvtruncnormal_eye1, 3},
+    {"_bmms_rndpp_mvnormal2", (DL_FUNC) &_bmms_rndpp_mvnormal2, 3},
+    {"_bmms_rndpp_mvnormalnew", (DL_FUNC) &_bmms_rndpp_mvnormalnew, 3},
+    {"_bmms_get_S", (DL_FUNC) &_bmms_get_S, 2},
+    {"_bmms_get_Ddiag", (DL_FUNC) &_bmms_get_Ddiag, 2},
+    {"_bmms_diag_default_mult", (DL_FUNC) &_bmms_diag_default_mult, 2},
+    {"_bmms_diag_custom_mult", (DL_FUNC) &_bmms_diag_custom_mult, 2},
+    {"_bmms_beta_post_sample", (DL_FUNC) &_bmms_beta_post_sample, 5},
     {NULL, NULL, 0}
 };
 

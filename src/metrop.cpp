@@ -513,13 +513,13 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
 } 
 
 // [[Rcpp::export]]
-Rcpp::List bmms_learn(arma::vec& y, arma::mat& X, 
+Rcpp::List sof(arma::vec& y, arma::mat& X, 
                       int max_stages,
-                      double lambda=10.0,
-                      unsigned int mcmc = 100, unsigned int burn = 50, bool silent = true){
+                      unsigned int mcmc = 100, unsigned int burn = 50, 
+                      double lambda=5.0,
+                      bool silent = true){
   if(silent){ cout.setstate(std::ios_base::failbit); } else {  cout.clear(); }
   
-  int basis_type = 1;//in_basis_type;
   int n = y.n_elem;
   int p = X.n_cols;
   
@@ -715,18 +715,18 @@ Rcpp::List bmms_learn(arma::vec& y, arma::mat& X,
 
 
 // [[Rcpp::export]]
-Rcpp::List bmms_learn_fixk(arma::vec& y, arma::mat& X, 
+Rcpp::List sofk(arma::vec& y, arma::mat& X, 
                            arma::field<arma::vec> start_splits, 
-                           double lambda=10.0,
+                           unsigned int mcmc = 100, unsigned int burn = 50,
+                           double lambda=5.0,
                            int ii=0, int ll=0,
-                           unsigned int mcmc = 100, unsigned int burn = 50, bool silent = true){
+                           bool silent = true){
   if(silent){ cout.setstate(std::ios_base::failbit); } else {  cout.clear(); }
   // sample from posterior of changepoints given their number
   // idea:
   // each stage will use increasing number of changepoints
   // posterior from first used as offset
   
-  int basis_type = 1;//in_basis_type;
   int n = y.n_elem;
   int p = X.n_cols;
   int max_stages = start_splits.n_elem;
@@ -889,17 +889,18 @@ Rcpp::List bmms_learn_fixk(arma::vec& y, arma::mat& X,
 
 
 // [[Rcpp::export]]
-Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X, 
-                         arma::field<arma::vec> start_splits, 
-                         int ii=0, int ll=0,
-                         unsigned int mcmc = 100, unsigned int burn = 50, bool silent = true){
+Rcpp::List sofk_binary(arma::vec& y, arma::mat& X, 
+                arma::field<arma::vec> start_splits, 
+                unsigned int mcmc = 100, unsigned int burn = 50,
+                double lambda=5.0,
+                int ii=0, int ll=0,
+                bool silent = true){
   if(silent){ cout.setstate(std::ios_base::failbit); } else {  cout.clear(); }
   // sample from posterior of changepoints given their number
   // idea:
   // each stage will use increasing number of changepoints
   // posterior from first used as offset
   
-  int basis_type = 1;//in_basis_type;
   int n = y.n_elem;
   int p = X.n_cols;
   int max_stages = start_splits.n_elem;
@@ -927,6 +928,27 @@ Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X,
   arma::field<arma::vec> current_splits = arma::field<arma::vec>(max_stages);
   //arma::field<arma::vec> proposed_splits = arma::field<arma::vec>(max_stages);
   
+  arma::vec ybin(n);
+  arma::vec z(n);
+  arma::mat zsave(n, mcmc-burn);
+  
+  arma::uvec yones = arma::find(y == 1);
+  arma::uvec yzeros = arma::find(y == 0);
+  
+  // y=1 is truncated lower by 0. upper=inf
+  // y=0 is truncated upper by 0, lower=-inf
+  
+  arma::vec trunc_lowerlim = arma::zeros(n);
+  trunc_lowerlim.elem(yones).fill(0.0);
+  trunc_lowerlim.elem(yzeros).fill(-arma::datum::inf);
+  
+  arma::vec trunc_upperlim = arma::zeros(n);
+  trunc_upperlim.elem(yones).fill(arma::datum::inf);
+  trunc_upperlim.elem(yzeros).fill(0.0);
+  
+  arma::mat In = arma::eye(n,n);
+  
+  
   int more_or_less = 0; // 0=move, 1=add/del
   int which_mol = 0; // index used to remove or add split at a stage
   
@@ -940,8 +962,11 @@ Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X,
   double accepted = 0;
   
   cout << "first model" << endl;
-  ModularLinReg base_model(y, X, n, splits(0), 0, max_stages, 0, false);
+  ModularLinReg base_model(y, X, n, splits(0), 0, max_stages, false, false);
   int m=0;
+  
+  ybin = y;
+  z = X * base_model.the_sample_field(base_model.n_stages-1);
   
   cout << "first model done " << endl;
   int tot_added_splits = 0;
@@ -965,7 +990,7 @@ Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X,
     
     // move, add split, drop split, add stage, drop stage
     // this function only allows move
-    int move_type = rndpp_discrete({.5, .5});
+    int move_type = rndpp_discrete({.25, .25, .25, .25});
     if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
       cout << "MOVING [" << m << "]" << endl;
       for(unsigned int s=0; s<n_stages; s++){
@@ -988,8 +1013,37 @@ Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X,
       cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
     }
     if(move_type == 1){
+      cout << "ADD SPLIT" << endl;
+      for(unsigned int s=0; s<n_stages; s++){
+        cout << "  STAGE : " << s << endl;
+        unsigned int curr_n_split = splits(m)(s).n_elem;
+        splits(m) = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
+        if(splits(m)(s).n_elem > curr_n_split){
+          tot_added_splits++;
+        }
+      }
+      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+    }
+    if(move_type == 2){
+      cout << "DROP SPLIT" << endl;
+      for(unsigned int s=0; s<n_stages; s++){
+        cout << "  STAGE : " << s << endl;
+        if((splits(m)(s).n_elem > 1) || ((splits(m)(s).n_elem == 1) & (s==n_stages-1) & s>0)){
+          // can only drop on lower level with more than one element, or last level 
+          unsigned int curr_n_split = splits(m)(s).n_elem;
+          splits(m) = proposal_drop_split_2(splits(m), s, y, X, p, n, base_model, lambda);
+          if(splits(m)(s).n_elem != curr_n_split){
+            //clog << m << " " << s << " was different from before: " << splits(m)(s).n_elem << " vs " << curr_n_split << endl;
+            tot_dropped_splits++;
+          }
+        }
+      }
+      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+    }
+    if(move_type == 3){
       cout << "REFRESH PARAMS" << endl;
-      base_model = ModularLinReg(y, X, n, splits(m), 0, max_stages, 0, false);
+      z = mvtruncnormal(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim, 1.0*In, 1).col(0);
+      base_model = ModularLinReg(z, X, n, splits(m), 0, max_stages, false, false);
     }
     
     if(m > burn-1){
@@ -1000,8 +1054,6 @@ Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X,
       sigmasq_mcmc(i) = base_model.sigmasq_scales(base_model.n_stages-1);
       splits_save(i) = splits(m);
     }
-    
-    cout <<" exited " << endl;
     
     if(mcmc > 100){
       if(!(m % 100)){
@@ -1035,9 +1087,8 @@ Rcpp::List bmms_moveonly(arma::vec& y, arma::mat& X,
 }
 
 
-
 // [[Rcpp::export]]
-Rcpp::List bMMs(arma::vec& y, arma::mat& X, 
+Rcpp::List bmms_base(arma::vec& y, arma::mat& X, 
                 double g, int mcmc, int burn, 
                 arma::field<arma::vec> splits, bool silent = true){
   // fixed splits, g prior

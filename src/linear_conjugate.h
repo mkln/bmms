@@ -11,6 +11,9 @@
 #include <math.h>
 #include <cstdlib>
 #include <Rcpp.h>
+#include "truncnormal_sample.h"
+#include "bmms_common.h"
+#include "metrop_helper.h"
 
 
 //double rndpp_gamma(double alpha, double beta);
@@ -179,6 +182,29 @@ public:
   VarSelMCMC(const arma::vec&, const arma::mat&, const arma::vec&, double, double, bool, int);
 };
 
+
+class ModularVS {
+public:
+  int K;
+  int mcmc;
+  
+  //std::vector<VSModule> varsel_modules;
+  
+  arma::vec y;
+  int n;
+  arma::field<arma::mat> Xall;
+  arma::vec resid;
+  
+  //ModularVS(const arma::vec&, const arma::field<arma::mat>&, int, double, arma::vec);
+  ModularVS(const arma::vec&, const arma::field<arma::mat>&, 
+            const arma::field<arma::vec>&,
+            int, double, arma::vec, bool);
+  
+  arma::mat intercept;
+  arma::field<arma::mat> beta_store;
+  arma::field<arma::mat> gamma_store;
+  arma::field<arma::vec> gamma_start;
+};
 
 Rcpp::List my_bayeslm(arma::vec y, arma::mat X);
 

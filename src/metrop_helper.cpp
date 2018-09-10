@@ -7,7 +7,6 @@
 
 using namespace std;
 
-// [[Rcpp::export]]
 int rndpp_sample1_comp(arma::vec x, int p, int current_split, double decay=4.0){
   /* vector x = current splits, p = how many in total
   * this returns 1 split out of the complement 
@@ -33,7 +32,6 @@ int rndpp_sample1_comp(arma::vec x, int p, int current_split, double decay=4.0){
   }
 }
 
-// [[Rcpp::export]]
 arma::vec rndpp_shuffle(const arma::vec& x){
   /* vector x = a vector
   output = reshuffled vector
@@ -43,15 +41,12 @@ arma::vec rndpp_shuffle(const arma::vec& x){
 }
 
 
-
-// [[Rcpp::export]]
 arma::uvec sample_index(const int& n, const int &vsize){
   arma::uvec sequence = arma::linspace<arma::uvec>(0, vsize-1, vsize);
   arma::uvec out = Rcpp::RcppArmadillo::sample(sequence, n, false);
   return out;
 }
 
-// [[Rcpp::export]]
 int sample_one_int(const int &vsize){
   arma::uvec sequence = arma::linspace<arma::uvec>(0, vsize-1, vsize);
   int out = (Rcpp::RcppArmadillo::sample(sequence, 1, false))(0);
@@ -59,8 +54,6 @@ int sample_one_int(const int &vsize){
 }
 
 
-
-// [[Rcpp::export]]
 arma::mat reshaper(arma::field<arma::mat> J_field, int s){
   arma::mat stretcher = (J_field(s).t() * J_field(s-1));
   arma::mat normalizer = col_sums(J_field(s));
@@ -90,6 +83,13 @@ double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_po
   int n = y.n_elem;
   double result = (n-p1)*log(n*1.0) - (a+n/2.0) * log(b + .5*arma::conv_to<double>::from(y.t()*y - mean_post.t() * inv_var_post * mean_post));
   return result;
+}
+
+double modular_loglikn(const arma::vec& x, const arma::mat& Si){
+  int p = Si.n_cols;
+  double normcore =  arma::conv_to<double>::from(x.t() * Si * x);
+  double normconst = - p/2.0 * log(2*M_PI) + .5 * log(arma::det(Si));
+  return normconst - 0.5 * (normcore);
 }
 
 Module::Module(){
@@ -130,7 +130,7 @@ Module::Module(){
 
 Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
                arma::mat& Jpre, arma::mat& Jnow, arma::vec& mean_post_pre, arma::vec& theta_sample_pre,
-               arma::vec& ingrid, arma::vec& splits, int kernel_type, int opt){
+               arma::vec& ingrid, arma::vec& splits, int kernel_type, bool fixed_sigma){
   //cout << "ModularLinReg :: module 0 " << endl;
   Xfull = X_full;
   ej = e;
@@ -138,6 +138,7 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   n = e.n_elem;
   pj = Xj.n_cols;
   
+  fix_sigma = fixed_sigma;
   g = g_prior;
   
   msplits = splits;
@@ -160,18 +161,22 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   var_post = g/(g+1.0) * (XtXi);
   inv_var_post = (g+1.0)/n * XtX;
   mean_post = var_post * Xj.t() * ej;
-  
-  beta_post = arma::conv_to<double>::from(.5*(
-    mean_pre.t() * (1.0/g * XtX) * mean_pre + 
-    ej.t()*ej - 
-    mean_post.t() * ( (g+1.0)/g * XtX) * mean_post)
-  );
-  
   In = arma::eye(n,n);
-  a = 2.1; // parametrization: a = mean^2 / variance + 2
-  b = a-1;  //                  b = (mean^3 + mean*variance) / variance
-  sigmasq_sample = opt==0? 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post)) : (b+beta_post)/(a+n/2.0+1);
-  sigmasq_mean = (b+beta_post)/(a+n/2.0+1);
+  
+  if(!fix_sigma){
+    beta_post = arma::conv_to<double>::from(.5*(
+      mean_pre.t() * (1.0/g * XtX) * mean_pre + 
+      ej.t()*ej - 
+      mean_post.t() * ( (g+1.0)/g * XtX) * mean_post)
+    );
+    
+    a = 2.1; // parametrization: a = mean^2 / variance + 2
+    b = a-1;  //                  b = (mean^3 + mean*variance) / variance
+    sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post));
+    sigmasq_mean = (b+beta_post)/(a+n/2.0+1);
+  } else {
+    sigmasq_sample = 1.0;
+  }
   
   theta_sample = rndpp_mvnormal(1, mean_post, sigmasq_sample*var_post).t();
   
@@ -206,13 +211,19 @@ void Module::redo(arma::vec& e){
   
   cout << "redoing module" << endl;
   
-  beta_post = arma::conv_to<double>::from(.5*(
-    ej.t() * (In - g/(g+1.0) * Px) * ej 
-  ));
+  if(!fix_sigma){
+    beta_post = arma::conv_to<double>::from(.5*(
+      ej.t() * (In - g/(g+1.0) * Px) * ej 
+    ));
+    
+    cout << "beta post " << beta_post << endl;
+    
+    
+    sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post)); //1.0/rndpp_gamma(n/2.0, 1.0/beta_post);
+  } else {
+    sigmasq_sample = 1.0;
+  }
   
-  cout << "beta post " << beta_post << endl;
-  
-  sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post)); //1.0/rndpp_gamma(n/2.0, 1.0/beta_post);
   mean_post = var_post * Xj.t() * ej;
   cout << "sigmasq sample " << sigmasq_sample << endl;
   theta_sample = rndpp_mvnormal(1, mean_post, sigmasq_sample*var_post).t();
@@ -233,16 +244,17 @@ void Module::redo(arma::vec& e){
 
 
 ModularLinReg::ModularLinReg(arma::vec& yin, arma::mat& Xin, double g, arma::field<arma::vec>& in_splits, 
-                             int kernel, int set_max_stages, int optimizing=0, bool fixed_grids = true){
+                             int kernel, int set_max_stages, bool fixed_sigma=false, bool fixed_grids = true){
   
   kernel_type = kernel;
   // kernel 0 = step functions; 1 = gaussian
   
   
   fixed_splits = fixed_grids;
-  opt = optimizing;
+  fix_sigma = fixed_sigma;
+  intercept = arma::mean(yin);
   
-  y = yin;
+  y = yin-intercept;
   X = Xin;
   
   max_stages = set_max_stages;
@@ -251,9 +263,8 @@ ModularLinReg::ModularLinReg(arma::vec& yin, arma::mat& Xin, double g, arma::fie
   loglik = arma::zeros(max_stages);
   n = y.n_elem;
   p = X.n_cols;
-  
+  In = arma::eye(n, n);
   g_prior = g;
-  
   
   split_seq = in_splits;
   n_stages = 1;
@@ -343,13 +354,19 @@ ModularLinReg::ModularLinReg(arma::vec& yin, arma::mat& Xin, double g, arma::fie
   }
   
   if(!fixed_splits){
-    double sigprior = 0;
-    for(int s=0; s<n_stages; s++){ 
-      loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
-             modules[s].a, modules[s].b) + sigprior;
-      sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+    if(fix_sigma){
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglikn(modules[s].ej, In - modules[s].Xj*modules[s].inv_var_post*modules[s].Xj.t());
+        
+      }
+    } else {
+      double sigprior = 0;
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
+               modules[s].a, modules[s].b) + sigprior;
+        sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+      }
     }
-    // marginalize over theta and sigma at last module, plus priors on sigmas of prev modules
   } 
   cout << "ModularLinReg created " << endl;
 }
@@ -394,13 +411,19 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
    loglik = modular_loglik(y, modules[n_stages-1].marglik_mean, varloglik, sigmasq_scales, n_stages);
    */
   if(!fixed_splits){
-    double sigprior = 0;
-    for(int s=0; s<n_stages; s++){ 
-      loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
-             modules[s].a, modules[s].b) + sigprior;
-      sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+    if(fix_sigma){
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglikn(modules[s].ej, In - modules[s].Xj*modules[s].inv_var_post*modules[s].Xj.t());
+        
+      }
+    } else {
+      double sigprior = 0;
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
+               modules[s].a, modules[s].b) + sigprior;
+        sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+      }
     }
-    // marginalize over theta and sigma at last module, plus priors on sigmas of prev modules
   } 
   
 }
@@ -429,13 +452,19 @@ void ModularLinReg::delete_last_module(){
   loglik = modular_loglik(y, modules[n_stages-1].marglik_mean, varloglik, sigmasq_scales, n_stages);
   */
   if(!fixed_splits){
-    double sigprior = 0;
-    for(int s=0; s<n_stages; s++){ 
-      loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
-             modules[s].a, modules[s].b) + sigprior;
-      sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+    if(fix_sigma){
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglikn(modules[s].ej, In - modules[s].Xj*modules[s].inv_var_post*modules[s].Xj.t());
+        
+      }
+    } else {
+      double sigprior = 0;
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
+               modules[s].a, modules[s].b) + sigprior;
+        sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+      }
     }
-    // marginalize over theta and sigma at last module, plus priors on sigmas of prev modules
   } 
 }
 
@@ -487,13 +516,19 @@ void ModularLinReg::redo(){
    */
   //clog << "getting here?" << endl;
   if(!fixed_splits){
-    double sigprior = 0;
-    for(int s=0; s<n_stages; s++){ 
-      loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
-             modules[s].a, modules[s].b) + sigprior;
-      sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+    if(fix_sigma){
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglikn(modules[s].ej, In - modules[s].Xj*modules[s].inv_var_post*modules[s].Xj.t());
+        
+      }
+    } else {
+      double sigprior = 0;
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
+               modules[s].a, modules[s].b) + sigprior;
+        sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+      }
     }
-    // marginalize over theta and sigma at last module, plus priors on sigmas of prev modules
   } 
 }
 
@@ -584,17 +619,21 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
     //bigsigma_of_incr(s) = (pow(n/(n+1.0), 2) * mod_reshaper(s-1) * modules[s-1].bigsigma * mod_reshaper(s-1).t() + 
     //  modules[s].bigsigma);
   }
-  
   if(!fixed_splits){
-    double sigprior = 0;
-    for(int s=0; s<n_stages; s++){ 
-      loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
-             modules[s].a, modules[s].b) + sigprior;
-      sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+    if(fix_sigma){
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglikn(modules[s].ej, In - modules[s].Xj*modules[s].inv_var_post*modules[s].Xj.t());
+        
+      }
+    } else {
+      double sigprior = 0;
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
+               modules[s].a, modules[s].b) + sigprior;
+        sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+      }
     }
-    // marginalize over theta and sigma at last module, plus priors on sigmas of prev modules
   } 
-  
   cout << "ModularLinReg created " << endl;
 }
 
@@ -632,13 +671,19 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
     
   }
   if(!fixed_splits){
-    double sigprior = 0;
-    for(int s=0; s<n_stages; s++){ 
-      loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
-             modules[s].a, modules[s].b) + sigprior;
-      sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+    if(fix_sigma){
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglikn(modules[s].ej, In - modules[s].Xj*modules[s].inv_var_post*modules[s].Xj.t());
+        
+      }
+    } else {
+      double sigprior = 0;
+      for(int s=0; s<n_stages; s++){ 
+        loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
+               modules[s].a, modules[s].b) + sigprior;
+        sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+      }
     }
-    // marginalize over theta and sigma at last module, plus priors on sigmas of prev modules
   } 
 }
 

@@ -40,6 +40,7 @@ public:
   arma::vec normalizer;
   
   arma::vec grid;
+  bool fix_sigma;
   
   int n;
   int pj;
@@ -83,7 +84,9 @@ public:
   void redo(arma::vec&);
   
   // e, X, Jpre, Jnow, prior mean and var, previously sampled theta
-  Module(arma::mat&, arma::vec&, arma::mat&, double, arma::mat&, arma::mat&, arma::vec&, arma::vec&, arma::vec&, arma::vec&, int, int);
+  Module(arma::mat&, arma::vec&, arma::mat&, 
+         double, arma::mat&, arma::mat&, arma::vec&, arma::vec&, arma::vec&, arma::vec&, 
+         int, bool);
   // empty constructor
   Module();
 };
@@ -98,7 +101,9 @@ public:
   double g_prior;
   arma::vec y;
   arma::mat X;
-  
+  double intercept;
+  bool fix_sigma;
+    
   // limit to number of possible stages
   int max_stages;
   
@@ -147,7 +152,7 @@ public:
   int opt;
   // constructor
   // y, X, list of splits for each stage, limit to stages
-  ModularLinReg(arma::vec&, arma::mat&, double, arma::field<arma::vec>&, int, int, int, bool);
+  ModularLinReg(arma::vec&, arma::mat&, double, arma::field<arma::vec>&, int, int, bool, bool);
   
 };
 

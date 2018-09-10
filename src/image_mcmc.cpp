@@ -14,7 +14,7 @@ using namespace std;
 
 
 // focuses around onesplit, with radius
-//[[Rcpp::export]]
+
 arma::mat splitmask_focus(const arma::mat& mask_of_splits, arma::vec onesplit, int radius_int=1){
   int x1 = onesplit(0) - radius_int;
   int x2 = onesplit(0) + radius_int;
@@ -45,7 +45,7 @@ int number_availables(const arma::mat& splitmask_focus){
 // return new mask of splits
 // also gives ratio: [number of moves TO proposed]/[number of moves FROM proposed]
 // = [prob moving FROM proposed back]/[prob moving TO proposed forward]
-//[[Rcpp::export]]
+
 arma::mat split_move2d(const arma::mat& mask_of_splits, 
                        const arma::mat& mask_nosplits,
                        arma::vec onesplit, 
@@ -112,7 +112,7 @@ arma::mat index_to_subscript(arma::uvec index, arma::mat m){
   return arma::conv_to<arma::mat>::from(arma::ind2sub(arma::size(m), index));
 }
 
-//[[Rcpp::export]]
+
 arma::mat split_add2d(arma::mat mask_of_splits, 
                       arma::mat mask_nosplits,
                       int lev,
@@ -183,7 +183,7 @@ arma::mat stage_add2d(arma::mat mask_of_splits,
   return mask_of_splits;
 }
 
-//[[Rcpp::export]]
+
 arma::mat split_drop2d(arma::mat mask_of_splits, 
                        const arma::mat& mask_nosplits,
                        int lev,
@@ -221,7 +221,7 @@ arma::mat split_drop2d(arma::mat mask_of_splits,
   return mask_of_splits;
 }
 
-//[[Rcpp::export]]
+
 void stage_drop2d(arma::mat mask_of_splits, 
                   const arma::mat& mask_nosplits,
                   int lev,
@@ -249,7 +249,7 @@ void stage_drop2d(arma::mat mask_of_splits,
   //return new_splitsub;
 }
 
-//[[Rcpp::export]]
+
 arma::mat proposal_move(const arma::mat& current_split_mask, 
                         const arma::mat& mask_nosplits,
                         const arma::field<arma::mat>& current_splits, 
@@ -271,7 +271,7 @@ arma::mat proposal_move(const arma::mat& current_split_mask,
 
 // finally try building a model from scratch and output beta
 //[[Rcpp::export]]
-Rcpp::List bmms_soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
+Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                       arma::mat mask_forbid,
                       double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius,
                       int max_stages, int start_movinglev,
@@ -533,13 +533,13 @@ Rcpp::List bmms_soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
 
 // finally try building a model from scratch and output beta
 //[[Rcpp::export]]
-Rcpp::List bmms_soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
+Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                     arma::mat mask_forbid,
                     double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius,
                     int max_stages, int start_movinglev,
                     int partnum, bool save=true,
                     bool save_splitmask = true,
-                    bool fixsigma = true){
+                    bool fixsigma = false){
   //former name: model_test
   
   //arma::field<arma::mat> old_splits,

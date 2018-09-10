@@ -6,7 +6,7 @@
 
 #include "linear_conjugate.h"
 #include "metrop_helper.h"
-#include "bmms_0906_varsel.h"
+//#include "bmms_0906_varsel.h"
 #include <RcppArmadillo.h>
 
 // from matrix Sx2 where each row is a 2D split

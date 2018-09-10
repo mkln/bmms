@@ -1,63 +1,9 @@
 #include "linear_conjugate.h"
-#include "bmms_common.h"
-#include "metrop_helper.h"
 
 using namespace std;
 using namespace Rcpp;
 
-//std::random_device rd;
-//std::mt19937 mt(rd());
 
-bool do_I_accept(double logaccept){ //, string name_accept, string name_count, List mcmc_pars){
-  double acceptj = 1.0;
-  if(!arma::is_finite(logaccept)){
-    acceptj = 0.0;
-  } else {
-    if(logaccept < 0){
-      acceptj = exp(logaccept);
-    }
-  }
-  double u = runif(1)(0);
-  if(u < acceptj){
-    return true;
-  } else {
-    return false;
-  }
-}
-
-const double EPS = 0.01;
-const double tau_accept = 0.234;
-const double g_exp = 0.7;
-const int g0 = 200;
-const double rho_max = 15;
-
-void adapt_alg6_s(double param, arma::vec& sumparam, arma::vec& prodparam,
-                  arma::vec& paramsd, arma::mat& sd_param, int mc, double accept_ratio){
-  
-  int j = 0;
-  //int siz = param.n_rows;
-  
-  sd_param(mc+1, j) = sd_param(mc, j) + pow(mc+0.0, -g_exp) * (accept_ratio - tau_accept);
-  if(sd_param(mc+1, j) > exp(rho_max)){
-    sd_param(mc+1, j) = exp(rho_max);
-  } else {
-    if(sd_param(mc+1, j) < exp(-rho_max)){
-      sd_param(mc+1, j) = exp(-rho_max);
-    }
-  }
-  
-  sumparam(j) = sumparam(j) + param; // param(j);
-  prodparam(j) = prodparam(j) + param*param; //param(j) * param(j);
-  
-  if(mc > g0){
-    paramsd(j) = sd_param(mc+1, j) / (mc-1.0) * (
-      prodparam(j) - (sumparam(j)*sumparam(j))/(mc+0.0) ) +
-        sd_param(mc+1, j) * EPS;
-  }
-}  
-
-
-// [[Rcpp::export]]
 arma::mat rndpp_stdmvnormal(int n, int dimension){
   arma::vec xtemp = arma::zeros(dimension);
   arma::mat outmat = arma::zeros(n, dimension);
@@ -68,7 +14,7 @@ arma::mat rndpp_stdmvnormal(int n, int dimension){
   return outmat;
 }
 
-// [[Rcpp::export]]
+
 arma::mat rndpp_mvt(int n, const arma::vec &mu, const arma::mat &sigma, double df){
   double w=1.0;
   arma::mat Z = rndpp_stdmvnormal(n, mu.n_elem);
@@ -259,8 +205,8 @@ void BayesLM::lambda_update(double lambda_new){
   Mi = arma::inv_sympd(M);
   mtMim = arma::conv_to<double>::from(m.t()*Mi*m);
   
-  alpha = 2.25; // parametrization: a = mean^2 / variance + 2
-  beta = 0.625; //alpha-1;  //                  b = (mean^3 + mean*variance) / variance
+  //alpha = 2.25; // parametrization: a = mean^2 / variance + 2
+  //beta = 0.625; //alpha-1;  //                  b = (mean^3 + mean*variance) / variance
   
   Sigma = arma::inv_sympd(Mi + XtX);
   mu = Sigma * (Mi*m + X.t()*ycenter);
@@ -322,126 +268,7 @@ void BayesLM::chg_data(arma::vec& yy, arma::mat& XX){
   reg_mean = icept + X * b;
 }
 
-//[[Rcpp::export]]
-Rcpp::List my_bayeslm(arma::vec y, arma::mat X, bool fixs){
-  
-  BayesLM lmodel(y, X, 1.0, fixs);
-  
-  return Rcpp::List::create(
-    Rcpp::Named("sigmasq") = lmodel.sigmasq,
-    Rcpp::Named("beta") = lmodel.b
-  );
-}
 
-// [[Rcpp::export]]
-double lambda_prior_mhr(double lambda_now, double lambda_prop){
-  double a=2.1;
-  double b=1.1;
-  return (a-1)*(log(lambda_prop) - log(lambda_now)) - (lambda_prop - lambda_now)/b;
-}
-
-//[[Rcpp::export]]
-double lambda_lik_mhr(double lambda, double lambda_prop, int p, double mfact){
-  // in log of course
-  return p/2.0 * (log(lambda_prop) - log(lambda)) - (lambda_prop - lambda) * mfact;
-}
-
-//[[Rcpp::export]]
-double lreg_lik_mhr(arma::vec &y, arma::mat &x, arma::vec b_prop, arma::vec b,
-                    double sigmasq_prop, double sigmasq){
-  return -y.n_elem/2.0 * (log(sigmasq_prop) - log(sigmasq)) - 
-    1.0/(2*sigmasq_prop)*arma::conv_to<double>::from((y-x*b_prop).t()*(y-x*b_prop)) +
-    1.0/(2*sigmasq)*arma::conv_to<double>::from((y-x*b).t()*(y-x*b));
-}
-
-//[[Rcpp::export]]
-Rcpp::List bayes_ridge(arma::vec y, arma::mat X, int mcmc=1000, int burn=0){
-  arma::vec beta = arma::zeros(X.n_cols);
-  
-  arma::mat priorM = arma::eye(X.n_cols, X.n_cols);
-  
-  double lambda=1;
-  double lambda_prop=1;
-  
-  BayesLM lmodel(y, X, lambda*priorM);
-  BayesLM propmodel = lmodel;
-  
-  double param_mult_temp=1;
-  double prior_accept = 0;
-  double logaccept=0;
-  double mfact = 0;
-  
-  arma::vec lambda_save = arma::zeros(mcmc-burn);
-  arma::vec sigmasq_save = arma::zeros(mcmc-burn);
-  arma::mat beta_save = arma::zeros(X.n_cols, mcmc-burn);
-  //arma::cube S_save = arma::zeros(X.n_cols, X.n_cols, mcmc-burn);
-  
-  // standard deviation of the proposals
-  // will be adaptively calibrated
-  arma::vec lambdasd = arma::ones(1);
-  arma::vec sumlambda = arma::zeros(1);
-  arma::vec prodlambda = arma::zeros(arma::size(lambdasd));
-  arma::mat sd_lambda = arma::zeros(mcmc+1, 1);
-  sd_lambda.row(0) += pow(2.4, 2);
-  
-  double accepted=0;
-  double proposed=0;
-  
-  for(int m=0; m<mcmc; m++){
-    //cout << "m " << m << endl;
-    beta = lmodel.b;
-    mfact = arma::conv_to<double>::from(1.0/(lmodel.sigmasq*2)*beta.t()*beta);
-    
-    // propose new lambda 
-    param_mult_temp = Rcpp::rnorm(1)(0);
-    param_mult_temp = exp(param_mult_temp * pow(lambdasd(0), 0.5));
-    param_mult_temp = min(param_mult_temp, 1e10);
-    param_mult_temp = max(param_mult_temp, 1e-10);
-    
-    lambda_prop = lambda * param_mult_temp;
-    proposed++;
-    
-    propmodel.lambda_update(lambda_prop);
-    
-    prior_accept = lambda_prior_mhr(lambda, lambda_prop);
-    
-    logaccept = //lreg_lik_mhr(y, X, propmodel.b, lmodel.b, propmodel.sigmasq, lmodel.sigmasq) + 
-      lambda_lik_mhr(lambda, lambda_prop, lmodel.p, mfact) + prior_accept;
-    
-    if(exp(logaccept) > runif(1)(0)){
-      lambda = lambda_prop;
-      lmodel = propmodel;  
-      accepted++;
-    }
-    
-    adapt_alg6_s(log(lambda), sumlambda, prodlambda, lambdasd, sd_lambda, 
-                 m, accepted/proposed);
-    
-    if(1 & (mcmc > 50)){
-      if(!(m % 50)){
-        clog << "m: " << m << " " << accepted/proposed << " " << lambdasd(0) << endl;
-      } 
-    }
-    
-    if(m > burn-1){
-      int i = m-burn;
-      lambda_save(i) = lambda;
-      beta_save.col(i) = beta;
-      sigmasq_save(i) = lmodel.sigmasq;
-      //S_save.slice(i) = S;
-    }
-  }
-  cout << "acceptance ratio " << accepted/proposed << endl;
-  
-  //return (rndpp_mvnormal(1, b_mean_post, Cov_post)).t();
-  return(Rcpp::List::create(
-      Rcpp::Named("beta") = beta_save,
-      Rcpp::Named("lambda") = lambda_save,
-      Rcpp::Named("sigmasq") = sigmasq_save
-  ));
-}
-
-//[[Rcpp::export]]
 arma::mat hat_alt(const arma::mat& X){
   arma::mat U;
   arma::vec s;
@@ -451,7 +278,7 @@ arma::mat hat_alt(const arma::mat& X){
   return U.cols(0,c-1) * U.cols(0,c-1).t();
 }
 
-//[[Rcpp::export]]
+
 arma::mat hat(const arma::mat& X){
   if(X.n_cols > X.n_rows){
     return hat_alt(X);
@@ -469,7 +296,6 @@ arma::mat hat(const arma::mat& X){
 
 
 // log density of mvnormal mean 0
-//[[Rcpp::export]]
 double m0mvnorm_dens(const arma::vec& x, const arma::mat& Si){
   int p = Si.n_cols;
   double normcore =  arma::conv_to<double>::from(x.t() * Si * x);
@@ -479,7 +305,6 @@ double m0mvnorm_dens(const arma::vec& x, const arma::mat& Si){
 
 // marglik of y ~ N(Xb, e In) with conjugate priors mean 0
 // and gprior for b
-//[[Rcpp::export]]
 double clm_marglik(const arma::vec& y, const arma::mat& Mi,
                    const arma::mat& Si, double muSimu, double a, double b){
   int p = Si.n_cols;
@@ -492,7 +317,6 @@ double clm_marglik(const arma::vec& y, const arma::mat& Mi,
 }
 
 // log density of mvnormal mean 0 -- only useful in ratios with gpriors
-//[[Rcpp::export]]
 double m0mvnorm_dens_gratio(double yy, double yPxy, double g, double p){
   return -0.5*p*log(g+1.0) + 0.5*g/(g+1.0) * yPxy - 0.5*yy;
 }
@@ -500,7 +324,6 @@ double m0mvnorm_dens_gratio(double yy, double yPxy, double g, double p){
 // marglik of y ~ N(Xb, e In) with conjugate priors mean 0
 //-- only useful in ratios with gpriors
 // and gprior for b
-//[[Rcpp::export]]
 double clm_marglik_gratio(double yy, double yPxy, double g, int n, double p, double a, double b){
   return -0.5*p*log(g+1.0) - (a+n/2.0)*log(b + 0.5*(yy - g/(g+1.0) * yPxy));
 }
@@ -600,6 +423,15 @@ void BayesLMg::sample_sigmasq(){
   sigmasq = 1.0/rndpp_gamma(alpha_n, 1.0/beta_n);
 }
 
+double BayesLMg::get_marglik(bool fix_sigma=false){
+  if(fix_sigma){
+    return m0mvnorm_dens_gratio(yty, yPxy, g, p);
+    //clog << marglik << endl;
+  } else {
+    return clm_marglik_gratio(yty, yPxy, g, n, p, alpha, beta);
+    //clog << marglik << endl;
+  }
+}
 
 BayesSelect::BayesSelect(){ 
   
@@ -637,7 +469,6 @@ BayesSelect::BayesSelect(const arma::vec& yy, const arma::mat& X, double gin, bo
 };
 
 
-
 void BayesSelect::change_X(const arma::mat& X){
   p = X.n_cols;
   
@@ -647,17 +478,7 @@ void BayesSelect::change_X(const arma::mat& X){
   marglik = get_marglik(fix_sigma);
 }
 
-double BayesLMg::get_marglik(bool fix_sigma=false){
-  if(fix_sigma){
-    return m0mvnorm_dens_gratio(yty, yPxy, g, p);
-    //clog << marglik << endl;
-  } else {
-    return clm_marglik_gratio(yty, yPxy, g, n, p, alpha, beta);
-    //clog << marglik << endl;
-  }
-}
 
-//[[Rcpp::export]]
 Rcpp::List lm_gprior(const arma::vec& y, const arma::mat& X, double g=-1.0, bool fixs=false){
   BayesLMg model;
   if(g==-1.0){
@@ -674,7 +495,6 @@ Rcpp::List lm_gprior(const arma::vec& y, const arma::mat& X, double g=-1.0, bool
   );
 }
 
-//[[Rcpp::export]]
 bool boolbern(double p){
   double run = arma::randu();
   return run < p;
@@ -718,13 +538,7 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
       //clog << "test  mcmc j " << j << endl;
       double accept_probability = exp(model_proposal.marglik - model.marglik) *
         exp(model_prior_par * (model.p - model_proposal.p));
-      
-      /*clog << "change to " << model_proposal.p << " from " << model.p << 
-       " mlik_ratio " << exp(model_proposal.marglik - model.marglik) << 
-       " mlik prop " << exp(model_proposal.marglik) <<
-       " mlik orig " << exp(model.marglik) << endl;
-       */
-      
+
       int accepted = rndpp_bern(accept_probability);
       if(accepted == 1){
         //clog << "accepted." << endl;
@@ -760,5 +574,117 @@ Rcpp::List bvs(const arma::vec& y, const arma::mat& X,
     //Rcpp::Named("sigmasq") = bvs_model.sigmasq,
     Rcpp::Named("gamma") = bvs_model.gamma_stored,
     Rcpp::Named("sigmasq") = bvs_model.sigmasq_stored
+  );
+}
+
+
+ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
+                     const arma::field<arma::vec>& starting,
+                     int mcmc_in,
+                     double gg, arma::vec ss, bool binary=false){
+  
+  K = Xall_in.n_elem;
+  //clog << K << endl;
+  mcmc = mcmc_in;
+  y = y_in;
+  Xall = Xall_in;
+  resid = y;
+  
+  n = y.n_elem;
+  arma::vec z(n);
+  arma::mat zsave(n, mcmc);
+  
+  z = (y-0.5)*2;
+  
+  arma::uvec yones = arma::find(y == 1);
+  arma::uvec yzeros = arma::find(y == 0);
+  
+  // y=1 is truncated lower by 0. upper=inf
+  // y=0 is truncated upper by 0, lower=-inf
+  
+  arma::vec trunc_lowerlim = arma::zeros(n);
+  trunc_lowerlim.elem(yones).fill(0.0);
+  trunc_lowerlim.elem(yzeros).fill(-arma::datum::inf);
+  
+  arma::vec trunc_upperlim = arma::zeros(n);
+  trunc_upperlim.elem(yones).fill(arma::datum::inf);
+  trunc_upperlim.elem(yzeros).fill(0.0);
+  
+  arma::mat In = arma::eye(n,n);
+  
+  intercept = arma::zeros(K, mcmc);
+  beta_store = arma::field<arma::mat>(K);
+  gamma_store = arma::field<arma::mat>(K);
+  gamma_start = starting;
+  
+  for(int j=0; j<K; j++){
+    gamma_start(j) = arma::zeros(Xall(j).n_cols);
+    for(unsigned int h=0; h<Xall(j).n_cols; h++){
+      gamma_start(j)(h) = rndpp_bern(0.1);
+    }
+    beta_store(j) = arma::zeros(Xall(j).n_cols, mcmc);
+    gamma_store(j) = arma::zeros(Xall(j).n_cols, mcmc);
+  }
+  
+  for(int m=0; m<mcmc; m++){
+    //clog << "m: " << m << endl;
+    if(binary){
+      resid = z;
+    } else {
+      resid = y;
+    }
+    
+    arma::vec xb_cumul = arma::zeros(n);
+    for(int j=0; j<K; j++){
+      //clog << " j: " << j << " " << arma::size(Xall(j)) << endl;
+      //clog << "  module" << endl;
+      double iboh = arma::mean(resid);
+      
+      //VSModule last_split_model = VSModule(y, X, gamma_start, MCMC, g, sprior, fixsigma, binary);
+      //VarSelMCMC bvs_model(y, X, gamma_start, g, sprior, fixsigma, MCMC);
+      
+      //VSModule onemodule = VSModule(resid, Xall(j), gamma_start(j), 1, gg, ss(j), binary?true:false, false);
+      VarSelMCMC onemodule(resid, Xall(j), gamma_start(j), gg, ss(j), binary?true:false, 1);
+      
+      //varsel_modules.push_back(onemodule);
+      intercept(j, m) = iboh;// onemodule.intercept;
+      xb_cumul = xb_cumul + Xall(j) * onemodule.beta_stored.col(0);
+      resid = resid - xb_cumul;
+      //clog << "  beta store" << endl;
+      beta_store(j).col(m) = onemodule.beta_stored.col(0);
+      //clog << "  gamma store" << endl;
+      gamma_store(j).col(m) = onemodule.gamma_stored.col(0);
+      //clog << "  gamma start" << endl;
+      gamma_start(j) = onemodule.gamma_stored.col(0);
+      //clog << gamma_start(1) << endl;
+    }
+    
+    if(binary){
+      z = mvtruncnormal_eye1(xb_cumul, 
+                             trunc_lowerlim, trunc_upperlim).col(0);
+    }
+    
+    if(mcmc > 100){
+      if(!(m % (mcmc / 10))){
+        clog << m << " " << max(abs(z)) << endl;
+      } 
+    }
+  }
+}
+
+
+// [[Rcpp::export]]
+Rcpp::List ModularVS_export(const arma::vec& y, 
+                            const arma::field<arma::mat>& Xall, 
+                            const arma::field<arma::vec>& starting,
+                            int MCMC, double gg, arma::vec ss, bool binary=false){
+  
+  int n = y.n_elem;
+  ModularVS test = ModularVS(y, Xall, starting, MCMC, gg, ss, binary);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("intercept_mc") = test.intercept,
+    Rcpp::Named("beta_mc") = test.beta_store,
+    Rcpp::Named("gamma_mc") = test.gamma_store
   );
 }

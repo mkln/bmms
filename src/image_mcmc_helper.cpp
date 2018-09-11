@@ -1,6 +1,7 @@
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
 
+#include <string>
 #include "image_mcmc_helper.h"
 #include "metrop_helper.h"
 
@@ -569,9 +570,9 @@ void ModularLR2D::delete_last_module(){
 }
 
 //[[Rcpp::export]]
-arma::field<arma::mat> load_splits(int maxlevs){
+arma::field<arma::mat> load_splits(int maxlevs, std::string sname){
   arma::field<arma::mat> splits(maxlevs);
-  splits.load("/home/mkln/ConnectomeDB/metadata/splitsub_R-1_mcmc.txt");
+  splits.load(sname);
   splits.print();
   return splits;
 }
@@ -586,6 +587,7 @@ arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::fi
   return splits;
 }
 
+//[[Rcpp::export]]
 double gammaprior_mhr(double new_val, double old_val, double alpha, double beta){
   return (alpha-1) * (log(new_val) - log(old_val)) - 1.0/beta * (new_val - old_val);
 }

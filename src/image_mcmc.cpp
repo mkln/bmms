@@ -4,7 +4,6 @@
 #include "truncnormal_sample.h"
 #include "image_mcmc_helper.h"
 
-
 using namespace std;
 
 /*
@@ -273,10 +272,11 @@ arma::mat proposal_move(const arma::mat& current_split_mask,
 //[[Rcpp::export]]
 Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                       arma::mat mask_forbid,
-                      double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius,
-                      int max_stages, int start_movinglev,
-                      int partnum, bool save=true,
-                      bool save_splitmask = true){
+                      double lambda_centers, double lambda_ridge, int mcmc, int burn, 
+                      int radius=2,
+                      int start_movinglev=0,
+                      int partnum=0, bool save=true,
+                      bool save_splitmask = false){
   //former name: model_test
   
   //arma::field<arma::mat> old_splits,
@@ -298,6 +298,8 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
   
   int splitpar_proposed = 0;
   int splitpar_accepted = 0;
+  
+  int max_stages = splits.n_elem;
   
   //splits = merge_splits(splits, old_splits);
   
@@ -403,7 +405,7 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       double totsplit_prior_mhr = totsplit_prior_ratio(propose_splitsub(rnd_moving_lev).n_rows, 
                                                        bmms_t.modules[rnd_moving_lev].splitmat.n_rows, n, 
                                                        rnd_moving_lev, 
-                                                       lambda_splits);
+                                                       lambda_centers);
       
       mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
         arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
@@ -442,7 +444,7 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
         double totsplit_prior_mhr = totsplit_prior_ratio(propose_splitsub(rnd_moving_lev).n_rows, 
                                                          bmms_t.modules[rnd_moving_lev].splitmat.n_rows, n, 
                                                          rnd_moving_lev,  
-                                                         lambda_splits);
+                                                         lambda_centers);
         
         mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
           arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
@@ -467,17 +469,17 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       splitpar_proposed++;
       //clog << "Q"; mh for split par
       double splitpar_m = arma::randn<double>();
-      double new_lambda_splits = 0.1 + lambda_splits * exp(splitpar_m);
+      double new_lambda_centers = 0.1 + lambda_centers * exp(splitpar_m);
       
-      mhr = exp(splitpar_prior(new_lambda_splits, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1) - 
-        splitpar_prior(lambda_splits, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1)) * 
-        exp(gammaprior_mhr(new_lambda_splits, lambda_splits));
+      mhr = exp(splitpar_prior(new_lambda_centers, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1) - 
+        splitpar_prior(lambda_centers, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1)) * 
+        exp(gammaprior_mhr(new_lambda_centers, lambda_centers));
       mhr = mhr > 1 ? 1 : mhr;
       
       int accepted_proposal = rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
-        lambda_splits = new_lambda_splits;
-        //clog << lambda_splits << endl;
+        lambda_centers = new_lambda_centers;
+        //clog << lambda_centers << endl;
         splitpar_accepted++;
       }
     }
@@ -488,7 +490,7 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       theta_mcmc(i) = bmms_t.theta_sampled;
       splitsub_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].splitmat;
       lambda_mcmc(i) = bmms_t.lambda;
-      splitsparam_mcmc(i) = lambda_splits;
+      splitsparam_mcmc(i) = lambda_centers;
       dim_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].effective_dimension;
       if(save_splitmask == true){
         splitmask_mcmc.slice(i) = bmms_t.modules[bmms_t.n_stages-1].splitmask;
@@ -504,7 +506,7 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
               " " << add_accepted / (add_proposed+0.0) << " " << drop_accepted / (drop_proposed+0.0) << " " <<
                 splitpar_accepted / (splitpar_proposed+0.0) << endl;
         if(save){
-          bmms_t.modules[bmms_t.n_stages-1].splitmat.save("/home/mkln/ConnectomeDB/metadata/splitsub_R-1_mcmc.txt");
+          bmms_t.modules[bmms_t.n_stages-1].splitmat.save("bmms_centers.temp");
         }
         
       } 
@@ -531,13 +533,36 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
 }
 
 
-// finally try building a model from scratch and output beta
+//' Scalar-on-image Binary regression
+//' 
+//' This function applies a Bayesian Modular & Multiscale regression model to
+//' a binary response, using image predictors.
+//' @param y A numeric vector of length n with (0,1) entries
+//' @param X An array of dimension (p1, p2, n)
+//' @param centers A list with K elements, each of which is a 2-column matrix. 
+//'   Element j of this list will be a matrix listing the (additional) centers to be used 
+//'   to split the image space into regions. This parameter only corresponds to the starting value
+//'   for MCMC. Only K will remain 
+//' @param mask_forbid A matrix of dimension (p1, p2). Element (i,j) can be set to 0 if the corresponding location 
+//'   cannot be used as center, 1 if it can. Typically this should be a matrix of ones.
+//' @param lambda_centers A scalar parameter controlling the prior probability on the number of centers
+//' @param lambda_ridge A scalar parameter corresponding to a ridge parameter for each linear regression module
+//' @param mcmc Number of Markov chain-Monte Carlo iterations
+//' @param burn Number of MCMC iterations to discard
+//' @param radius A scalar parameter controlling the dimension of the jumps for the ``move" proposals 
+//'   of the centers in MCMC
+//' @param max_stages A scalar controlling the maximum number of stages. Currently fixed at K
+//' @param start_movinglev A scalar smaller or equal to K indicating which 
+//' @param partnum
+//' @param save
+//' @param save_splitmask
+//' @param fixsigma
 //[[Rcpp::export]]
-Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
+Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                     arma::mat mask_forbid,
-                    double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius,
-                    int max_stages, int start_movinglev,
-                    int partnum, bool save=true,
+                    double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius=2,
+                    int start_movinglev=0,
+                    int partnum=0, bool save=true,
                     bool save_splitmask = true,
                     bool fixsigma = false){
   //former name: model_test
@@ -553,6 +578,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
   double to_from_ratio = 0.0;
   //int radius = 2;
   double mhr = 0.0;
+  int max_stages = centers.n_elem;
   
   int add_proposed = 0;
   int add_accepted = 0;
@@ -600,7 +626,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
   arma::field<arma::mat> propose_splitsub;
   
   clog << "initalize " << endl;
-  ModularLR2D bmms_t = ModularLR2D(y, X, splits, mask_forbid, max_stages, lambda_ridge, fixsigma);
+  ModularLR2D bmms_t = ModularLR2D(y, X, centers, mask_forbid, max_stages, lambda_ridge, fixsigma);
   int num_levs = bmms_t.n_stages;
   
   ybin = y;
@@ -610,12 +636,12 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
     if(m==0){ 
       clog << "starting mcmc" << endl;
     }
-    int choices = 3;
+    int choices = 4;
     int move_type = arma::randi<int>(arma::distr_param(0, choices-1));
     
     int rnd_moving_lev = arma::randi<int>(arma::distr_param(start_movinglev, num_levs-1));
     
-    if(move_type == 99){
+    if(move_type == 3){
       
       //clog << "R"; mh for lambda
       double lambdamult = arma::randn<double>();
@@ -692,7 +718,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       double totsplit_prior_mhr = totsplit_prior_ratio(propose_splitsub(rnd_moving_lev).n_rows, 
                                                        bmms_t.modules[rnd_moving_lev].splitmat.n_rows, n, 
                                                        rnd_moving_lev, 
-                                                       lambda_splits);
+                                                       lambda_centers);
       
       mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
         arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
@@ -731,7 +757,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
         double totsplit_prior_mhr = totsplit_prior_ratio(propose_splitsub(rnd_moving_lev).n_rows, 
                                                          bmms_t.modules[rnd_moving_lev].splitmat.n_rows, n, 
                                                          rnd_moving_lev,  
-                                                         lambda_splits);
+                                                         lambda_centers);
         
         mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
           arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
@@ -756,26 +782,25 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       splitpar_proposed++;
       //clog << "Q"; mh for split par
       double splitpar_m = arma::randn<double>();
-      double new_lambda_splits = 0.1 + lambda_splits * exp(splitpar_m);
+      double new_lambda_centers = 0.1 + lambda_centers * exp(splitpar_m);
       
-      mhr = exp(splitpar_prior(new_lambda_splits, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1) - 
-        splitpar_prior(lambda_splits, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1)) * 
-        exp(gammaprior_mhr(new_lambda_splits, lambda_splits));
+      mhr = exp(splitpar_prior(new_lambda_centers, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1) - 
+        splitpar_prior(lambda_centers, bmms_t.modules[bmms_t.n_stages-1].splitmat.n_rows, n, max_stages-1)) * 
+        exp(gammaprior_mhr(new_lambda_centers, lambda_centers));
       mhr = mhr > 1 ? 1 : mhr;
       
       int accepted_proposal = rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
-        lambda_splits = new_lambda_splits;
-        //clog << lambda_splits << endl;
+        lambda_centers = new_lambda_centers;
+        //clog << lambda_centers << endl;
         splitpar_accepted++;
       }
     }
     num_levs = bmms_t.n_stages;
     
     // gibbs latent
-    z = mvtruncnormal(bmms_t.Xb_sum, trunc_lowerlim, trunc_upperlim, 1.0*In, 1).col(0);
+    z = mvtruncnormal_eye1(bmms_t.Xb_sum, trunc_lowerlim, trunc_upperlim).col(0);
     bmms_t = ModularLR2D(z, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma);
-    
     
     
     if(m>burn-1){
@@ -784,7 +809,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       icept_mcmc(i) = bmms_t.icept_sampled;
       splitsub_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].splitmat;
       lambda_mcmc(i) = bmms_t.lambda;
-      splitsparam_mcmc(i) = lambda_splits;
+      splitsparam_mcmc(i) = lambda_centers;
       dim_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].effective_dimension;
       zsave.col(i) = z;
       if(save_splitmask == true){
@@ -802,7 +827,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
               " " << add_accepted / (add_proposed+0.0) << " " << drop_accepted / (drop_proposed+0.0) << " " <<
                 splitpar_accepted / (splitpar_proposed+0.0) << " z " << z.max() << endl;
         if(save){
-          bmms_t.modules[bmms_t.n_stages-1].splitmat.save("/home/mkln/ConnectomeDB/metadata/splitsub_R-1_mcmc.txt");
+          bmms_t.modules[bmms_t.n_stages-1].splitmat.save("bmms_centers.temp");
         }
         
       } 

@@ -1,11 +1,13 @@
 Package: bmms
 Type: Package
-Title: What the package does (short line)
+Title: Bayesian Modular & Multiscale Regression
 Version: 1.0
 Date: 2018-09-10
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Michele Peruzzi, David Dunson
+Maintainer: Michele Peruzzi <peruzzi@gmail.com>
+Description: This package includes methods for Bayesian Modular & Multiscale regression (BM&Ms) and classification.
+Details: This package includes methods for Bayesian Modular & Multiscale regression (BM&Ms) and classification.
+License: MIT
 Imports: Rcpp (>= 0.12.18)
 LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 6.1.0

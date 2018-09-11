@@ -337,13 +337,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // load_splits
-arma::field<arma::mat> load_splits(int maxlevs);
-RcppExport SEXP _bmms_load_splits(SEXP maxlevsSEXP) {
+arma::field<arma::mat> load_splits(int maxlevs, std::string sname);
+RcppExport SEXP _bmms_load_splits(SEXP maxlevsSEXP, SEXP snameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type maxlevs(maxlevsSEXP);
-    rcpp_result_gen = Rcpp::wrap(load_splits(maxlevs));
+    Rcpp::traits::input_parameter< std::string >::type sname(snameSEXP);
+    rcpp_result_gen = Rcpp::wrap(load_splits(maxlevs, sname));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -356,6 +357,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::field<arma::mat>& >::type old_splits(old_splitsSEXP);
     Rcpp::traits::input_parameter< arma::field<arma::mat> >::type new_splits(new_splitsSEXP);
     rcpp_result_gen = Rcpp::wrap(merge_splits(old_splits, new_splits));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gammaprior_mhr
+double gammaprior_mhr(double new_val, double old_val, double alpha, double beta);
+RcppExport SEXP _bmms_gammaprior_mhr(SEXP new_valSEXP, SEXP old_valSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type new_val(new_valSEXP);
+    Rcpp::traits::input_parameter< double >::type old_val(old_valSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gammaprior_mhr(new_val, old_val, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -407,8 +422,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // soi
-Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits, arma::mat mask_forbid, double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius, int max_stages, int start_movinglev, int partnum, bool save, bool save_splitmask);
-RcppExport SEXP _bmms_soi(SEXP ySEXP, SEXP XSEXP, SEXP splitsSEXP, SEXP mask_forbidSEXP, SEXP lambda_splitsSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP max_stagesSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_splitmaskSEXP) {
+Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_splitmask);
+RcppExport SEXP _bmms_soi(SEXP ySEXP, SEXP XSEXP, SEXP splitsSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_splitmaskSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -416,42 +431,40 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_splits(lambda_splitsSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_centers(lambda_centersSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
     Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
     Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
-    Rcpp::traits::input_parameter< int >::type max_stages(max_stagesSEXP);
     Rcpp::traits::input_parameter< int >::type start_movinglev(start_movinglevSEXP);
     Rcpp::traits::input_parameter< int >::type partnum(partnumSEXP);
     Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
     Rcpp::traits::input_parameter< bool >::type save_splitmask(save_splitmaskSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi(y, X, splits, mask_forbid, lambda_splits, lambda_ridge, mcmc, burn, radius, max_stages, start_movinglev, partnum, save, save_splitmask));
+    rcpp_result_gen = Rcpp::wrap(soi(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask));
     return rcpp_result_gen;
 END_RCPP
 }
 // soi_binary
-Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> splits, arma::mat mask_forbid, double lambda_splits, double lambda_ridge, int mcmc, int burn, int radius, int max_stages, int start_movinglev, int partnum, bool save, bool save_splitmask, bool fixsigma);
-RcppExport SEXP _bmms_soi_binary(SEXP ySEXP, SEXP XSEXP, SEXP splitsSEXP, SEXP mask_forbidSEXP, SEXP lambda_splitsSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP max_stagesSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_splitmaskSEXP, SEXP fixsigmaSEXP) {
+Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_splitmask, bool fixsigma);
+RcppExport SEXP _bmms_soi_binary(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_splitmaskSEXP, SEXP fixsigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type centers(centersSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_splits(lambda_splitsSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_centers(lambda_centersSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
     Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
     Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
-    Rcpp::traits::input_parameter< int >::type max_stages(max_stagesSEXP);
     Rcpp::traits::input_parameter< int >::type start_movinglev(start_movinglevSEXP);
     Rcpp::traits::input_parameter< int >::type partnum(partnumSEXP);
     Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
     Rcpp::traits::input_parameter< bool >::type save_splitmask(save_splitmaskSEXP);
     Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_binary(y, X, splits, mask_forbid, lambda_splits, lambda_ridge, mcmc, burn, radius, max_stages, start_movinglev, partnum, save, save_splitmask, fixsigma));
+    rcpp_result_gen = Rcpp::wrap(soi_binary(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -970,14 +983,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_mat_to_vec_by_region", (DL_FUNC) &_bmms_mat_to_vec_by_region, 3},
     {"_bmms_cube_to_mat_by_region", (DL_FUNC) &_bmms_cube_to_mat_by_region, 3},
     {"_bmms_unmask_vector", (DL_FUNC) &_bmms_unmask_vector, 3},
-    {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 1},
+    {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 2},
     {"_bmms_merge_splits", (DL_FUNC) &_bmms_merge_splits, 2},
+    {"_bmms_gammaprior_mhr", (DL_FUNC) &_bmms_gammaprior_mhr, 4},
     {"_bmms_cube_mean", (DL_FUNC) &_bmms_cube_mean, 2},
     {"_bmms_cube_sum", (DL_FUNC) &_bmms_cube_sum, 2},
     {"_bmms_number_availables", (DL_FUNC) &_bmms_number_availables, 1},
     {"_bmms_index_to_subscript", (DL_FUNC) &_bmms_index_to_subscript, 2},
-    {"_bmms_soi", (DL_FUNC) &_bmms_soi, 14},
-    {"_bmms_soi_binary", (DL_FUNC) &_bmms_soi_binary, 15},
+    {"_bmms_soi", (DL_FUNC) &_bmms_soi, 13},
+    {"_bmms_soi_binary", (DL_FUNC) &_bmms_soi_binary, 14},
     {"_bmms_bvs", (DL_FUNC) &_bmms_bvs, 7},
     {"_bmms_ModularVS_export", (DL_FUNC) &_bmms_ModularVS_export, 7},
     {"_bmms_totsplit_prior_ratio", (DL_FUNC) &_bmms_totsplit_prior_ratio, 5},

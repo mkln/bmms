@@ -122,6 +122,7 @@ BayesLM::BayesLM(const arma::vec& yy, const arma::mat& XX, double lambda_in = 1,
   
   m = arma::zeros(p);
   //M = n*XtXi;
+  //clog << lambda << endl;
   Mi = 1.0/n * XtX + arma::eye(p,p) * lambda;
   mtMim = 0.0; //arma::conv_to<double>::from(m.t()*Mi*m);
   

@@ -451,7 +451,7 @@ arma::mat mvrandn_cpp(const arma::vec& l_in, const arma::vec& u_in,
       if(iter > 10000){
         accept = n;
         rv = arma::join_horiz(rv, Z);
-        clog << l_in << endl << u_in << endl << "Sample is only approximately distributed" << endl;
+        clog << "Sample is only approximately distributed" << endl;
       }
     }
   } while (accept < n);

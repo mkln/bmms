@@ -161,7 +161,7 @@ public:
 arma::field<arma::mat> load_splits(int maxlevs);
 
 arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::field<arma::mat> new_splits);
-double gammaprior_mhr(double new_val, double old_val, double alpha=0.1, double beta=5);
+double gammaprior_mhr(double new_val, double old_val, double alpha=200, double beta=.5);
 
 arma::mat cube_mean(arma::cube X, int dim);
 arma::mat cube_sum(arma::cube X, int dim);

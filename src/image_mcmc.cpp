@@ -500,6 +500,7 @@ Rcpp::List soi(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
     
     if(mcmc > 100){
       if(!(m % (mcmc / 10))){
+        Rcpp::checkUserInterrupt();
         clog << endl << 
           partnum << " " << floor(100.0*(m+0.0)/mcmc) << 
             " " << bmms_t.n_stages << " " << bmms_t.modules[bmms_t.n_stages-1].effective_dimension << 
@@ -821,6 +822,7 @@ Rcpp::List soi_binary(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
     
     if(mcmc > 100){
       if(!(m % (mcmc / 10))){
+        Rcpp::checkUserInterrupt();
         clog << endl << 
           partnum << " " << floor(100.0*(m+0.0)/mcmc) << 
             " " << bmms_t.n_stages << " " << bmms_t.modules[bmms_t.n_stages-1].effective_dimension << 

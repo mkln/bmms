@@ -4,7 +4,6 @@
 #include <RcppArmadillo.h>
 #include "truncnormal_sample.h"
 
-//[[Rcpp::export]]
 arma::vec pnorm01_vec(const arma::vec& x, int lower=1, int logged=0){
   /*arma::vec p(x.n_elem);
   for(unsigned int i = 0; i<x.n_elem; i++){
@@ -15,7 +14,6 @@ arma::vec pnorm01_vec(const arma::vec& x, int lower=1, int logged=0){
   return Rcpp::pnorm(xn, 0.0, 1.0, lower, logged);
 }
 
-//[[Rcpp::export]]
 arma::vec qnorm01_vec(const arma::vec& x, int lower=1, int logged=0){
   /*arma::vec q(x.n_elem);
   for(unsigned int i = 0; i<x.n_elem; i++){
@@ -25,14 +23,10 @@ arma::vec qnorm01_vec(const arma::vec& x, int lower=1, int logged=0){
   return Rcpp::qnorm(xn, 0.0, 1.0);
 }
 
-
-//[[Rcpp::export]]
 arma::vec log1p_vec(const arma::vec& x){
   return log(1 + x);
 }
 
-
-// [[Rcpp::export]]
 arma::uvec usetdiff(const arma::uvec& x, const arma::uvec& y) {
   std::vector<int> a = arma::conv_to< std::vector<int> >::from(arma::sort(x));
   std::vector<int> b = arma::conv_to< std::vector<int> >::from(arma::sort(y));
@@ -43,7 +37,6 @@ arma::uvec usetdiff(const arma::uvec& x, const arma::uvec& y) {
   return arma::conv_to<arma::uvec>::from(out);
 }
 
-//[[Rcpp::export]]
 arma::vec lnNpr_cpp(const arma::vec& a, const arma::vec& b){
   arma::vec p = arma::zeros(a.n_elem);
   arma::uvec I = arma::find(a > 0);
@@ -82,7 +75,6 @@ arma::vec lnNpr_cpp(const arma::vec& a, const arma::vec& b){
   return p;
 }
 
-//[[Rcpp::export]]
 arma::field<arma::mat> cholperm_cpp(arma::mat Sig, arma::vec l, arma::vec u){ 
                        //arma::vec& l_out, arma::vec& u_out, arma::vec& perm_out){
   
@@ -191,7 +183,7 @@ arma::field<arma::mat> cholperm_cpp(arma::mat Sig, arma::vec l, arma::vec u){
   return returning;
 }
 
-//[[Rcpp::export]]
+
 arma::mat gradpsi_cpp(const arma::vec& y, const arma::mat& L, 
                       const arma::vec& l, const arma::vec& u, arma::vec& grad){
   int d = u.n_elem;
@@ -244,13 +236,11 @@ arma::mat gradpsi_cpp(const arma::vec& y, const arma::mat& L,
   return Jac;
 }
 
-//[[Rcpp::export]]
+
 arma::vec armasolve(arma::mat A, arma::vec grad){
   return arma::solve(A, -grad);
 }
 
-
-//[[Rcpp::export]]
 arma::vec nleq(const arma::vec& l, const arma::vec& u, const arma::mat& L){
   int d = l.n_elem;
   arma::vec x = arma::zeros(2*d-2);
@@ -271,7 +261,6 @@ arma::vec nleq(const arma::vec& l, const arma::vec& u, const arma::mat& L){
   return x;
 }
 
-//[[Rcpp::export]]
 arma::vec ntail_cpp(const arma::vec& l, const arma::vec& u){
   arma::vec c = pow(l, 2)/2.0;
   int n = l.n_elem;
@@ -292,7 +281,7 @@ arma::vec ntail_cpp(const arma::vec& l, const arma::vec& u){
   return pow(x*2, .5);
 }
 
-//[[Rcpp::export]]
+
 arma::vec trnd_cpp(const arma::vec& l, const arma::vec& u){
   arma::vec x = arma::randn(l.n_elem);
   arma::uvec I = arma::find((x < l) + (x > u));
@@ -310,7 +299,6 @@ arma::vec trnd_cpp(const arma::vec& l, const arma::vec& u){
   return x;
 }
 
-//[[Rcpp::export]]
 arma::vec tn_cpp(const arma::vec& l, const arma::vec& u){
   double tol = 2.05;
   arma::vec x = l;
@@ -331,7 +319,7 @@ arma::vec tn_cpp(const arma::vec& l, const arma::vec& u){
   return x;
 }
 
-//[[Rcpp::export]]
+
 arma::vec trandn_cpp(const arma::vec& l, const arma::vec& u){
   // this will NOT check l>u
   
@@ -358,7 +346,7 @@ arma::vec trandn_cpp(const arma::vec& l, const arma::vec& u){
   return x;
 }
 
-//[[Rcpp::export]]
+
 arma::mat mvnrnd_cpp(int n, const arma::mat& L, 
                      const arma::vec& l, const arma::vec& u, 
                      arma::vec mu, arma::vec& logpr){
@@ -380,7 +368,7 @@ arma::mat mvnrnd_cpp(int n, const arma::mat& L,
   return Z;
 }
 
-//[[Rcpp::export]]
+
 double psy_cpp(arma::vec x, const arma::mat& L, 
                arma::vec l, arma::vec u, arma::vec mu){
   //int d = u.n_elem;
@@ -393,7 +381,7 @@ double psy_cpp(arma::vec x, const arma::mat& L,
   return arma::accu(lnNpr_cpp(l, u) + .5 * pow(mu, 2) - x % mu);
 }
 
-//[[Rcpp::export]]
+
 arma::mat mvrandn_cpp(const arma::vec& l_in, const arma::vec& u_in, 
                       const arma::mat& Sig, int n){
   int d = l_in.n_elem;
@@ -486,7 +474,6 @@ arma::mat mvtruncnormal_eye1(const arma::vec& mean,
   return mean+truncraw;
 }
 
-// [[Rcpp::export]]
 arma::mat rndpp_mvnormal2(int n, const arma::vec& mu, const arma::mat& sigma) {
   int ncols = sigma.n_cols;
   arma::mat Y = arma::randn(n, ncols);
@@ -494,7 +481,6 @@ arma::mat rndpp_mvnormal2(int n, const arma::vec& mu, const arma::mat& sigma) {
   return arma::repmat(mu, 1, n).t() + Y * arma::chol(sigma);
 }
 
-// [[Rcpp::export]]
 arma::mat rndpp_mvnormalnew(int n, const arma::vec &mean, const arma::mat &sigma){
   int dimension = mean.n_elem;
   arma::mat outmat = arma::zeros(dimension, n);
@@ -506,83 +492,3 @@ arma::mat rndpp_mvnormalnew(int n, const arma::vec &mean, const arma::mat &sigma
   }
   return outmat.t();
 }
-
-//[[Rcpp::export]]
-arma::mat get_S(const arma::vec& y, const arma::mat& X){
-  // y is vector of {0,1}
-  return arma::diagmat(2*y-1) * X;
-}
-
-//[[Rcpp::export]]
-arma::mat get_Ddiag(const arma::mat& Sigma, const arma::mat& S){
-  arma::vec diagd = arma::zeros(S.n_rows);
-  for(unsigned int i=0; i<S.n_rows; i++){
-    diagd(i) = arma::conv_to<double>::from(S.row(i) * Sigma * S.row(i).t()) + 1.0;
-  }
-  return diagd;
-}
-
-//[[Rcpp::export]]
-arma::mat diag_default_mult(const arma::mat& A, const arma::vec& D){
-  return A*arma::diagmat(D);
-}
-//[[Rcpp::export]]
-arma::mat diag_custom_mult(const arma::mat& A, const arma::vec& D){
-  arma::mat result(A.n_rows, D.n_elem);
-  for(unsigned int i = 0; i<A.n_cols; i++){
-    result.col(i) = A.col(i) * D(i);
-  }
-  return result;
-}
-
-//[[Rcpp::export]]
-arma::mat beta_post_sample(const arma::vec& mu, const arma::mat& Sigma,
-                                const arma::mat& S, const arma::vec& Ddiag, int sample_size=1){
-  //clog << "1" << endl;
-  int n = S.n_rows;
-  int p = S.n_cols;
-  arma::mat In = arma::eye(S.n_rows, S.n_rows);
-  arma::mat Sigma_inv = arma::inv_sympd(Sigma);
-  arma::mat SES_I = S * Sigma * S.t() + In;
-  arma::mat SES_I_inv(n,n);
-  if(n > p){
-    SES_I_inv = In  - S * arma::inv_sympd(Sigma_inv + S.t()*S) * S.t();
-  } else {
-    SES_I_inv = arma::inv_sympd(SES_I);
-  }
-  
-  //clog << "2" << endl;
-  arma::mat Dsqrt = arma::diagmat(pow(Ddiag, .5));
-  arma::mat Dsqrt_inv = arma::diagmat(pow(Ddiag, -.5));
-  arma::vec lower = - Dsqrt_inv * S * mu;
-  arma::vec upper(lower.n_elem);
-  upper.fill(arma::datum::inf);
-  //clog << "3" << endl;
-  arma::vec V0mean = arma::zeros(S.n_cols);
-  arma::mat V0cov = Sigma_inv - S.t() * SES_I_inv * S;
-  arma::mat V0 = rndpp_mvnormalnew(sample_size, V0mean, V0cov);
-  //clog << "4" << endl;
-  //clog << Dsqrt_inv << endl;
-  //clog << SES_I << endl;
-  arma::mat V1cor = Dsqrt_inv * SES_I * Dsqrt_inv;
-  //clog << V1cor << endl;
-  arma::mat V1 = mvrandn_cpp(lower, upper, V1cor, sample_size);
-  /*return Rcpp::List::create(Rcpp::Named("beta") = arma::repmat(mu, 1, sample_size) + Sigma * (V0.t() + S.t()*SES_I_inv*Dsqrt * V1 ),
-                            Rcpp::Named("SES_I") = SES_I,
-                            Rcpp::Named("SES_I_inv") = SES_I_inv,
-                            Rcpp::Named("V1cor") = V1cor,
-                            Rcpp::Named("lower") = lower
-                            );
-   */
-  return arma::repmat(mu, 1, sample_size) + Sigma * (V0.t() + S.t()*SES_I_inv*Dsqrt * V1 );
-}
-
-
-//double bprobit_marglik
-/*
-//[[Rcpp::export]]
-arma::mat rmvsun(const arma::vec& xi, const arma::mat& Omega, const arma::mat& Delta,
-                 const arma::vec& gam, const arma::vec& Gamma){
-  
-}
-*/

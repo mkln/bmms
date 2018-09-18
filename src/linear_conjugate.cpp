@@ -120,10 +120,11 @@ BayesLM::BayesLM(const arma::vec& yy, const arma::mat& XX, double lambda_in = 1,
   icept = arma::mean(y);
   ycenter = y - icept;
   
+  Ip = arma::eye(p,p);
   m = arma::zeros(p);
   //M = n*XtXi;
   //clog << lambda << endl;
-  Mi = 1.0/n * XtX + arma::eye(p,p) * lambda;
+  Mi = pow(1.0/n, 0.5) * XtX + Ip * lambda;
   mtMim = 0.0; //arma::conv_to<double>::from(m.t()*Mi*m);
   
   alpha = 2.1; // parametrization: a = mean^2 / variance + 2
@@ -184,7 +185,8 @@ BayesLM::BayesLM(arma::vec yy, arma::mat XX, arma::mat MM){
     alpha_n = alpha + n/2.0;
     beta_n = beta + 0.5*(mtMim - mutSimu + yty);
     sigmasq = 1.0/rndpp_gamma(alpha_n, 1.0/beta_n);
-    b = rndpp_mvt(1, mu, beta_n/alpha_n * Sigma/lambda, 2*alpha_n).t(); //(rndpp_mvnormal(1, mu, Sigma*sigmasq/lambda)).row(0).t();
+    b = (rndpp_mvnormal(1, mu, Sigma*sigmasq)).row(0).t();
+    //b = rndpp_mvt(1, mu, beta_n/alpha_n * Sigma/lambda, 2*alpha_n).t(); //(rndpp_mvnormal(1, mu, Sigma*sigmasq/lambda)).row(0).t();
     
   } else { 
     yty = 0.0;
@@ -202,8 +204,8 @@ void BayesLM::lambda_update(double lambda_new){
   // specifying prior for regression coefficient variance
   
   lambda = lambda_new;
-  M = lambda_new*M/lambda;
-  Mi = arma::inv_sympd(M);
+  //M = Ip * lambda_new;
+  Mi = pow(1.0/n, 0.5) * XtX + Ip * lambda_new;
   mtMim = arma::conv_to<double>::from(m.t()*Mi*m);
   
   //alpha = 2.25; // parametrization: a = mean^2 / variance + 2
@@ -217,17 +219,18 @@ void BayesLM::lambda_update(double lambda_new){
   beta_n = beta + 0.5*(mtMim - mutSimu + yty);
   
   sigmasq = 1.0/rndpp_gamma(alpha_n, 1.0/beta_n);
-  b = rndpp_mvt(1, mu, beta_n/alpha_n * Sigma/lambda_new, 2*alpha_n).t(); //(rndpp_mvnormal(1, mu, Sigma*sigmasq/lambda)).row(0).t();
+  b = (rndpp_mvnormal(1, mu, Sigma*sigmasq)).row(0).t();
   reg_mean = X * b;
 }
 
 void BayesLM::posterior(){
   sigmasq = 1.0/rndpp_gamma(alpha_n, 1.0/beta_n);
-  b = rndpp_mvt(1, mu, beta_n/alpha_n * Sigma/lambda, 2*alpha_n).t(); //(rndpp_mvnormal(1, mu, Sigma*sigmasq/lambda)).row(0).t();
+  b = (rndpp_mvnormal(1, mu, Sigma*sigmasq)).row(0).t();
 }
 
 void BayesLM::beta_sample(){
-  b = rndpp_mvt(1, mu, beta_n/alpha_n * Sigma/lambda, 2*alpha_n).t(); //(rndpp_mvnormal(1, mu, Sigma*sigmasq/lambda)).row(0).t();
+  b = (rndpp_mvnormal(1, mu, Sigma*sigmasq)).row(0).t();
+  //b = rndpp_mvt(1, mu, beta_n/alpha_n * Sigma/lambda, 2*alpha_n).t(); //(rndpp_mvnormal(1, mu, Sigma*sigmasq/lambda)).row(0).t();
 }
 
 void BayesLM::chg_y(arma::vec& yy){
@@ -675,7 +678,7 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
 
 
 // [[Rcpp::export]]
-Rcpp::List ModularVS_export(const arma::vec& y, 
+Rcpp::List momscaleBVS(const arma::vec& y, 
                             const arma::field<arma::mat>& Xall, 
                             const arma::field<arma::vec>& starting,
                             int MCMC, double gg, arma::vec ss, bool binary=false){

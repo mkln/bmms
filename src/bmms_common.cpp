@@ -1,5 +1,7 @@
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::interfaces(cpp)]]
+
 #include "bmms_common.h"
 
 using namespace std;
@@ -8,8 +10,6 @@ std::random_device rd;
 std::mt19937 mt(rd());
 int basis_type = 1;
 
-
-//[[Rcpp::export]]
 arma::mat X2Dgrid(arma::vec x1, arma::vec x2){
   arma::mat rr = arma::zeros(x1.n_elem*x2.n_elem, 2);
   for(unsigned int i=0; i<x1.n_elem; i++){
@@ -22,7 +22,6 @@ arma::mat X2Dgrid(arma::vec x1, arma::vec x2){
 }
 
 
-//[[Rcpp::export]]
 double rndpp_bern(double p){
   double run = arma::randu();
   if(run < p){ 
@@ -32,14 +31,13 @@ double rndpp_bern(double p){
   }
 }
 
-//[[Rcpp::export]]
+
 double split_struct_ratio(arma::vec prop_split, arma::vec orig_split, int p, double param){
   //return exp(-param*(gini(prop_split,p) + gini(orig_split,p)));
   return 1.0; 
 }
 
 
-// [[Rcpp::export]]
 arma::vec bmms_setdiff(arma::vec& x, arma::vec& y) {
   std::vector<int> a = arma::conv_to< std::vector<int> >::from(arma::sort(x));
   std::vector<int> b = arma::conv_to< std::vector<int> >::from(arma::sort(y));
@@ -52,19 +50,16 @@ arma::vec bmms_setdiff(arma::vec& x, arma::vec& y) {
 }
 
 
-// [[Rcpp::export]]
 int rndpp_unif_int(int max){
   std::uniform_int_distribution<int> d(0,max);
   return d(mt);
 }
 
-// [[Rcpp::export]]
 int rndpp_discrete(arma::vec probs){
   std::discrete_distribution<> d(probs.begin(), probs.end());
   return d(mt);
 }
 
-// [[Rcpp::export]]
 double rndpp_gamma(double alpha, double beta) 
 {
   // E(X) = alpha * beta
@@ -72,14 +67,12 @@ double rndpp_gamma(double alpha, double beta)
   return dist(mt);
 }
 
-// [[Rcpp::export]]
 double rndpp_normal(double mean, double sigma) 
 {
   std::normal_distribution<double> dist(mean, sigma);
   return dist(mt);
 }
 
-// [[Rcpp::export]]
 arma::mat rndpp_mvnormal(int n, const arma::vec &mean, const arma::mat &sigma){
   int dimension = arma::size(mean)(0);
   arma::vec xtemp = arma::zeros(dimension);
@@ -107,7 +100,6 @@ arma::vec nonzeromean(arma::mat mat_mcmc){
   return result;
 }
 
-// [[Rcpp::export]]
 arma::vec col_eq_check(arma::mat A){
   arma::vec is_same_as = arma::ones(A.n_cols) * -1;
   
@@ -123,21 +115,11 @@ arma::vec col_eq_check(arma::mat A){
   return is_same_as;
 }
 
-// [[Rcpp::export]]
-arma::vec col_sums(arma::mat matty){
-  int ncols = arma::size(matty)(1);
-  int nrows = arma::size(matty)(0);
-  arma::vec colsums = arma::zeros(ncols);
-  for(int i=0; i<nrows; i++){
-    for(int j=0; j<ncols; j++){
-      colsums(j) += matty(i, j);
-    }
-  }
-  return colsums;
+arma::vec col_sums(const arma::mat& matty){
+  return arma::sum(matty, 0).t();
 }
 
 
-// [[Rcpp::export]]
 arma::mat single_split(arma::mat Jcoarse, int where, int p){
   int which_row = where;
   int which_col = arma::conv_to<int>::from(arma::find(Jcoarse.row(which_row), 1, "first"));
@@ -152,7 +134,6 @@ arma::mat single_split(arma::mat Jcoarse, int where, int p){
   return splitted;
 }
 
-// [[Rcpp::export]]
 arma::mat multi_split(arma::mat Jcoarse, arma::vec where, int p){
   //int p = arma::accu(Jcoarse);
   //int c = Jcoarse.n_cols;
@@ -249,8 +230,6 @@ arma::field<arma::vec> stage_fix(arma::field<arma::vec>& in_splits){
 }
 
 
-
-// [[Rcpp::export]]
 arma::mat exclude(arma::mat test, arma::vec excl){
   arma::vec keepers = arma::ones(test.n_cols);
   for(unsigned int e=0; e<excl.n_elem; e++){

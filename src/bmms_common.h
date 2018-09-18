@@ -1,5 +1,6 @@
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::interfaces(r, cpp)]]
 
 #ifndef bmms_common
 #define bmms_common
@@ -31,7 +32,7 @@ double rndpp_bern(double p);
 arma::mat rndpp_mvnormal(int n, const arma::vec &mean, const arma::mat &sigma);
 arma::vec nonzeromean(arma::mat mat_mcmc);
 arma::vec col_eq_check(arma::mat A);
-arma::vec col_sums(arma::mat matty);
+arma::vec col_sums(const arma::mat& matty);
 arma::mat drop_dup_cols(arma::mat A);
 arma::mat exclude(arma::mat test, arma::vec excl);
 arma::mat single_split(arma::mat Jcoarse, int where, int p);

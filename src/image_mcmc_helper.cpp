@@ -11,7 +11,6 @@ using namespace std;
 // from matrix Sx2 where each row is a 2D split
 // and p1, p2 is the grid dimension
 // return a masking matrix size p1xp2 with 1 at split locations
-//[[Rcpp::export]]
 arma::mat splitsub_to_splitmask(const arma::field<arma::mat>& splits, int p1, int p2){
   // given dimensions p1xp2 and the splits
   // returns matrix of zeros + l in split locations
@@ -28,7 +27,6 @@ arma::mat splitsub_to_splitmask(const arma::field<arma::mat>& splits, int p1, in
 }
 
 // obtain Sx2 split matrix from a split mask
-//[[Rcpp::export]]
 arma::field<arma::mat> splitmask_to_splitsub(const arma::mat& splitmask){
   int lev = splitmask.max();
   arma::field<arma::mat> subs(lev);
@@ -95,7 +93,6 @@ arma::mat splitsub_to_groupmask_blocks(const arma::mat& splits, int p1, int p2){
   return(splitted);
 }
 
-//[[Rcpp::export]]
 arma::mat row_intersection(const arma::mat& mat1, const arma::mat& mat2){
   arma::mat inter = -1*arma::zeros(mat1.n_rows<mat2.n_rows? mat1.n_rows : mat2.n_rows, 2);
   int c=0;
@@ -114,7 +111,6 @@ arma::mat row_intersection(const arma::mat& mat1, const arma::mat& mat2){
   }
 }
 
-//[[Rcpp::export]]
 arma::mat row_difference(arma::mat mat1, const arma::mat& mat2){
   arma::mat diff = -1*arma::zeros(mat1.n_rows, 2);
   int c=0;
@@ -137,7 +133,7 @@ arma::mat row_difference(arma::mat mat1, const arma::mat& mat2){
   }
 }
 
-//[[Rcpp::export]]
+
 arma::field<arma::mat> splits_augmentation(arma::field<arma::mat> splits){
   arma::field<arma::mat> splits_augment(splits.n_elem);
   // append previous splits to currents
@@ -150,7 +146,6 @@ arma::field<arma::mat> splits_augmentation(arma::field<arma::mat> splits){
 
 
 //with voronoi tessellation
-//[[Rcpp::export]]
 arma::mat splitsub_to_groupmask(arma::field<arma::mat> splits, int p1, int p2){
   // splits is a nsplit x 2 matrix
   arma::vec distances = arma::ones(splits(0).n_rows);
@@ -210,14 +205,12 @@ arma::mat splitsub_to_groupmask(arma::field<arma::mat> splits, int p1, int p2){
 }
 
 // extract region numbers (labels) from a grouping mask
-//[[Rcpp::export]]
 arma::vec mat_unique(const arma::mat& A){
   arma::uvec uvals = arma::find_unique(A);
   return(A.elem(uvals));
 }
 
 // returns a matrix where all unselected regions are set to 0
-//[[Rcpp::export]]
 arma::mat mask_oneval(const arma::mat& A, const arma::mat& mask, int val){
   arma::uvec uvals = arma::find(mask != val);
   arma::mat retmat = A;
@@ -227,7 +220,6 @@ arma::mat mask_oneval(const arma::mat& A, const arma::mat& mask, int val){
 
 // using a grouping mask, sum values in a matrix corresponding to 
 // the same group (2d coarsening operation)
-//[[Rcpp::export]]
 double mask_oneval_sum(const arma::mat& A, const arma::mat& mask, int val){
   arma::uvec uvals = arma::find(mask == val);
   return(arma::accu(A.elem(uvals)));
@@ -235,14 +227,12 @@ double mask_oneval_sum(const arma::mat& A, const arma::mat& mask, int val){
 
 // same as mask_oneval_sum but for a cube slice
 // cube here will be the cube-X to be transformed in matrix-X
-//[[Rcpp::export]]
 double mask_cube_slice(const arma::cube& C, int slice, const arma::mat& mask, int val){
   arma::uvec uvals = arma::find(mask == val);
   return(arma::accu(C.slice(slice).elem(uvals)));
 }
 
 // transform a regressor matrix to a vector using grouping mask as coarsening
-//[[Rcpp::export]]
 arma::vec mat_to_vec_by_region(const arma::mat& A, const arma::mat& mask, arma::vec unique_regions){
   //arma::vec unique_regions = mat_unique(mask);
   int n_unique_regions = unique_regions.n_elem;
@@ -254,7 +244,6 @@ arma::vec mat_to_vec_by_region(const arma::mat& A, const arma::mat& mask, arma::
 }
 
 // using a grouping mask, transforma a cube to a matrix
-//[[Rcpp::export]]
 arma::mat cube_to_mat_by_region(const arma::cube& C, const arma::mat& mask, arma::vec unique_regions){
   // cube is assumed dimension (p1, p2, n)
   int n_unique_regions = unique_regions.n_elem;
@@ -271,7 +260,6 @@ arma::mat cube_to_mat_by_region(const arma::cube& C, const arma::mat& mask, arma
 
 // given a vectorized beta vector, a vector of labels, and a grouping mask
 // return a matrix of size size(mask) filling it with beta using regions
-//[[Rcpp::export]]
 arma::mat unmask_vector(const arma::vec& beta, const arma::vec& regions, const arma::mat& mask){
   // takes a vector and fills a matrix of dim size(mask) using regions
   arma::mat unmasked_vec = arma::zeros(arma::size(mask));
@@ -577,8 +565,6 @@ arma::field<arma::mat> load_splits(int maxlevs, std::string sname){
   return splits;
 }
 
-
-//[[Rcpp::export]]
 arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::field<arma::mat> new_splits){
   arma::field<arma::mat> splits(old_splits.n_elem);
   for(unsigned int s = 0; s<new_splits.n_elem; s++){
@@ -587,12 +573,9 @@ arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::fi
   return splits;
 }
 
-//[[Rcpp::export]]
 double gammaprior_mhr(double new_val, double old_val, double alpha, double beta){
   return (alpha-1) * (log(new_val) - log(old_val)) - 1.0/beta * (new_val - old_val);
 }
-
-
 
 //[[Rcpp::export]]
 arma::mat cube_mean(arma::cube X, int dim){

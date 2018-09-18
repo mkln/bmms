@@ -53,6 +53,7 @@ public:
   arma::mat Mi;
   double mtMim;
   
+  arma::mat Ip;
   // posterior
   
   double alpha_n;

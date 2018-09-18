@@ -1,7 +1,7 @@
 Package: bmms
 Type: Package
 Title: Bayesian Modular & Multiscale Regression
-Version: 1.0
+Version: 0.1
 Date: 2018-09-10
 Author: Michele Peruzzi, David Dunson
 Maintainer: Michele Peruzzi <peruzzi@gmail.com>

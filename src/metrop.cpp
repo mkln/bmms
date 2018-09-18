@@ -512,7 +512,6 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
   }
 } 
 
-// [[Rcpp::export]]
 Rcpp::List sof(arma::vec& y, arma::mat& X, 
                       int max_stages,
                       unsigned int mcmc = 100, unsigned int burn = 50, 

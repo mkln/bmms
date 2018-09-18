@@ -1,4 +1,3 @@
-
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
 
@@ -687,14 +686,13 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
   } 
 }
 
-// [[Rcpp::export]]
 double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop){
   //lambda_prop is 1/variance;
   double means = pow(2, ss);
   return exp(-lambda_prop/2.0 * pow(tot_split_prop - means, 2) + lambda_prop/2.0 * pow(tot_split_orig - means, 2) ); //prior_ratio;
   //return exp(-0.0-prior_levs);
 }
-// [[Rcpp::export]]
+
 double splitpar_prior(double x, int tot_split, int norp, int ss){
   //lambda_prop is 1/variance;
   double means = pow(2, ss);
@@ -702,13 +700,10 @@ double splitpar_prior(double x, int tot_split, int norp, int ss){
   //return exp(-0.0-prior_levs);
 }
 
-// [[Rcpp::export]]
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction){
-  return 1.0;//pow(2.0/norp,tot_stage_prop-tot_stage_orig);
+  return 1.0;
 }
 
-
-// [[Rcpp::export]]
 arma::field<arma::vec> splits_truncate(arma::field<arma::vec> splits, int k){
   int k_effective = splits.n_elem > k ? k : splits.n_elem;
   if(k_effective<1){

@@ -577,10 +577,21 @@ double gammaprior_mhr(double new_val, double old_val, double alpha, double beta)
   return (alpha-1) * (log(new_val) - log(old_val)) - 1.0/beta * (new_val - old_val);
 }
 
+//' Compute the mean along a cube dimension
+//' 
+//' @param X A 3-dimensional array
+//' @param dim The dimension along which to compute the mean
+//' @export
 //[[Rcpp::export]]
 arma::mat cube_mean(arma::cube X, int dim){
   return arma::mean(X, dim);
 }
+
+//' Compute the sum along a cube dimension
+//' 
+//' @param X A 3-dimensional array
+//' @param dim The dimension along which to compute the sum
+//' @export
 //[[Rcpp::export]]
 arma::mat cube_sum(arma::cube X, int dim){
   return arma::sum(X, dim);

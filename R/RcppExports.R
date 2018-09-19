@@ -5,10 +5,20 @@ load_splits <- function(maxlevs, sname) {
     .Call('_bmms_load_splits', PACKAGE = 'bmms', maxlevs, sname)
 }
 
+#' Compute the mean along a cube dimension
+#' 
+#' @param X A 3-dimensional array
+#' @param dim The dimension along which to compute the mean
+#' @export
 cube_mean <- function(X, dim) {
     .Call('_bmms_cube_mean', PACKAGE = 'bmms', X, dim)
 }
 
+#' Compute the sum along a cube dimension
+#' 
+#' @param X A 3-dimensional array
+#' @param dim The dimension along which to compute the sum
+#' @export
 cube_sum <- function(X, dim) {
     .Call('_bmms_cube_sum', PACKAGE = 'bmms', X, dim)
 }
@@ -32,12 +42,34 @@ soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ri
     .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma)
 }
 
+#' A simple Bayesian Variable Selection model using g-priors
+#' 
+#' @param y vector of responses
+#' @param X design matrix
+#' @param prior starting model (#name to be changed#)
+#' @param mcmc number of Markov chain Monte Carlo iterations
+#' @param g g-prior parameter
+#' @param model_prior_par For model M, p(M) is prop. to exp(k * p) where p is the 
+#'   number of included variables, and k is model_prior_par
+#' @param fixs Fix the regression variance to 1?
+#' @export
 bvs <- function(y, X, prior, mcmc, g = -1.0, model_prior_par = 1.0, fixs = FALSE) {
     .Call('_bmms_bvs', PACKAGE = 'bmms', y, X, prior, mcmc, g, model_prior_par, fixs)
 }
 
-momscaleBVS <- function(y, Xall, starting, MCMC, gg, ss, binary = FALSE) {
-    .Call('_bmms_momscaleBVS', PACKAGE = 'bmms', y, Xall, starting, MCMC, gg, ss, binary)
+#' A Modular & Multiscale Bayesian Variable Selection model
+#' 
+#' @param y vector of responses
+#' @param Xall A list of length K, where each component is a design matrix at a different resolution.
+#' @param starting A list of length K with the starting configurations. Useful to restart MCMC from good locations
+#' @param mcmc_in number of Markov chain Monte Carlo iterations
+#' @param gg g-prior parameter
+#' @param module_prior_par A vector with K components.  For model M, p(M) is prop. to exp(k * p) where p is the 
+#'   number of included variables, and k is model_prior_par
+#' @param binary Are responses binary (0,1)?
+#' @export
+momscaleBVS <- function(y, Xall, starting, mcmc, gg, module_prior_par, binary = FALSE) {
+    .Call('_bmms_momscaleBVS', PACKAGE = 'bmms', y, Xall, starting, mcmc, gg, module_prior_par, binary)
 }
 
 sof <- function(y, X, max_stages, mcmc = 100L, burn = 50L, lambda = 5.0, silent = TRUE) {
@@ -56,10 +88,24 @@ bmms_base <- function(y, X, g, mcmc, burn, splits, silent = TRUE) {
     .Call('_bmms_bmms_base', PACKAGE = 'bmms', y, X, g, mcmc, burn, splits, silent)
 }
 
+#' Sample from Truncated Normal using Botev (2017)
+#' 
+#' @param mean A p-dimensional mean vector
+#' @param l_in A p-dimensional vector of lower truncation limits (can be -Inf)
+#' @param u_in A p-dimensional vector of upper truncation limits (can be Inf)
+#' @param Sig A (p,p) covariance matrix.
+#' @param n number of samples to extract
+#' @export
 mvtruncnormal <- function(mean, l_in, u_in, Sig, n) {
     .Call('_bmms_mvtruncnormal', PACKAGE = 'bmms', mean, l_in, u_in, Sig, n)
 }
 
+#' Sample from Truncated and shifted Normal with Identity covariance
+#' 
+#' @param mean A p-dimensional mean vector
+#' @param l_in A p-dimensional vector of lower truncation limits (can be -Inf)
+#' @param u_in A p-dimensional vector of upper truncation limits (can be Inf)
+#' @export
 mvtruncnormal_eye1 <- function(mean, l_in, u_in) {
     .Call('_bmms_mvtruncnormal_eye1', PACKAGE = 'bmms', mean, l_in, u_in)
 }

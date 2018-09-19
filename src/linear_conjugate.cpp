@@ -563,6 +563,17 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
   
 }
 
+//' A simple Bayesian Variable Selection model using g-priors
+//' 
+//' @param y vector of responses
+//' @param X design matrix
+//' @param prior starting model (#name to be changed#)
+//' @param mcmc number of Markov chain Monte Carlo iterations
+//' @param g g-prior parameter
+//' @param model_prior_par For model M, p(M) is prop. to exp(k * p) where p is the 
+//'   number of included variables, and k is model_prior_par
+//' @param fixs Fix the regression variance to 1?
+//' @export
 //[[Rcpp::export]]
 Rcpp::List bvs(const arma::vec& y, const arma::mat& X, 
                const arma::vec& prior, int mcmc,
@@ -585,7 +596,7 @@ Rcpp::List bvs(const arma::vec& y, const arma::mat& X,
 ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
                      const arma::field<arma::vec>& starting,
                      int mcmc_in,
-                     double gg, arma::vec ss, bool binary=false){
+                     double gg, arma::vec module_prior_par, bool binary=false){
   
   K = Xall_in.n_elem;
   //clog << K << endl;
@@ -648,7 +659,7 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
       //VarSelMCMC bvs_model(y, X, gamma_start, g, sprior, fixsigma, MCMC);
       
       //VSModule onemodule = VSModule(resid, Xall(j), gamma_start(j), 1, gg, ss(j), binary?true:false, false);
-      VarSelMCMC onemodule(resid, Xall(j), gamma_start(j), gg, ss(j), binary?true:false, 1);
+      VarSelMCMC onemodule(resid, Xall(j), gamma_start(j), gg, module_prior_par(j), binary?true:false, 1);
       
       //varsel_modules.push_back(onemodule);
       intercept(j, m) = iboh;// onemodule.intercept;
@@ -676,15 +687,25 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
   }
 }
 
-
+//' A Modular & Multiscale Bayesian Variable Selection model
+//' 
+//' @param y vector of responses
+//' @param Xall A list of length K, where each component is a design matrix at a different resolution.
+//' @param starting A list of length K with the starting configurations. Useful to restart MCMC from good locations
+//' @param mcmc_in number of Markov chain Monte Carlo iterations
+//' @param gg g-prior parameter
+//' @param module_prior_par A vector with K components.  For model M, p(M) is prop. to exp(k * p) where p is the 
+//'   number of included variables, and k is model_prior_par
+//' @param binary Are responses binary (0,1)?
+//' @export
 // [[Rcpp::export]]
 Rcpp::List momscaleBVS(const arma::vec& y, 
                             const arma::field<arma::mat>& Xall, 
                             const arma::field<arma::vec>& starting,
-                            int MCMC, double gg, arma::vec ss, bool binary=false){
+                            int mcmc, double gg, arma::vec module_prior_par, bool binary=false){
   
   int n = y.n_elem;
-  ModularVS test = ModularVS(y, Xall, starting, MCMC, gg, ss, binary);
+  ModularVS test = ModularVS(y, Xall, starting, mcmc, gg, module_prior_par, binary);
   
   return Rcpp::List::create(
     Rcpp::Named("intercept_mc") = test.intercept,

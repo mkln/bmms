@@ -450,6 +450,14 @@ arma::mat mvrandn_cpp(const arma::vec& l_in, const arma::vec& u_in,
   return rv;
 }
 
+//' Sample from Truncated Normal using Botev (2017)
+//' 
+//' @param mean A p-dimensional mean vector
+//' @param l_in A p-dimensional vector of lower truncation limits (can be -Inf)
+//' @param u_in A p-dimensional vector of upper truncation limits (can be Inf)
+//' @param Sig A (p,p) covariance matrix.
+//' @param n number of samples to extract
+//' @export
 //[[Rcpp::export]]
 arma::mat mvtruncnormal(const arma::vec& mean, 
                         const arma::vec& l_in, const arma::vec& u_in, 
@@ -462,6 +470,12 @@ arma::mat mvtruncnormal(const arma::vec& mean,
   return meanmat;
 }
 
+//' Sample from Truncated and shifted Normal with Identity covariance
+//' 
+//' @param mean A p-dimensional mean vector
+//' @param l_in A p-dimensional vector of lower truncation limits (can be -Inf)
+//' @param u_in A p-dimensional vector of upper truncation limits (can be Inf)
+//' @export
 //[[Rcpp::export]]
 arma::mat mvtruncnormal_eye1(const arma::vec& mean, 
                         const arma::vec& l_in, const arma::vec& u_in){

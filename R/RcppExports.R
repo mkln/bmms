@@ -13,44 +13,23 @@ cube_sum <- function(X, dim) {
     .Call('_bmms_cube_sum', PACKAGE = 'bmms', X, dim)
 }
 
-number_availables <- function(splitmask_focus) {
-    .Call('_bmms_number_availables', PACKAGE = 'bmms', splitmask_focus)
-}
-
+#' Vector index to matrix subscripts
+#' 
+#' Get matrix subscripts from corresponding vector indices (both start from 0).
+#' This is a utility function using Armadillo's ind2sub function.
+#' @param index a vector of indices
+#' @param m a matrix (only its size is important)
+#' @export
 index_to_subscript <- function(index, m) {
     .Call('_bmms_index_to_subscript', PACKAGE = 'bmms', index, m)
 }
 
-soi <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = FALSE) {
-    .Call('_bmms_soi', PACKAGE = 'bmms', y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask)
+soi_cpp <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = FALSE) {
+    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask)
 }
 
-#' Scalar-on-image Binary regression
-#' 
-#' This function applies a Bayesian Modular & Multiscale regression model to
-#' a binary response, using image predictors.
-#' @param y A numeric vector of length n with (0,1) entries
-#' @param X An array of dimension (p1, p2, n)
-#' @param centers A list with K elements, each of which is a 2-column matrix. 
-#'   Element j of this list will be a matrix listing the (additional) centers to be used 
-#'   to split the image space into regions. This parameter only corresponds to the starting value
-#'   for MCMC. Only K will remain 
-#' @param mask_forbid A matrix of dimension (p1, p2). Element (i,j) can be set to 0 if the corresponding location 
-#'   cannot be used as center, 1 if it can. Typically this should be a matrix of ones.
-#' @param lambda_centers A scalar parameter controlling the prior probability on the number of centers
-#' @param lambda_ridge A scalar parameter corresponding to a ridge parameter for each linear regression module
-#' @param mcmc Number of Markov chain-Monte Carlo iterations
-#' @param burn Number of MCMC iterations to discard
-#' @param radius A scalar parameter controlling the dimension of the jumps for the ``move" proposals 
-#'   of the centers in MCMC
-#' @param max_stages A scalar controlling the maximum number of stages. Currently fixed at K
-#' @param start_movinglev A scalar smaller or equal to K indicating which 
-#' @param partnum
-#' @param save
-#' @param save_splitmask
-#' @param fixsigma
-soi_binary <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = TRUE, fixsigma = FALSE) {
-    .Call('_bmms_soi_binary', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma)
+soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = TRUE, fixsigma = FALSE) {
+    .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma)
 }
 
 bvs <- function(y, X, prior, mcmc, g = -1.0, model_prior_par = 1.0, fixs = FALSE) {
@@ -59,6 +38,10 @@ bvs <- function(y, X, prior, mcmc, g = -1.0, model_prior_par = 1.0, fixs = FALSE
 
 momscaleBVS <- function(y, Xall, starting, MCMC, gg, ss, binary = FALSE) {
     .Call('_bmms_momscaleBVS', PACKAGE = 'bmms', y, Xall, starting, MCMC, gg, ss, binary)
+}
+
+sof <- function(y, X, max_stages, mcmc = 100L, burn = 50L, lambda = 5.0, silent = TRUE) {
+    .Call('_bmms_sof', PACKAGE = 'bmms', y, X, max_stages, mcmc, burn, lambda, silent)
 }
 
 sofk <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ii = 0L, ll = 0L, silent = TRUE) {

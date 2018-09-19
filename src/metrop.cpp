@@ -1,5 +1,6 @@
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::interfaces(r)]]
 
 #include <RcppArmadillo.h>
 #include "metrop_helper.h"
@@ -39,7 +40,8 @@ arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int s
 
 arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current_splits, 
                                            int stage, int split, 
-                                           arma::vec& y, arma::mat& X, int p, int n,
+                                           const arma::vec& y, 
+                                           const arma::mat& X, int p, int n,
                                            ModularLinReg& base_model, double decay){
   // initialize the proposal as the last accepted value of the splits
   arma::field<arma::vec> proposed_splits = current_splits;
@@ -76,7 +78,7 @@ arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current
     double prob = exp(arma::accu(proposed_model.loglik.subvec(stage, proposed_model.n_stages-1)) - 
                       arma::accu(base_model.loglik.subvec(stage, base_model.n_stages-1)) ) * rj_prob;
     //if(stage==0){
-    //clog << "mlik ratio of move: " <<  exp(proposed_model.loglik - base_model.loglik) << endl;
+    //clog << "mlik ratio of move: " <<  prob << endl;
     //double prob = exp(dlog_mlik(proposed_model, base_model)) * rj_prob;
     //}
     prob = prob > 1 ? 1 : prob;
@@ -200,7 +202,8 @@ arma::field<arma::vec> proposal_drop_split(const arma::field<arma::vec>& current
 
 arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& current_splits, 
                                              int stage,  
-                                             arma::vec& y, arma::mat& X, int p, int n,
+                                             const arma::vec& y, 
+                                             const arma::mat& X, int p, int n,
                                              ModularLinReg& base_model,
                                              double lambda_prop=10.0){
   // removing something
@@ -310,11 +313,17 @@ arma::field<arma::vec> proposal_drop_stage(const arma::field<arma::vec>& current
   int p=base_model.p;
   
   proposed_model.delete_last_module();
+  int prop_stages = proposed_model.n_stages;
   cout << "boh?" << endl;
   double dropping_stage = totstage_prior_ratio(base_model.n_stages - 1, base_model.n_stages, p<n?p:n, all_splits_elem, -1);
   // the proposed model is the same as the base model, except for the last stage
   // we integrate from the base, we fix at the proposed
-  mlr = exp(proposed_model.loglik(proposed_model.n_stages-1) - base_model.loglik(base_model.n_stages-1));
+  //exp(proposed_model.loglik(proposed_model.n_stages-1) - base_model.loglik(base_model.n_stages-1));
+  
+  mlr = exp( 
+    modular_loglik0(proposed_model.modules[prop_stages-1].ej, proposed_model.modules[prop_stages-1].a, proposed_model.modules[prop_stages-1].b)
+    -
+      base_model.loglik(proposed_model.n_stages-1));
   prob = mlr * dropping_stage;
   
   prob = prob > 1 ? 1 : prob;
@@ -364,7 +373,8 @@ arma::vec proposal_add_rj(const arma::field<arma::vec>& current_splits, int stag
 
 arma::field<arma::vec> proposal_add_split(const arma::field<arma::vec>& current_splits, 
                                           int stage,  
-                                          arma::vec& y, arma::mat& X, int p, int n,
+                                          const arma::vec& y, 
+                                          const arma::mat& X, int p, int n,
                                           ModularLinReg& base_model,
                                           double lambda_prop=10.0){
   // probability of going from base to proposal (add)
@@ -455,6 +465,7 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
   //clog << "  !! trying to add new stage !! " << endl;
   //int max_levels = log2(p+0.0);
   double prior_levs = log2(p)/2.0;
+  int base_stages = base_model.n_stages;
   
   if(base_model.n_stages < max_levels){
     arma::vec addsplit_rj = proposal_newstage_rj(current_splits, n, p, base_model.n_stages);
@@ -479,7 +490,9 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
       proposed_model.add_new_module(proposed_splits(base_model.n_stages));
       cout << "proposal model for NEW STAGE built" << endl;
       // proposed model has one more stage, so we integrate that but we keep everything at base model
-      double prob = exp(proposed_model.loglik(proposed_model.n_stages-1) - base_model.loglik(base_model.n_stages-1)) * rj_prob;
+      double prob = exp(proposed_model.loglik(proposed_model.n_stages-1) - 
+                        modular_loglik0(base_model.modules[base_stages-1].ej, base_model.modules[base_stages-1].a, base_model.modules[base_stages-1].b)) * 
+        rj_prob;
       //cout << "adding? MLR " << exp(proposed_model.loglik - base_model.loglik) << endl;
       prob = prob > 1 ? 1 : prob;
       int accepted_proposal = rndpp_discrete({1-prob, prob});
@@ -512,6 +525,7 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
   }
 } 
 
+// [[Rcpp::export]]
 Rcpp::List sof(arma::vec& y, arma::mat& X, 
                       int max_stages,
                       unsigned int mcmc = 100, unsigned int burn = 50, 
@@ -714,8 +728,8 @@ Rcpp::List sof(arma::vec& y, arma::mat& X,
 
 
 // [[Rcpp::export]]
-Rcpp::List sofk(arma::vec& y, arma::mat& X, 
-                           arma::field<arma::vec> start_splits, 
+Rcpp::List sofk(const arma::vec& y, const arma::mat& X, 
+                           const arma::field<arma::vec>& start_splits, 
                            unsigned int mcmc = 100, unsigned int burn = 50,
                            double lambda=5.0,
                            int ii=0, int ll=0,
@@ -766,6 +780,11 @@ Rcpp::List sofk(arma::vec& y, arma::mat& X,
   double accepted = 0;
   
   cout << "first model" << endl;
+  /*
+   * (arma::vec& yin, arma::mat& Xin, double g, 
+   * arma::field<arma::vec>& in_splits, 
+   int kernel, int set_max_stages, bool fixed_sigma=false, bool fixed_grids = true)
+   */
   ModularLinReg base_model(y, X, n, splits(0), 0, max_stages, 0, false);
   int m=0;
   
@@ -888,7 +907,7 @@ Rcpp::List sofk(arma::vec& y, arma::mat& X,
 
 
 // [[Rcpp::export]]
-Rcpp::List sofk_binary(arma::vec& y, arma::mat& X, 
+Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X, 
                 arma::field<arma::vec> start_splits, 
                 unsigned int mcmc = 100, unsigned int burn = 50,
                 double lambda=5.0,

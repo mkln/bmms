@@ -84,6 +84,13 @@ double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_po
   return result;
 }
 
+double modular_loglik0(arma::vec& y, double a, double b){
+  int n = y.n_elem;
+  double result = (n)*log(n*1.0) - (a+n/2.0) * log(b + .5*arma::conv_to<double>::from(y.t()*y));
+  return result;
+}
+
+
 double modular_loglikn(const arma::vec& x, const arma::mat& Si){
   int p = Si.n_cols;
   double normcore =  arma::conv_to<double>::from(x.t() * Si * x);
@@ -161,6 +168,9 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   inv_var_post = (g+1.0)/n * XtX;
   mean_post = var_post * Xj.t() * ej;
   In = arma::eye(n,n);
+  a = 2.1; // parametrization: a = mean^2 / variance + 2
+  b = a-1;  //                  b = (mean^3 + mean*variance) / variance
+  
   
   if(!fix_sigma){
     beta_post = arma::conv_to<double>::from(.5*(
@@ -169,8 +179,6 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
       mean_post.t() * ( (g+1.0)/g * XtX) * mean_post)
     );
     
-    a = 2.1; // parametrization: a = mean^2 / variance + 2
-    b = a-1;  //                  b = (mean^3 + mean*variance) / variance
     sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post));
     sigmasq_mean = (b+beta_post)/(a+n/2.0+1);
   } else {
@@ -242,7 +250,10 @@ void Module::redo(arma::vec& e){
 }
 
 
-ModularLinReg::ModularLinReg(arma::vec& yin, arma::mat& Xin, double g, arma::field<arma::vec>& in_splits, 
+ModularLinReg::ModularLinReg(const arma::vec& yin, 
+                             const arma::mat& Xin, 
+                             double g, 
+                             const arma::field<arma::vec>& in_splits, 
                              int kernel, int set_max_stages, bool fixed_sigma=false, bool fixed_grids = true){
   
   kernel_type = kernel;
@@ -360,10 +371,15 @@ ModularLinReg::ModularLinReg(arma::vec& yin, arma::mat& Xin, double g, arma::fie
       }
     } else {
       double sigprior = 0;
-      for(int s=0; s<n_stages; s++){ 
+      for(int s=0; s<n_stages; s++){
+        //clog << s << endl;
+        //clog << modules[s].ej << " " << endl <<  modules[s].mean_post << endl <<
+        //  arma::det(modules[s].inv_var_post) << endl << modules[s].a << " " << modules[s].b << endl;
+            
         loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
                modules[s].a, modules[s].b) + sigprior;
         sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
+        
       }
     }
   } 

@@ -8,6 +8,7 @@ Maintainer: Michele Peruzzi <peruzzi@gmail.com>
 Description: This package includes methods for Bayesian Modular & Multiscale regression (BM&Ms) and classification.
 Details: This package includes methods for Bayesian Modular & Multiscale regression (BM&Ms) and classification.
 License: MIT
-Imports: Rcpp (>= 0.12.18)
+Depends: Rcpp, RcppArmadillo, plyr, magrittr
+Imports: Rcpp (>= 0.12.18), plyr, magrittr
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 6.1.0

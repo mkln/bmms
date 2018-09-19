@@ -21,6 +21,8 @@ int sample_one_int(const int &vsize);
 arma::mat reshaper(arma::field<arma::mat> J_field, int s);
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar);
 
+double modular_loglik0(arma::vec& y, double a, double b);
+  
 double modular_loglik1(arma::vec& y, arma::vec& marglik_mean, arma::mat& varloglik, arma::vec& sigmasq_scales, int n_stages);
 
 double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_post, double a, double b);
@@ -152,7 +154,9 @@ public:
   int opt;
   // constructor
   // y, X, list of splits for each stage, limit to stages
-  ModularLinReg(arma::vec&, arma::mat&, double, arma::field<arma::vec>&, int, int, bool, bool);
+  ModularLinReg(const arma::vec&, const arma::mat&, 
+                double, 
+                const arma::field<arma::vec>&, int, int, bool, bool);
   
 };
 

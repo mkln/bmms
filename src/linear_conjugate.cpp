@@ -515,6 +515,7 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
   arma::vec p_indices = arma::linspace<arma::vec>(0, p-1, p);
   n = y.n_elem;
   
+  icept_stored = arma::zeros(mcmc);
   beta_stored = arma::zeros(p, mcmc);
   gamma_stored = arma::zeros(p, mcmc);
   sigmasq_stored = arma::zeros(mcmc);
@@ -527,10 +528,10 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
   arma::uvec gammaix = arma::find(gamma);
   //clog << "test  1" << endl;
   model = BayesSelect(y, X.cols(gammaix), gin, fixsigma);
-  sampling_order = rndpp_shuffle(p_indices);
+  
   //clog << "test  2" << endl;
   for(int m=0; m<mcmc; m++){
-    //clog << "order " << sampling_order.t() << endl;
+    sampling_order = rndpp_shuffle(p_indices);
     for(int j=0; j<p; j++){
       int ix = sampling_order(j);
       gamma_proposal = gamma;
@@ -542,7 +543,8 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
       //clog << "test  mcmc j " << j << endl;
       double accept_probability = exp(model_proposal.marglik - model.marglik) *
         exp(model_prior_par * (model.p - model_proposal.p));
-
+      accept_probability = accept_probability > 1 ? 1.0 : accept_probability;
+    
       int accepted = rndpp_bern(accept_probability);
       if(accepted == 1){
         //clog << "accepted." << endl;
@@ -556,11 +558,12 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
     arma::vec beta_full = arma::zeros(p);
     beta_full.elem(gammaix) = sampled_model.b;
     
+    icept_stored(m) = sampled_model.icept;
     beta_stored.col(m) = beta_full;
     gamma_stored.col(m) = arma::conv_to<arma::vec>::from(gamma);
     sigmasq_stored(m) = sampled_model.sigmasq;
   }
-  
+  //clog << selprob << endl;
 }
 
 //' A simple Bayesian Variable Selection model using g-priors
@@ -659,12 +662,13 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
       //VarSelMCMC bvs_model(y, X, gamma_start, g, sprior, fixsigma, MCMC);
       
       //VSModule onemodule = VSModule(resid, Xall(j), gamma_start(j), 1, gg, ss(j), binary?true:false, false);
+    
       VarSelMCMC onemodule(resid, Xall(j), gamma_start(j), gg, module_prior_par(j), binary?true:false, 1);
       
       //varsel_modules.push_back(onemodule);
-      intercept(j, m) = iboh;// onemodule.intercept;
-      xb_cumul = xb_cumul + Xall(j) * onemodule.beta_stored.col(0);
-      resid = resid - xb_cumul;
+      intercept(j, m) = onemodule.icept_stored(0);// onemodule.intercept;
+      xb_cumul = xb_cumul + Xall(j) * onemodule.beta_stored.col(0) + onemodule.icept_stored(0);
+      resid = (binary?z:y) - xb_cumul;
       //clog << "  beta store" << endl;
       beta_store(j).col(m) = onemodule.beta_stored.col(0);
       //clog << "  gamma store" << endl;
@@ -700,9 +704,9 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
 //' @export
 // [[Rcpp::export]]
 Rcpp::List momscaleBVS(const arma::vec& y, 
-                            const arma::field<arma::mat>& Xall, 
-                            const arma::field<arma::vec>& starting,
-                            int mcmc, double gg, arma::vec module_prior_par, bool binary=false){
+                       const arma::field<arma::mat>& Xall, 
+                       const arma::field<arma::vec>& starting,
+                       int mcmc, double gg, arma::vec module_prior_par, bool binary=false){
   
   int n = y.n_elem;
   ModularVS test = ModularVS(y, Xall, starting, mcmc, gg, module_prior_par, binary);

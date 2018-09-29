@@ -176,6 +176,7 @@ public:
   
   void chain();
   
+  arma::vec icept_stored;
   arma::mat gamma_stored;
   arma::mat beta_stored;
   arma::vec sigmasq_stored;

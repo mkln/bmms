@@ -34,10 +34,12 @@ index_to_subscript <- function(index, m) {
     .Call('_bmms_index_to_subscript', PACKAGE = 'bmms', index, m)
 }
 
+#'@export
 soi_cpp <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = FALSE) {
     .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask)
 }
 
+#'@export
 soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = TRUE, fixsigma = FALSE) {
     .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma)
 }
@@ -72,18 +74,22 @@ momscaleBVS <- function(y, Xall, starting, mcmc, gg, module_prior_par, binary = 
     .Call('_bmms_momscaleBVS', PACKAGE = 'bmms', y, Xall, starting, mcmc, gg, module_prior_par, binary)
 }
 
+#'@export
 sof <- function(y, X, max_stages, mcmc = 100L, burn = 50L, lambda = 5.0, silent = TRUE) {
     .Call('_bmms_sof', PACKAGE = 'bmms', y, X, max_stages, mcmc, burn, lambda, silent)
 }
 
+#'@export
 sofk <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ii = 0L, ll = 0L, silent = TRUE) {
     .Call('_bmms_sofk', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ii, ll, silent)
 }
 
+#'@export
 sofk_binary <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ii = 0L, ll = 0L, silent = TRUE) {
     .Call('_bmms_sofk_binary', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ii, ll, silent)
 }
 
+#'@export
 bmms_base <- function(y, X, g, mcmc, burn, splits, silent = TRUE) {
     .Call('_bmms_bmms_base', PACKAGE = 'bmms', y, X, g, mcmc, burn, splits, silent)
 }

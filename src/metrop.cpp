@@ -525,6 +525,7 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
   }
 } 
 
+//'@export
 // [[Rcpp::export]]
 Rcpp::List sof(arma::vec& y, arma::mat& X, 
                       int max_stages,
@@ -726,7 +727,7 @@ Rcpp::List sof(arma::vec& y, arma::mat& X,
 }
 
 
-
+//'@export
 // [[Rcpp::export]]
 Rcpp::List sofk(const arma::vec& y, const arma::mat& X, 
                            const arma::field<arma::vec>& start_splits, 
@@ -906,6 +907,7 @@ Rcpp::List sofk(const arma::vec& y, const arma::mat& X,
 }
 
 
+//'@export
 // [[Rcpp::export]]
 Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X, 
                 arma::field<arma::vec> start_splits, 
@@ -1105,6 +1107,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
 }
 
 
+//'@export
 // [[Rcpp::export]]
 Rcpp::List bmms_base(arma::vec& y, arma::mat& X, 
                 double g, int mcmc, int burn, 

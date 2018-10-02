@@ -122,7 +122,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // momscaleBVS
-Rcpp::List momscaleBVS(const arma::vec& y, const arma::field<arma::mat>& Xall, const arma::field<arma::vec>& starting, int mcmc, double gg, arma::vec module_prior_par, bool binary);
+Rcpp::List momscaleBVS(const arma::vec& y, const arma::field<arma::mat>& Xall, const arma::field<arma::vec>& starting, int mcmc, arma::vec gg, arma::vec module_prior_par, bool binary);
 RcppExport SEXP _bmms_momscaleBVS(SEXP ySEXP, SEXP XallSEXP, SEXP startingSEXP, SEXP mcmcSEXP, SEXP ggSEXP, SEXP module_prior_parSEXP, SEXP binarySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -131,7 +131,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type Xall(XallSEXP);
     Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type starting(startingSEXP);
     Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
-    Rcpp::traits::input_parameter< double >::type gg(ggSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type gg(ggSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type module_prior_par(module_prior_parSEXP);
     Rcpp::traits::input_parameter< bool >::type binary(binarySEXP);
     rcpp_result_gen = Rcpp::wrap(momscaleBVS(y, Xall, starting, mcmc, gg, module_prior_par, binary));

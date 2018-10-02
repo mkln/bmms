@@ -200,7 +200,7 @@ public:
   //ModularVS(const arma::vec&, const arma::field<arma::mat>&, int, double, arma::vec);
   ModularVS(const arma::vec&, const arma::field<arma::mat>&, 
             const arma::field<arma::vec>&,
-            int, double, arma::vec, bool);
+            int, arma::vec, arma::vec, bool);
   
   arma::mat intercept;
   arma::field<arma::mat> beta_store;

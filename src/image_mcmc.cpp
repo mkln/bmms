@@ -275,6 +275,7 @@ arma::mat proposal_move(const arma::mat& current_split_mask,
 
 
 // finally try building a model from scratch and output beta
+//'@export
 //[[Rcpp::export]]
 Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                       arma::mat mask_forbid,
@@ -539,6 +540,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
   );
 }
 
+//'@export
 //[[Rcpp::export]]
 Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                     arma::mat mask_forbid,

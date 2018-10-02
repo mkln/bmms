@@ -544,7 +544,7 @@ VarSelMCMC::VarSelMCMC(const arma::vec& yy, const arma::mat& XX, const arma::vec
       double accept_probability = exp(model_proposal.marglik - model.marglik) *
         exp(model_prior_par * (model.p - model_proposal.p));
       accept_probability = accept_probability > 1 ? 1.0 : accept_probability;
-    
+      
       int accepted = rndpp_bern(accept_probability);
       if(accepted == 1){
         //clog << "accepted." << endl;
@@ -599,7 +599,8 @@ Rcpp::List bvs(const arma::vec& y, const arma::mat& X,
 ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
                      const arma::field<arma::vec>& starting,
                      int mcmc_in,
-                     double gg, arma::vec module_prior_par, bool binary=false){
+                     arma::vec gg, 
+                     arma::vec module_prior_par, bool binary=false){
   
   K = Xall_in.n_elem;
   //clog << K << endl;
@@ -662,8 +663,8 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
       //VarSelMCMC bvs_model(y, X, gamma_start, g, sprior, fixsigma, MCMC);
       
       //VSModule onemodule = VSModule(resid, Xall(j), gamma_start(j), 1, gg, ss(j), binary?true:false, false);
-    
-      VarSelMCMC onemodule(resid, Xall(j), gamma_start(j), gg, module_prior_par(j), binary?true:false, 1);
+      
+      VarSelMCMC onemodule(resid, Xall(j), gamma_start(j), gg(j), module_prior_par(j), binary?true:false, 1);
       
       //varsel_modules.push_back(onemodule);
       intercept(j, m) = onemodule.icept_stored(0);// onemodule.intercept;
@@ -706,9 +707,17 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
 Rcpp::List momscaleBVS(const arma::vec& y, 
                        const arma::field<arma::mat>& Xall, 
                        const arma::field<arma::vec>& starting,
-                       int mcmc, double gg, arma::vec module_prior_par, bool binary=false){
+                       int mcmc, arma::vec gg, arma::vec module_prior_par, bool binary=false){
   
+  
+  arma::vec ggk;
+  if(gg.n_elem == 1){
+    ggk = arma::ones(module_prior_par.n_elem) * gg(0);
+  } else { 
+    ggk = gg;
+  }
   int n = y.n_elem;
+  clog << "starting." << endl;
   ModularVS test = ModularVS(y, Xall, starting, mcmc, gg, module_prior_par, binary);
   
   return Rcpp::List::create(

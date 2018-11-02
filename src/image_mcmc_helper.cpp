@@ -145,7 +145,8 @@ arma::field<arma::mat> splits_augmentation(arma::field<arma::mat> splits){
 }
 
 
-//with voronoi tessellation
+//with H. voronoi tessellation
+//[[Rcpp::export]]
 arma::mat splitsub_to_groupmask(arma::field<arma::mat> splits, int p1, int p2){
   // splits is a nsplit x 2 matrix
   arma::vec distances = arma::ones(splits(0).n_rows);
@@ -557,6 +558,7 @@ void ModularLR2D::delete_last_module(){
   splitsub = splitsub_new;
 }
 
+//' @export
 //[[Rcpp::export]]
 arma::field<arma::mat> load_splits(int maxlevs, std::string sname){
   arma::field<arma::mat> splits(maxlevs);

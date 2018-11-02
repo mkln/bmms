@@ -9,6 +9,19 @@
 
 using namespace Rcpp;
 
+// splitsub_to_groupmask
+arma::mat splitsub_to_groupmask(arma::field<arma::mat> splits, int p1, int p2);
+RcppExport SEXP _bmms_splitsub_to_groupmask(SEXP splitsSEXP, SEXP p1SEXP, SEXP p2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type p1(p1SEXP);
+    Rcpp::traits::input_parameter< int >::type p2(p2SEXP);
+    rcpp_result_gen = Rcpp::wrap(splitsub_to_groupmask(splits, p1, p2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // load_splits
 arma::field<arma::mat> load_splits(int maxlevs, std::string sname);
 RcppExport SEXP _bmms_load_splits(SEXP maxlevsSEXP, SEXP snameSEXP) {
@@ -139,8 +152,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sof
-Rcpp::List sof(arma::vec& y, arma::mat& X, int max_stages, unsigned int mcmc, unsigned int burn, double lambda, bool silent);
-RcppExport SEXP _bmms_sof(SEXP ySEXP, SEXP XSEXP, SEXP max_stagesSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP silentSEXP) {
+Rcpp::List sof(arma::vec& y, arma::mat& X, int max_stages, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, bool silent);
+RcppExport SEXP _bmms_sof(SEXP ySEXP, SEXP XSEXP, SEXP max_stagesSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP silentSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -150,14 +163,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type ain(ainSEXP);
+    Rcpp::traits::input_parameter< double >::type bin(binSEXP);
     Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
-    rcpp_result_gen = Rcpp::wrap(sof(y, X, max_stages, mcmc, burn, lambda, silent));
+    rcpp_result_gen = Rcpp::wrap(sof(y, X, max_stages, mcmc, burn, lambda, ain, bin, silent));
     return rcpp_result_gen;
 END_RCPP
 }
 // sofk
-Rcpp::List sofk(const arma::vec& y, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, int ii, int ll, bool silent);
-RcppExport SEXP _bmms_sofk(SEXP ySEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP silentSEXP) {
+Rcpp::List sofk(const arma::vec& y, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool silent);
+RcppExport SEXP _bmms_sofk(SEXP ySEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP silentSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -167,10 +182,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type ain(ainSEXP);
+    Rcpp::traits::input_parameter< double >::type bin(binSEXP);
     Rcpp::traits::input_parameter< int >::type ii(iiSEXP);
     Rcpp::traits::input_parameter< int >::type ll(llSEXP);
     Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
-    rcpp_result_gen = Rcpp::wrap(sofk(y, X, start_splits, mcmc, burn, lambda, ii, ll, silent));
+    rcpp_result_gen = Rcpp::wrap(sofk(y, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, silent));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -254,6 +271,7 @@ RcppExport SEXP _bmms_RcppExport_registerCCallable() {
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_bmms_splitsub_to_groupmask", (DL_FUNC) &_bmms_splitsub_to_groupmask, 3},
     {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 2},
     {"_bmms_cube_mean", (DL_FUNC) &_bmms_cube_mean, 2},
     {"_bmms_cube_sum", (DL_FUNC) &_bmms_cube_sum, 2},
@@ -262,8 +280,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_soi_binary_cpp", (DL_FUNC) &_bmms_soi_binary_cpp, 14},
     {"_bmms_bvs", (DL_FUNC) &_bmms_bvs, 7},
     {"_bmms_momscaleBVS", (DL_FUNC) &_bmms_momscaleBVS, 7},
-    {"_bmms_sof", (DL_FUNC) &_bmms_sof, 7},
-    {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 9},
+    {"_bmms_sof", (DL_FUNC) &_bmms_sof, 9},
+    {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 11},
     {"_bmms_sofk_binary", (DL_FUNC) &_bmms_sofk_binary, 9},
     {"_bmms_bmms_base", (DL_FUNC) &_bmms_bmms_base, 7},
     {"_bmms_mvtruncnormal", (DL_FUNC) &_bmms_mvtruncnormal, 5},

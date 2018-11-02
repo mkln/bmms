@@ -12,7 +12,6 @@ using namespace std;
 *                   TO APPROPRIATE NEW LOCS
 */
 
-
 // focuses around onesplit, with radius
 
 arma::mat splitmask_focus(const arma::mat& mask_of_splits, arma::vec onesplit, int radius_int=1){
@@ -328,6 +327,8 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
   //clog << "effective dim " << bmms_t.modules[bmms_t.n_stages-1].effective_dimension << endl;
   
   for(unsigned int m = 0; m<mcmc; m++){
+    Rcpp::checkUserInterrupt();
+    
     if(m==0){ 
       clog << "starting mcmc" << endl;
     }
@@ -617,6 +618,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
   z = bmms_t.modules[0].X_flat * bmms_t.modules[0].flatmodel.b;
   
   for(unsigned int m = 0; m<mcmc; m++){
+    Rcpp::checkUserInterrupt();
     if(m==0){ 
       clog << "starting mcmc" << endl;
     }
@@ -626,7 +628,6 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
     int rnd_moving_lev = arma::randi<int>(arma::distr_param(start_movinglev, num_levs-1));
     
     if(move_type == 3){
-      
       //clog << "R"; mh for lambda
       double lambdamult = arma::randn<double>();
       double new_lambda = 0.01 + lambda_ridge * exp(lambdamult);
@@ -671,8 +672,9 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
       proposed_bayeslm.change_module(rnd_moving_lev, propose_splitsub);
       //clog << "done" << endl;
       
-      mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
-        arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * to_from_ratio;
+      mhr = exp(proposed_bayeslm.logliks(rnd_moving_lev) - bmms_t.logliks(rnd_moving_lev)) * to_from_ratio;
+        //exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
+        //arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * to_from_ratio;
       mhr = mhr > 1 ? 1 : mhr;
       
       //clog << "moving mhr " << mhr << endl << "to_from_ratio " << to_from_ratio << endl;
@@ -704,8 +706,10 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
                                                        rnd_moving_lev, 
                                                        lambda_centers);
       
-      mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
-        arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
+      mhr = exp(proposed_bayeslm.logliks(rnd_moving_lev) - 
+        bmms_t.logliks(rnd_moving_lev)) * 
+        //exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
+        //arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
         to_from_ratio * totsplit_prior_mhr;
       mhr = mhr > 1 ? 1 : mhr;
       //cout << mhr << endl;
@@ -743,8 +747,10 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
                                                          rnd_moving_lev,  
                                                          lambda_centers);
         
-        mhr = exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
-          arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
+        mhr = exp(proposed_bayeslm.logliks(rnd_moving_lev) - 
+          bmms_t.logliks(rnd_moving_lev)) *
+          //exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
+          //arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * 
           to_from_ratio * totsplit_prior_mhr;
         mhr = mhr > 1 ? 1 : mhr;
         //clog << "and this " << endl;

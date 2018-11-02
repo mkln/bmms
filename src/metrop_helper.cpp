@@ -136,7 +136,8 @@ Module::Module(){
 
 Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
                arma::mat& Jpre, arma::mat& Jnow, arma::vec& mean_post_pre, arma::vec& theta_sample_pre,
-               arma::vec& ingrid, arma::vec& splits, int kernel_type, bool fixed_sigma){
+               arma::vec& ingrid, arma::vec& splits, int kernel_type, bool fixed_sigma=false,
+               double ain=2.1, double bin=1.1){
   //cout << "ModularLinReg :: module 0 " << endl;
   Xfull = X_full;
   ej = e;
@@ -168,10 +169,10 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   inv_var_post = (g+1.0)/n * XtX;
   mean_post = var_post * Xj.t() * ej;
   In = arma::eye(n,n);
-  a = 2.1; // parametrization: a = mean^2 / variance + 2
-  b = a-1;  //                  b = (mean^3 + mean*variance) / variance
+  a = ain; // parametrization: a = mean^2 / variance + 2
+  b = bin;  //                  b = (mean^3 + mean*variance) / variance
   
-  
+  //clog << a << " " << b << endl;
   if(!fix_sigma){
     beta_post = arma::conv_to<double>::from(.5*(
       mean_pre.t() * (1.0/g * XtX) * mean_pre + 
@@ -179,6 +180,7 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
       mean_post.t() * ( (g+1.0)/g * XtX) * mean_post)
     );
     
+    //clog << a + n/2.0 << " " << (b + beta_post) << endl;
     sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post));
     sigmasq_mean = (b+beta_post)/(a+n/2.0+1);
   } else {
@@ -254,11 +256,15 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
                              const arma::mat& Xin, 
                              double g, 
                              const arma::field<arma::vec>& in_splits, 
-                             int kernel, int set_max_stages, bool fixed_sigma=false, bool fixed_grids = true){
+                             int kernel, int set_max_stages, 
+                             bool fixed_sigma=false, bool fixed_grids = true,
+                             double ain=2.1, double bin=1.1){
   
   kernel_type = kernel;
   // kernel 0 = step functions; 1 = gaussian
   
+  a = ain;
+  b = bin;
   
   fixed_splits = fixed_grids;
   fix_sigma = fixed_sigma;
@@ -331,7 +337,8 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   
   cout << "-adding first module" << endl;
   Module adding_module(X, y, X_field(0), g_prior, faux_J_previous, J_field(0), 
-                       faux_theta_previous_sample, faux_theta_previous_sample, grid, bigsplit(0), kernel_type, opt);
+                       faux_theta_previous_sample, faux_theta_previous_sample, grid, 
+                       bigsplit(0), kernel_type, false, a, b);
   cout << "added." << endl;
   modules.push_back(adding_module);
   
@@ -348,7 +355,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
     //cout << "-adding other module" << endl;
     adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), J_field(s-1), J_field(s), 
                            modules[s-1].mean_post, modules[s-1].theta_sample,
-                           grid, bigsplit(s), kernel_type, opt);
+                           grid, bigsplit(s), kernel_type, false, a, b);
     //cout << "--added." << endl;
     modules.push_back(adding_module);
     theta_p_scales(s) = modules[s].theta_p_sample;
@@ -386,7 +393,6 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   cout << "ModularLinReg created " << endl;
 }
 
-
 void ModularLinReg::add_new_module(arma::vec& new_splits){
   //cout << "new Module for ModularLinReg" << endl;
   n_stages++;
@@ -402,7 +408,7 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
   
   Module adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), J_field(s-1), J_field(s), 
                                 modules[s-1].mean_post, modules[s-1].theta_sample,
-                                grid, bigsplit(s), kernel_type, opt);
+                                grid, bigsplit(s), kernel_type, false, a, b);
   modules.push_back(adding_module);
   
   theta_p_scales(s) = modules[s].theta_p_sample;
@@ -604,7 +610,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   
   cout << "-adding first module" << endl;
   Module adding_module(X, y, X_field(0), g_prior, faux_J_previous, J_field(0), 
-                       faux_theta_previous_sample, faux_theta_previous_sample, grid, bigsplit(0), kernel_type, opt);
+                       faux_theta_previous_sample, faux_theta_previous_sample, grid, bigsplit(0), kernel_type, false, a, b);
   cout << "added." << endl;
   modules.push_back(adding_module);
   
@@ -620,7 +626,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
     //cout << "-adding other module" << endl;
     adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), J_field(s-1), J_field(s), 
                            modules[s-1].mean_post, modules[s-1].theta_sample,
-                           grid, bigsplit(s), kernel_type, opt);
+                           grid, bigsplit(s), kernel_type, false, a, b);
     //cout << "--added." << endl;
     modules.push_back(adding_module);
     theta_p_scales(s) = modules[s].theta_p_sample;
@@ -670,7 +676,7 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
     X_field(s) = X * J_field(s);
     
     Module adding_module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), J_field(s-1), J_field(s), 
-                         modules[s-1].mean_post, modules[s-1].theta_sample, grid, bigsplit(s), kernel_type, opt);
+                         modules[s-1].mean_post, modules[s-1].theta_sample, grid, bigsplit(s), kernel_type, false, a, b);
     modules[s] = adding_module;
     theta_p_scales(s) = modules[s].theta_p_sample;
     mu_field(s) = modules[s].mean_post;//mu_field(s-1) + modules[s].J_now * modules[s].mean_post;
@@ -701,12 +707,17 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
     }
   } 
 }
+double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop){
+  double ck = lambda_prop * pow(2.0,ss);
+  double proposal = (- ck * tot_split_prop * std::log(tot_split_prop));
+  double orig = (- ck * tot_split_orig * std::log(tot_split_orig));
+  return exp(proposal - orig);
+}
 
 double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop){
   //lambda_prop is 1/variance;
   double means = pow(2, ss);
   return exp(-lambda_prop/2.0 * pow(tot_split_prop - means, 2) + lambda_prop/2.0 * pow(tot_split_orig - means, 2) ); //prior_ratio;
-  //return exp(-0.0-prior_levs);
 }
 
 double splitpar_prior(double x, int tot_split, int norp, int ss){

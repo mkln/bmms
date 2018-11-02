@@ -1,4 +1,3 @@
-
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
 
@@ -88,7 +87,7 @@ public:
   // e, X, Jpre, Jnow, prior mean and var, previously sampled theta
   Module(arma::mat&, arma::vec&, arma::mat&, 
          double, arma::mat&, arma::mat&, arma::vec&, arma::vec&, arma::vec&, arma::vec&, 
-         int, bool);
+         int, bool, double, double);
   // empty constructor
   Module();
 };
@@ -124,6 +123,8 @@ public:
   arma::field<arma::vec> m_field;
   arma::field<arma::mat> M_field;
   
+  double a, b;
+  
   std::vector<Module> modules;
   
   //arma::field<arma::mat> mod_reshaper;
@@ -156,12 +157,14 @@ public:
   // y, X, list of splits for each stage, limit to stages
   ModularLinReg(const arma::vec&, const arma::mat&, 
                 double, 
-                const arma::field<arma::vec>&, int, int, bool, bool);
+                const arma::field<arma::vec>&, int, int, bool, bool,
+                double, double);
   
 };
 
 
 double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop=10.0);
+double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop=10.0);
 
 double splitpar_prior(double x, int tot_split, int norp, int ss);
 

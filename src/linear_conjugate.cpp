@@ -50,7 +50,7 @@ BayesLM::BayesLM(const arma::vec& yy, const arma::mat& XX, bool fixs=false){
   
   m = arma::zeros(p);
   //M = n*XtXi;
-  Mi = 1.0/n * XtX + arma::eye(p,p) * lambda;
+  Mi = 1.0/log(1.0+n) * XtX + arma::eye(p,p) * lambda;
   mtMim = 0.0; //arma::conv_to<double>::from(m.t()*Mi*m);
   
   alpha = 0.0;
@@ -87,7 +87,7 @@ BayesLM::BayesLM(arma::vec yy, arma::mat XX, double lambda_in = 1){
   
   m = arma::zeros(p);
   //M = n*XtXi;
-  Mi = 1.0/n * XtX + arma::eye(p,p) * lambda;
+  Mi = 1.0/log(1.0+n) * XtX + arma::eye(p,p) * lambda;
   mtMim = 0.0; //arma::conv_to<double>::from(m.t()*Mi*m);
   
   alpha = 2.1; // parametrization: a = mean^2 / variance + 2
@@ -124,7 +124,7 @@ BayesLM::BayesLM(const arma::vec& yy, const arma::mat& XX, double lambda_in = 1,
   m = arma::zeros(p);
   //M = n*XtXi;
   //clog << lambda << endl;
-  Mi = pow(1.0/n, 0.5) * XtX + Ip * lambda;
+  Mi = 1.0/log(1.0+n) * XtX + Ip * lambda;
   mtMim = 0.0; //arma::conv_to<double>::from(m.t()*Mi*m);
   
   alpha = 2.1; // parametrization: a = mean^2 / variance + 2
@@ -205,7 +205,7 @@ void BayesLM::lambda_update(double lambda_new){
   
   lambda = lambda_new;
   //M = Ip * lambda_new;
-  Mi = pow(1.0/n, 0.5) * XtX + Ip * lambda_new;
+  Mi = 1.0/log(1.0+n) * XtX + Ip * lambda_new;
   mtMim = arma::conv_to<double>::from(m.t()*Mi*m);
   
   //alpha = 2.25; // parametrization: a = mean^2 / variance + 2

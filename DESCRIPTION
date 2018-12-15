@@ -1,14 +1,14 @@
 Package: bmms
 Type: Package
 Title: Bayesian Modular & Multiscale Regression
-Version: 0.1
-Date: 2018-09-10
+Version: 0.2
+Date: 2018-12-15
 Author: Michele Peruzzi, David Dunson
 Maintainer: Michele Peruzzi <peruzzi@gmail.com>
 Description: This package includes methods for Bayesian Modular & Multiscale regression (BM&Ms) and classification.
 Details: This package includes methods for Bayesian Modular & Multiscale regression (BM&Ms) and classification.
 License: MIT
-Depends: Rcpp, RcppArmadillo, plyr, magrittr
-Imports: Rcpp (>= 0.12.18), plyr, magrittr
-LinkingTo: Rcpp, RcppArmadillo
+Depends: Rcpp, RcppArmadillo, emotionalabyss, plyr, magrittr
+Imports: Rcpp (>= 0.12.18), emotionalabyss, plyr, magrittr
+LinkingTo: Rcpp, RcppArmadillo, emotionalabyss
 RoxygenNote: 6.1.0

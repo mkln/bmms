@@ -4,20 +4,12 @@
 #ifndef mcmc_helper
 #define mcmc_helper
 
-#include "linear_conjugate.h"
-#include "bmms_common.h"
 #include <RcppArmadillo.h>
-
+#include <bmtools.h>
 
 using namespace std;
 
 
-int rndpp_sample1_comp(arma::vec x, int p, int current_split, double decay);
-arma::vec rndpp_shuffle(const arma::vec& x);
-arma::uvec sample_index(const int& n, const int &vsize);
-int sample_one_int(const int &vsize);
-
-arma::mat reshaper(arma::field<arma::mat> J_field, int s);
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar);
 
 double modular_loglik0(arma::vec& y, double a, double b);
@@ -170,7 +162,5 @@ double splitpar_prior(double x, int tot_split, int norp, int ss);
 
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction);
 
-
-arma::field<arma::vec> splits_truncate(arma::field<arma::vec> splits, int k);
 
 #endif

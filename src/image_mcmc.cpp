@@ -1,42 +1,9 @@
 //[[Rcpp::plugins(cpp11)]]
 //[[Rcpp::depends(RcppArmadillo)]]
-//[[Rcpp::interfaces(r)]]
 
-#include "truncnormal_sample.h"
 #include "image_mcmc_helper.h"
 
 using namespace std;
-
-/*
-*              FUNCTIONS TO MOVE SPLIT LOCATIONS
-*                   TO APPROPRIATE NEW LOCS
-*/
-
-// focuses around onesplit, with radius
-
-arma::mat splitmask_focus(const arma::mat& mask_of_splits, arma::vec onesplit, int radius_int=1){
-  int x1 = onesplit(0) - radius_int;
-  int x2 = onesplit(0) + radius_int;
-  int y1 = onesplit(1) - radius_int;
-  int y2 = onesplit(1) + radius_int;
-  int xlim = mask_of_splits.n_rows-1;
-  int ylim = mask_of_splits.n_cols-1;
-  x1 = max(0, x1);
-  x2 = min(x2, xlim);
-  y1 = max(0, y1);
-  y2 = min(y2, ylim);
-  
-  // focusing
-  arma::mat around_split = mask_of_splits.submat(x1, y1, x2, y2);
-  return around_split;
-}
-
-// given focus of a split matrix, counts the zeros (ie number of available locations to move to)
-int number_availables(const arma::mat& splitmask_focus){
-  int c1 = arma::accu(1-splitmask_focus.elem(arma::find(splitmask_focus == 0)));
-  return c1;
-}
-
 
 // given a mask of splits,
 // move onesplit to another location around it (radius fixed)
@@ -74,7 +41,7 @@ arma::mat split_move2d(const arma::mat& mask_of_splits,
   
   // choose random location among available ones
   // in focused view
-  arma::uvec rand_location = sample_index(1, available_locations.n_elem);
+  arma::uvec rand_location = bmrandom::sample_index(1, available_locations.n_elem);
   rand_location = available_locations.elem(rand_location);
   
   // original location in focused coordinate system
@@ -95,26 +62,14 @@ arma::mat split_move2d(const arma::mat& mask_of_splits,
   new_location(1) = new_location(1) + y1;
   //cout << "new location in original coordinates : " << new_location.t() << endl;
   
-  arma::mat avail_around_moved = splitmask_focus(returning_mat, new_location, radius_int);
-  arma::mat avail_around_nosplit = splitmask_focus(returning_mat, new_location, radius_int);
+  arma::mat avail_around_moved = bm2d::splitmask_focus(returning_mat, new_location, radius_int);
+  arma::mat avail_around_nosplit = bm2d::splitmask_focus(returning_mat, new_location, radius_int);
   double avail_from = arma::accu(1-avail_around_moved.elem(arma::find((avail_around_moved+avail_around_nosplit) == 1)));
   //number_availables(avail_around_moved);
   //cout << "number of moves FROM new: " << avail_from << endl;
   
   to_from_ratio = avail_to/avail_from;
   return returning_mat;
-}
-
-//' Vector index to matrix subscripts
-//' 
-//' Get matrix subscripts from corresponding vector indices (both start from 0).
-//' This is a utility function using Armadillo's ind2sub function.
-//' @param index a vector of indices
-//' @param m a matrix (only its size is important)
-//' @export
-//[[Rcpp::export]]
-arma::mat index_to_subscript(const arma::uvec& index, const arma::mat& m){
-  return arma::conv_to<arma::mat>::from(arma::ind2sub(arma::size(m), index));
 }
 
 arma::mat split_add2d(arma::mat mask_of_splits, 
@@ -136,7 +91,7 @@ arma::mat split_add2d(arma::mat mask_of_splits,
   
   // choose random location among available ones
   // in focused view
-  arma::uvec rand_location = sample_index(1, available_locations.n_elem);
+  arma::uvec rand_location = bmrandom::sample_index(1, available_locations.n_elem);
   rand_location = available_locations.elem(rand_location);
   
   // change values in the focused view
@@ -171,7 +126,7 @@ arma::mat stage_add2d(arma::mat mask_of_splits,
   
   // choose random location among available ones
   // in focused view
-  arma::uvec rand_location = sample_index(2, available_locations.n_elem);
+  arma::uvec rand_location = bmrandom::sample_index(2, available_locations.n_elem);
   rand_location = available_locations.elem(rand_location);
   
   // change values in the focused view
@@ -206,7 +161,7 @@ arma::mat split_drop2d(arma::mat mask_of_splits,
   
   //cout << "number of moves TO new: " << avail_to << endl;
   // choose random location among available ones
-  arma::uvec rand_location = sample_index(1, available_locations.n_elem);
+  arma::uvec rand_location = bmrandom::sample_index(1, available_locations.n_elem);
   rand_location = available_locations.elem(rand_location);
   
   // change values in the focused view
@@ -277,12 +232,12 @@ arma::mat proposal_move(const arma::mat& current_split_mask,
 //'@export
 //[[Rcpp::export]]
 Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
-                      arma::mat mask_forbid,
-                      double lambda_centers, double lambda_ridge, int mcmc, int burn, 
-                      int radius=2,
-                      int start_movinglev=0,
-                      int partnum=0, bool save=true,
-                      bool save_splitmask = false){
+                   arma::mat mask_forbid,
+                   double lambda_centers, double lambda_ridge, int mcmc, int burn, 
+                   int radius=2,
+                   int start_movinglev=0,
+                   int partnum=0, bool save=true,
+                   bool save_splitmask = false){
   //former name: model_test
   
   //arma::field<arma::mat> old_splits,
@@ -342,14 +297,14 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       double lambdamult = arma::randn<double>();
       double new_lambda = 0.01 + lambda_ridge * exp(lambdamult);
       
-      propose_splitsub = splitmask_to_splitsub(bmms_t.modules[bmms_t.n_stages-1].splitmask);
+      propose_splitsub = bm2d::splitmask_to_splitsub(bmms_t.modules[bmms_t.n_stages-1].splitmask);
       ModularLR2D proposed_bayeslm(y, X, propose_splitsub, mask_forbid, max_stages, new_lambda);
       
       mhr = exp(arma::accu(proposed_bayeslm.logliks) - arma::accu(bmms_t.logliks)) * 
         exp(gammaprior_mhr(new_lambda, lambda_ridge));
       mhr = mhr > 1 ? 1 : mhr;
       
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         lambda_ridge = new_lambda;
         bmms_t = proposed_bayeslm;
@@ -374,7 +329,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                                        bmms_t.modules[bmms_t.n_stages-1].splitmat(rnd_moving_lev).row(rnd_moving_split).t(), 
                                        to_from_ratio, radius);
       
-      propose_splitsub = splitmask_to_splitsub(propose_splitmask);
+      propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
       
       ModularLR2D proposed_bayeslm = bmms_t;
       
@@ -388,7 +343,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       
       //clog << "moving mhr " << mhr << endl << "to_from_ratio " << to_from_ratio << endl;
       
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         //clog << "[MOVE SPLIT " << stage << "] accept, MLR: " << exp(proposed_model.loglik - base_model.loglik) << endl;
         bmms_t = proposed_bayeslm;
@@ -404,7 +359,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                                       rnd_moving_lev, 
                                       to_from_ratio);
       //cout << propose_splitmask << endl;
-      propose_splitsub = splitmask_to_splitsub(propose_splitmask);
+      propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
       //cout << propose_splitsub.row(rnd_moving) << endl;
       ModularLR2D proposed_bayeslm = bmms_t;
       proposed_bayeslm.change_module(rnd_moving_lev, propose_splitsub);
@@ -420,7 +375,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
         to_from_ratio * totsplit_prior_mhr;
       mhr = mhr > 1 ? 1 : mhr;
       //cout << mhr << endl;
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         //clog << "ADDED " << endl;
         add_accepted ++;
@@ -441,7 +396,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
                                          to_from_ratio);
         
         
-        propose_splitsub = splitmask_to_splitsub(propose_splitmask);
+        propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
         
         ModularLR2D proposed_bayeslm = bmms_t;
         //clog << "changing " << endl;
@@ -459,7 +414,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
           to_from_ratio * totsplit_prior_mhr;
         mhr = mhr > 1 ? 1 : mhr;
         //clog << "and this " << endl;
-        int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+        int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
         if(accepted_proposal == 1){
           drop_accepted ++;
           //clog << "DROPPED " << endl;
@@ -484,7 +439,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
         exp(gammaprior_mhr(new_lambda_centers, lambda_centers));
       mhr = mhr > 1 ? 1 : mhr;
       
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         lambda_centers = new_lambda_centers;
         //clog << lambda_centers << endl;
@@ -544,12 +499,12 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
 //'@export
 //[[Rcpp::export]]
 Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
-                    arma::mat mask_forbid,
-                    double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius=2,
-                    int start_movinglev=0,
-                    int partnum=0, bool save=true,
-                    bool save_splitmask = true,
-                    bool fixsigma = false){
+                          arma::mat mask_forbid,
+                          double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius=2,
+                          int start_movinglev=0,
+                          int partnum=0, bool save=true,
+                          bool save_splitmask = true,
+                          bool fixsigma = false){
   //former name: model_test
   
   //arma::field<arma::mat> old_splits,
@@ -632,14 +587,14 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
       double lambdamult = arma::randn<double>();
       double new_lambda = 0.01 + lambda_ridge * exp(lambdamult);
       
-      propose_splitsub = splitmask_to_splitsub(bmms_t.modules[bmms_t.n_stages-1].splitmask);
+      propose_splitsub = bm2d::splitmask_to_splitsub(bmms_t.modules[bmms_t.n_stages-1].splitmask);
       ModularLR2D proposed_bayeslm(z, X, propose_splitsub, mask_forbid, max_stages, new_lambda, fixsigma);
       
       mhr = exp(arma::accu(proposed_bayeslm.logliks) - arma::accu(bmms_t.logliks)) * 
         exp(gammaprior_mhr(new_lambda, lambda_ridge));
       mhr = mhr > 1 ? 1 : mhr;
       
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         lambda_ridge = new_lambda;
         bmms_t = proposed_bayeslm;
@@ -664,7 +619,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
                                        bmms_t.modules[bmms_t.n_stages-1].splitmat(rnd_moving_lev).row(rnd_moving_split).t(), 
                                        to_from_ratio, radius);
       
-      propose_splitsub = splitmask_to_splitsub(propose_splitmask);
+      propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
       
       ModularLR2D proposed_bayeslm = bmms_t;
       
@@ -673,13 +628,13 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
       //clog << "done" << endl;
       
       mhr = exp(proposed_bayeslm.logliks(rnd_moving_lev) - bmms_t.logliks(rnd_moving_lev)) * to_from_ratio;
-        //exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
-        //arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * to_from_ratio;
+      //exp(arma::accu(proposed_bayeslm.logliks.subvec(rnd_moving_lev, proposed_bayeslm.n_stages-1)) - 
+      //arma::accu(bmms_t.logliks.subvec(rnd_moving_lev, bmms_t.n_stages-1))) * to_from_ratio;
       mhr = mhr > 1 ? 1 : mhr;
       
       //clog << "moving mhr " << mhr << endl << "to_from_ratio " << to_from_ratio << endl;
       
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         //clog << "[MOVE SPLIT " << stage << "] accept, MLR: " << exp(proposed_model.loglik - base_model.loglik) << endl;
         bmms_t = proposed_bayeslm;
@@ -695,7 +650,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
                                       rnd_moving_lev, 
                                       to_from_ratio);
       //cout << propose_splitmask << endl;
-      propose_splitsub = splitmask_to_splitsub(propose_splitmask);
+      propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
       //cout << propose_splitsub.row(rnd_moving) << endl;
       ModularLR2D proposed_bayeslm = bmms_t;
       proposed_bayeslm.change_module(rnd_moving_lev, propose_splitsub);
@@ -713,7 +668,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
         to_from_ratio * totsplit_prior_mhr;
       mhr = mhr > 1 ? 1 : mhr;
       //cout << mhr << endl;
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         //clog << "ADDED " << endl;
         add_accepted ++;
@@ -734,7 +689,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
                                          to_from_ratio);
         
         
-        propose_splitsub = splitmask_to_splitsub(propose_splitmask);
+        propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
         
         ModularLR2D proposed_bayeslm = bmms_t;
         //clog << "changing " << endl;
@@ -754,7 +709,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
           to_from_ratio * totsplit_prior_mhr;
         mhr = mhr > 1 ? 1 : mhr;
         //clog << "and this " << endl;
-        int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+        int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
         if(accepted_proposal == 1){
           drop_accepted ++;
           //clog << "DROPPED " << endl;
@@ -779,7 +734,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
         exp(gammaprior_mhr(new_lambda_centers, lambda_centers));
       mhr = mhr > 1 ? 1 : mhr;
       
-      int accepted_proposal = rndpp_discrete({1-mhr, mhr});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
       if(accepted_proposal == 1){
         lambda_centers = new_lambda_centers;
         //clog << lambda_centers << endl;
@@ -789,7 +744,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
     num_levs = bmms_t.n_stages;
     
     // gibbs latent
-    z = mvtruncnormal_eye1(bmms_t.Xb_sum, trunc_lowerlim, trunc_upperlim).col(0);
+    z = bmrandom::mvtruncnormal_eye1(bmms_t.Xb_sum, trunc_lowerlim, trunc_upperlim).col(0);
     bmms_t = ModularLR2D(z, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma);
     
     
@@ -846,4 +801,5 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
     //Rcpp::Named("sigmasq_sampled") = bmms_t.modules[bmms_t.n_stages-1].sigmasq_sampled
   );
 }
+
 

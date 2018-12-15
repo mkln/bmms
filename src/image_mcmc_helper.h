@@ -4,66 +4,12 @@
 #ifndef image_voronoi
 #define image_voronoi
 
-#include "linear_conjugate.h"
-#include "metrop_helper.h"
-//#include "bmms_0906_varsel.h"
 #include <RcppArmadillo.h>
-
-// from matrix Sx2 where each row is a 2D split
-// and p1, p2 is the grid dimension
-// return a masking matrix size p1xp2 with 1 at split locations
-arma::mat splitsub_to_splitmask(const arma::field<arma::mat>& splits, int p1, int p2);
-// obtain Sx2 split matrix from a split mask
-arma::field<arma::mat> splitmask_to_splitsub(const arma::mat& splitmask);
-/*
-*              FUNCTIONS FOR GROUPING MASKS
-*                   AND COARSENING
-*/
-
-// from a starting grouping mask, split the relevant region 
-// using the new split onesplit. for BLOCKS, not voronoi
-arma::mat mask_onesplit(arma::mat startmat, arma::vec onesplit, int seq);
-// make a grouping mask from split matrix
-// a grouping max assigns each element of the grid to a numbered group
-arma::mat splitsub_to_groupmask_blocks(const arma::mat& splits, int p1, int p2);
-
-arma::mat row_intersection(const arma::mat& mat1, const arma::mat& mat2);
-
-arma::mat row_difference(arma::mat mat1, const arma::mat& mat2);
-
-arma::field<arma::mat> splits_augmentation(arma::field<arma::mat> splits);
-
-//with voronoi tessellation
-
-arma::mat splitsub_to_groupmask(arma::field<arma::mat> splits, int p1, int p2);
-// extract region numbers (labels) from a grouping mask
-
-arma::vec mat_unique(const arma::mat& A);
-// returns a matrix where all unselected regions are set to 0
-
-arma::mat mask_oneval(const arma::mat& A, const arma::mat& mask, int val);
-// using a grouping mask, sum values in a matrix corresponding to 
-// the same group (2d coarsening operation)
-
-double mask_oneval_sum(const arma::mat& A, const arma::mat& mask, int val);
-// same as mask_oneval_sum but for a cube slice
-// cube here will be the cube-X to be transformed in matrix-X
-
-double mask_cube_slice(const arma::cube& C, int slice, const arma::mat& mask, int val);
-// transform a regressor matrix to a vector using grouping mask as coarsening
-
-arma::vec mat_to_vec_by_region(const arma::mat& A, const arma::mat& mask, arma::vec unique_regions);
-// using a grouping mask, transforma a cube to a matrix
-
-arma::mat cube_to_mat_by_region(const arma::cube& C, const arma::mat& mask, arma::vec unique_regions);
-
-// given a vectorized beta vector, a vector of labels, and a grouping mask
-// return a matrix of size size(mask) filling it with beta using regions
-
-arma::mat unmask_vector(const arma::vec& beta, const arma::vec& regions, const arma::mat& mask);
-
+#include "metrop_helper.h"
 
 double blm_marglik(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_post, double a, double b);
+
+arma::mat index_to_subscript(const arma::uvec& index, const arma::mat& m);
 
 class BayesLM2D{
 public:
@@ -86,7 +32,7 @@ public:
   
   double lambda;
   
-  BayesLM flatmodel; //***
+  bmmodels::BayesLM flatmodel; //***
   //VSModule selector;
   
   arma::mat mask_nosplits;
@@ -163,7 +109,5 @@ arma::field<arma::mat> load_splits(int maxlevs);
 arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::field<arma::mat> new_splits);
 double gammaprior_mhr(double new_val, double old_val, double alpha=100, double beta=.5);
 
-arma::mat cube_mean(arma::cube X, int dim);
-arma::mat cube_sum(arma::cube X, int dim);
 
 #endif

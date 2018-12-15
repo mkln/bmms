@@ -7,9 +7,7 @@ using namespace std;
 
 int MCMCSWITCH = 0;
 
-
 arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int stage, int split, int p, double decay){
-  
   //cout << "[][][][][][][][] proposal move rj [][][][][][][][]" << endl;
   arma::vec all_splits = arma::zeros(0);
   for(unsigned int s=0; s<current_splits.n_elem; s++){
@@ -23,7 +21,7 @@ arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int s
   int starting_from = current_splits(stage)(split);
   
   // determining move
-  int move = rndpp_sample1_comp(all_splits, p-1, starting_from, decay);
+  int move = bmrandom::rndpp_sample1_comp(all_splits, p-1, starting_from, decay);
   double ip_move_forward = p-1 - all_splits.n_elem ; // = 1/q(new | old)
   double ip_move_backward = p-1 - all_splits.n_elem; // = 1/(q(old | new))
   
@@ -48,7 +46,7 @@ arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current
   // same probability of moving back here if we were in the proposal
   
   arma::vec proposal_rj = proposal_jumplr_rj(current_splits, stage, split, p, decay);
-  int move_instage = proposal_rj(0); //rndpp_discrete({1, 1})*2-1; // -1: move-, 1: move+ 
+  int move_instage = proposal_rj(0); //bmrandom::rndpp_discrete({1, 1})*2-1; // -1: move-, 1: move+ 
   double rj_prob = proposal_rj(1);
   
   //cout << ">> from " << proposed_splits << " to " << proposed_splits(stage)(split)+move_instage << endl;
@@ -81,7 +79,7 @@ arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current
     //double prob = exp(dlog_mlik(proposed_model, base_model)) * rj_prob;
     //}
     prob = prob > 1 ? 1 : prob;
-    int accepted_proposal = rndpp_discrete({1-prob, prob});
+    int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
     if(accepted_proposal == 1){
       //clog << "[MOVE SPLIT " << stage << "] accept, MLR: " << exp(proposed_model.loglik - base_model.loglik) << endl;
       base_model = proposed_model;
@@ -103,7 +101,7 @@ arma::vec proposal_drop_rj(const arma::field<arma::vec>& current_splits, int sta
     all_splits_elem += current_splits(s).n_elem;
   }
   // determining move
-  int move = rndpp_unif_int(current_splits(stage).n_elem-1); // pick at random from the available at stage
+  int move = bmrandom::rndpp_unif_int(current_splits(stage).n_elem-1); // pick at random from the available at stage
   double ip_move_forward = current_splits(stage).n_elem; // = 1/q(new | old) // how many are available
   // backward move would be to add at this stage
   // we can add here picking at random from the available
@@ -143,7 +141,7 @@ arma::field<arma::vec> proposal_drop_split(const arma::field<arma::vec>& current
   
   arma::vec dropmove = proposal_drop_rj(current_splits, stage, p, n, lambda_prop); //base_model.n_stages);
   int dropping = dropmove(0); //
-  //int dropping = rndpp_unif_int(proposed_splits(stage).n_elem-1);
+  //int dropping = bmrandom::rndpp_unif_int(proposed_splits(stage).n_elem-1);
   double rj_prob = dropmove(1);
   //clog << "dropping with proposal prob " <<  rj_prob << endl;
   
@@ -151,7 +149,7 @@ arma::field<arma::vec> proposal_drop_split(const arma::field<arma::vec>& current
   proposed_splits(stage)(dropping) = -1;
   
   //cout << "fixing possible wrong splits " << endl;
-  proposed_splits(stage) = split_fix(proposed_splits, stage); // fix this but dont touch the stage
+  proposed_splits(stage) = bmfuncs::split_fix(proposed_splits, stage); // fix this but dont touch the stage
   //cout << "proposed splits with this drop proposals look like this: " << endl;
   //cout << proposed_splits << endl;
   //cout << "if I try fixing the stages then " << endl;
@@ -187,7 +185,7 @@ arma::field<arma::vec> proposal_drop_split(const arma::field<arma::vec>& current
   }
   
   prob = prob > 1 ? 1 : prob;
-  int accepted_proposal = rndpp_discrete({1-prob, prob});
+  int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
   if(accepted_proposal == 1){
     cout << "[DROP SPLIT] accept, MLR: " << mlr;
     cout << (current_splits(stage).n_elem == 1 ? " <STAGE> " : "" );
@@ -224,7 +222,7 @@ arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& curre
   
   arma::vec dropmove = proposal_drop_rj(current_splits, stage, p, n, lambda_prop); //base_model.n_stages);
   int dropping = dropmove(0); //
-  //int dropping = rndpp_unif_int(proposed_splits(stage).n_elem-1);
+  //int dropping = bmrandom::rndpp_unif_int(proposed_splits(stage).n_elem-1);
   double rj_prob = dropmove(1);
   //clog << "dropping with proposal prob " <<  rj_prob << endl;
   
@@ -232,7 +230,7 @@ arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& curre
   proposed_splits(stage)(dropping) = -1;
   
   //cout << "fixing possible wrong splits " << endl;
-  proposed_splits(stage) = split_fix(proposed_splits, stage); // fix this but dont touch the stage
+  proposed_splits(stage) = bmfuncs::split_fix(proposed_splits, stage); // fix this but dont touch the stage
   //cout << "proposed splits with this drop proposals look like this: " << endl;
   //cout << proposed_splits << endl;
   //cout << "if I try fixing the stages then " << endl;
@@ -261,7 +259,7 @@ arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& curre
   }
   
   prob = prob > 1 ? 1 : prob;
-  int accepted_proposal = rndpp_discrete({1-prob, prob});
+  int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
   if(accepted_proposal == 1){
     cout << "[DROP SPLIT] accept, MLR: " << mlr;
     cout << (current_splits(stage).n_elem == 1 ? " <STAGE> " : "" );
@@ -295,7 +293,7 @@ arma::field<arma::vec> proposal_drop_stage(const arma::field<arma::vec>& current
   
   //arma::vec dropmove = proposal_drop_rj(current_splits, stage, p, n, base_model.n_stages);
   //int dropping = dropmove(0); //
-  //int dropping = rndpp_unif_int(proposed_splits(stage).n_elem-1);
+  //int dropping = bmrandom::rndpp_unif_int(proposed_splits(stage).n_elem-1);
   double rj_prob = 1.0;//dropmove(1);
   //clog << "dropping with proposal prob " <<  rj_prob << endl;
   
@@ -303,12 +301,12 @@ arma::field<arma::vec> proposal_drop_stage(const arma::field<arma::vec>& current
   //proposed_splits(stage)(dropping) = -1;
   
   //cout << "fixing possible wrong splits " << endl;
-  //proposed_splits(stage) = split_fix(proposed_splits, stage); // fix this but dont touch the stage
+  //proposed_splits(stage) = bmfuncs::split_fix(proposed_splits, stage); // fix this but dont touch the stage
   //cout << "proposed splits with this drop proposals look like this: " << endl;
   //cout << proposed_splits << endl;
   
   cout << "if I try fixing the stages then " << endl;
-  cout << stage_fix(proposed_splits) << endl;
+  cout << bmfuncs::stage_fix(proposed_splits) << endl;
   cout << "done" << endl;
   
   ModularLinReg proposed_model = base_model;
@@ -334,7 +332,7 @@ arma::field<arma::vec> proposal_drop_stage(const arma::field<arma::vec>& current
   prob = mlr * dropping_stage;
   
   prob = prob > 1 ? 1 : prob;
-  int accepted_proposal = rndpp_discrete({1-prob, prob});
+  int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
   if(accepted_proposal == 1){
     //clog << "-";
     //clog << "[DROP STAGE] accept, MLR: " << mlr << endl;
@@ -359,7 +357,7 @@ arma::vec proposal_add_rj(const arma::field<arma::vec>& current_splits, int stag
   }
   
   // determining move
-  int move = rndpp_sample1_comp(all_splits, p-2, -1, 1.0);  // pick at random from the available from p-1
+  int move = bmrandom::rndpp_sample1_comp(all_splits, p-2, -1, 1.0);  // pick at random from the available from p-1
   
   double ip_move_forward = p-1 - all_splits.n_elem; // = 1/q(new | old) // how many are available
   // backward move would be to drop at this stage
@@ -395,7 +393,7 @@ arma::field<arma::vec> proposal_add_split(const arma::field<arma::vec>& current_
   double rj_prob = addsplit_rj(1);
   //clog << "adding with proposal prob " <<  rj_prob << endl;
   
-  //rndpp_sample1_comp(current_splits(stage), p-1); //can't sample the last one because it's not a split
+  //bmrandom::rndpp_sample1_comp(current_splits(stage), p-1); //can't sample the last one because it's not a split
   
   //clog << "proposal: add " << new_split << " to stage " << stage << " ... ";
   //move_possible(current_splits, new_split, stage, current_splits(stage).n_elem, p)
@@ -433,7 +431,7 @@ arma::field<arma::vec> proposal_add_split(const arma::field<arma::vec>& current_
     //double prob = exp(dlog_mlik(proposed_model, base_model)) * rj_prob;
     //clog << proposed_model.loglik.t() << endl << base_model.loglik.t();
     prob = prob > 1 ? 1 : prob;
-    double accepted_proposal = rndpp_discrete({1-prob, prob});
+    double accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
     if(accepted_proposal == 1){
       cout << "[ADD SPLIT] accept, MLR: " << exp(arma::accu(proposed_model.loglik) - arma::accu(base_model.loglik)) << " rjprob=" << rj_prob << endl;
       base_model = proposed_model;
@@ -457,7 +455,7 @@ arma::vec proposal_newstage_rj(const arma::field<arma::vec>& current_splits, int
     all_splits = arma::join_vert(all_splits, current_splits(s));
   }
   // determining move
-  int move = rndpp_sample1_comp(all_splits, p-2, -1, 1.0);  // pick at random from the available from p-2
+  int move = bmrandom::rndpp_sample1_comp(all_splits, p-2, -1, 1.0);  // pick at random from the available from p-2
   // p-1 is the last variable and cant split there
   
   double ip_move_forward = p-1 - all_splits.n_elem; // = 1/q(new | old) // how many are available
@@ -514,7 +512,7 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
                         rj_prob;
       //cout << "adding? MLR " << exp(proposed_model.loglik - base_model.loglik) << endl;
       prob = prob > 1 ? 1 : prob;
-      int accepted_proposal = rndpp_discrete({1-prob, prob});
+      int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
       if(accepted_proposal == 1){
         //clog << "+";
         //clog << "[ADD STAGE] accept, MLR: " << exp(proposed_model.loglik - base_model.loglik) << " now:" << proposed_model.n_stages << endl;
@@ -617,7 +615,7 @@ Rcpp::List sof(arma::vec& y, arma::mat& X,
     int n_stages = base_model.n_stages;
     
     // move, add split, drop split, add stage, drop stage
-    int move_type = rndpp_discrete({1.0/5, 1.0/5, 1.0/5, 1.0/5, 1.0/5});
+    int move_type = bmrandom::rndpp_discrete({1.0/5, 1.0/5, 1.0/5, 1.0/5, 1.0/5});
     //clog << "move " << move_type << endl;
     
     if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
@@ -747,7 +745,7 @@ Rcpp::List sof(arma::vec& y, arma::mat& X,
 }
 
 
-
+//' @export
 // [[Rcpp::export]]
 Rcpp::List sofk(const arma::vec& y, const arma::mat& X, 
                 const arma::field<arma::vec>& start_splits, 
@@ -832,7 +830,7 @@ Rcpp::List sofk(const arma::vec& y, const arma::mat& X,
     
     // move, add split, drop split, add stage, drop stage
     // this function only allows move
-    int move_type = rndpp_discrete({.25, .25, .25, .25});
+    int move_type = bmrandom::rndpp_discrete({.25, .25, .25, .25});
     if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
       cout << "MOVING [" << m << "]" << endl;
       for(unsigned int s=0; s<n_stages; s++){
@@ -928,6 +926,7 @@ Rcpp::List sofk(const arma::vec& y, const arma::mat& X,
 }
 
 
+//' @export
 // [[Rcpp::export]]
 Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X, 
                        arma::field<arma::vec> start_splits, 
@@ -1030,7 +1029,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     
     // move, add split, drop split, add stage, drop stage
     // this function only allows move
-    int move_type = rndpp_discrete({.25, .25, .25, .25});
+    int move_type = bmrandom::rndpp_discrete({.25, .25, .25, .25});
     if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
       cout << "MOVING [" << m << "]" << endl;
       for(unsigned int s=0; s<n_stages; s++){
@@ -1082,7 +1081,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     }
     if(move_type == 3){
       cout << "REFRESH PARAMS" << endl;
-      z = mvtruncnormal(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim, 1.0*In, 1).col(0);
+      z = bmrandom::mvtruncnormal(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim, 1.0*In, 1).col(0);
       base_model = ModularLinReg(z, X, n, splits(m), 0, max_stages, false, false,
                                  base_model.a, base_model.b);
     }

@@ -2,66 +2,9 @@
 //[[Rcpp::depends(RcppArmadillo)]]
 
 #include "metrop_helper.h"
-#include <RcppArmadilloExtensions/sample.h>
 
 using namespace std;
 
-int rndpp_sample1_comp(arma::vec x, int p, int current_split, double decay=4.0){
-  /* vector x = current splits, p = how many in total
-  * this returns 1 split out of the complement 
-  * decay controls how far the proposed jump is going to be from the current
-  * decay=1 corresponds to uniform prob on all availables
-  * if current_split=-1 then pick uniformly
-  */
-  //double decay = 5.0;
-  arma::vec all = arma::linspace(0, p-1, p);
-  arma::vec avail = bmms_setdiff(all, x);
-  //cout << avail << endl;
-  arma::vec probweights;
-  if(current_split == -1){
-    probweights = arma::ones(arma::size(avail));
-  } else {
-    probweights = arma::exp(arma::abs(avail - current_split) * log(1.0/decay));
-  }
-  if(avail.n_elem > 0){
-    arma::vec out = Rcpp::RcppArmadillo::sample(avail, 1, true, probweights); 
-    return out(0);
-  } else {
-    return -1;
-  }
-}
-
-arma::vec rndpp_shuffle(const arma::vec& x){
-  /* vector x = a vector
-  output = reshuffled vector
-  */
-  //double decay = 5.0;
-  return Rcpp::RcppArmadillo::sample(x, x.n_elem, false); 
-}
-
-
-arma::uvec sample_index(const int& n, const int &vsize){
-  arma::uvec sequence = arma::linspace<arma::uvec>(0, vsize-1, vsize);
-  arma::uvec out = Rcpp::RcppArmadillo::sample(sequence, n, false);
-  return out;
-}
-
-int sample_one_int(const int &vsize){
-  arma::uvec sequence = arma::linspace<arma::uvec>(0, vsize-1, vsize);
-  int out = (Rcpp::RcppArmadillo::sample(sequence, 1, false))(0);
-  return out;
-}
-
-
-arma::mat reshaper(arma::field<arma::mat> J_field, int s){
-  arma::mat stretcher = (J_field(s).t() * J_field(s-1));
-  arma::mat normalizer = col_sums(J_field(s));
-  //stretcher.transform( [](double val) { return (val>0 ? 1 : 0); } );
-  for(unsigned int j=0; j<stretcher.n_rows; j++){
-    stretcher.row(j) = stretcher.row(j)/normalizer(j);
-  }
-  return(stretcher);
-}
 
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar){
   //cout << arma::size(x) << " " << arma::size(mean) << " " << arma::size(covar) << endl;
@@ -181,13 +124,13 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
     );
     
     //clog << a + n/2.0 << " " << (b + beta_post) << endl;
-    sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post));
+    sigmasq_sample = 1.0/bmrandom::rndpp_gamma(a + n/2.0, 1.0/(b + beta_post));
     sigmasq_mean = (b+beta_post)/(a+n/2.0+1);
   } else {
     sigmasq_sample = 1.0;
   }
   
-  theta_sample = rndpp_mvnormal(1, mean_post, sigmasq_sample*var_post).t();
+  theta_sample = bmrandom::rndpp_mvnormal(1, mean_post, sigmasq_sample*var_post).t();
   
   //clog << sigmasq_sample << " " << sigmasq_mean << endl;
   //module variance HERE to be used with SUBSEQUENT models
@@ -228,14 +171,14 @@ void Module::redo(arma::vec& e){
     cout << "beta post " << beta_post << endl;
     
     
-    sigmasq_sample = 1.0/rndpp_gamma(a + n/2.0, 1.0/(b + beta_post)); //1.0/rndpp_gamma(n/2.0, 1.0/beta_post);
+    sigmasq_sample = 1.0/bmrandom::rndpp_gamma(a + n/2.0, 1.0/(b + beta_post)); //1.0/rndpp_gamma(n/2.0, 1.0/beta_post);
   } else {
     sigmasq_sample = 1.0;
   }
   
   mean_post = var_post * Xj.t() * ej;
   cout << "sigmasq sample " << sigmasq_sample << endl;
-  theta_sample = rndpp_mvnormal(1, mean_post, sigmasq_sample*var_post).t();
+  theta_sample = bmrandom::rndpp_mvnormal(1, mean_post, sigmasq_sample*var_post).t();
   
   //if(MCMCSWITCH == 1){
   marglik_module_var = sigmasq_sample * (Xj * var_post * Xj.t()); 
@@ -315,7 +258,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   grid = arma::linspace(0, p-1, p);
   pones = arma::ones(p, 1);
   
-  J_field(0) = multi_split(pones, split_seq(0), p);
+  J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   
   X_field(0) = X * J_field(0);
   //
@@ -327,7 +270,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   // structure of all other modules
   //cout << "ModularLinReg :: creating other elements after 0 " << endl;
   for(unsigned int j=1; j<n_stages; j++){
-    J_field(j) = multi_split(pones, bigsplit(j), p);
+    J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     X_field(j) = X * J_field(j);
   }
   
@@ -402,7 +345,7 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
   bigsplit(s) = arma::join_vert(bigsplit(s-1), new_splits);
   cumsplit(s) = bigsplit(s).n_elem;
   
-  J_field(s) = multi_split(pones, bigsplit(s), p);
+  J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
   
   X_field(s) = X * J_field(s);
   
@@ -588,7 +531,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   grid = arma::linspace(0, p-1, p);
   pones = arma::ones(p, 1);
   
-  J_field(0) = multi_split(pones, split_seq(0), p);
+  J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   
   X_field(0) = X * J_field(0);
   //
@@ -600,7 +543,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   // structure of all other modules
   //cout << "ModularLinReg :: creating other elements after 0 " << endl;
   for(unsigned int j=1; j<n_stages; j++){
-    J_field(j) = multi_split(pones, bigsplit(j), p);
+    J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     X_field(j) = X * J_field(j);
   }
   
@@ -671,7 +614,7 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
     //starting from whichone, but n_stages is the same here
     bigsplit(s) = arma::join_vert(bigsplit(s-1), split_seq(s));
     cumsplit(s) = bigsplit(s).n_elem;
-    J_field(s) = multi_split(pones, bigsplit(s), p);
+    J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
     
     X_field(s) = X * J_field(s);
     
@@ -731,14 +674,5 @@ double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, in
   return 1.0;
 }
 
-arma::field<arma::vec> splits_truncate(arma::field<arma::vec> splits, int k){
-  int k_effective = splits.n_elem > k ? k : splits.n_elem;
-  if(k_effective<1){
-    k_effective=1;
-  }
-  arma::field<arma::vec> splits_new(k_effective);
-  for(int i=0; i<k_effective; i++){
-    splits_new(i) = splits(i);
-  }
-  return splits_new;
-}
+
+

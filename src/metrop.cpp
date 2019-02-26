@@ -842,9 +842,9 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         clog << "[" << round(100*m/mcmc) << "%]";
       } 
     } 
-    clog << "[100%]" << endl;
+    
   } // mcmc loop 
-
+  clog << "[100%]" << endl;
   return Rcpp::List::create(
     Rcpp::Named("splits") = splits_save,
     //Rcpp::Named("mu") = mu_mcmc,

@@ -58,19 +58,3 @@ sofr <- function(y, X, K, mcmc, burn=0, lambda=1, family="gaussian"){
   return(result)
 }
 
-#' Bayesian Modular & Multiscale Scalar-on-function regression
-#' 
-#' This function applies a Bayesian Modular & Multiscale regression model to
-#' a scalar response, using functional predictors recorded on a common, regular grid.
-#' The overall model is assumed gaussian.
-#' @param y Vector of outcomes
-#' @param X Matrix of dimension (n, p)
-#' @param K Maximum number of modular steps. 
-#' @param mcmc Number of Markov chain-Monte Carlo iterations
-#' @param burn Number of MCMC iterations to discard
-#' @export
-sofr2 <- function(y, X, maxk, mcmc, burn=0, lambda=1){
-  p <- ncol(X)
-  result <- sof(y, X, maxk, mcmc, burn, lambda)
-  return(result)
-}

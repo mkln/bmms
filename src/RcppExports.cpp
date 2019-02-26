@@ -77,32 +77,13 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// sof
-Rcpp::List sof(arma::vec& y, arma::mat& X, int max_stages, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, bool silent);
-RcppExport SEXP _bmms_sof(SEXP ySEXP, SEXP XSEXP, SEXP max_stagesSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP silentSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< int >::type max_stages(max_stagesSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type ain(ainSEXP);
-    Rcpp::traits::input_parameter< double >::type bin(binSEXP);
-    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
-    rcpp_result_gen = Rcpp::wrap(sof(y, X, max_stages, mcmc, burn, lambda, ain, bin, silent));
-    return rcpp_result_gen;
-END_RCPP
-}
 // sofk
-Rcpp::List sofk(const arma::vec& y, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool silent);
-RcppExport SEXP _bmms_sofk(SEXP ySEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP silentSEXP) {
+Rcpp::List sofk(const arma::vec& yin, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool onesigma, bool silent, double gin, double structpar);
+RcppExport SEXP _bmms_sofk(SEXP yinSEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP onesigmaSEXP, SEXP silentSEXP, SEXP ginSEXP, SEXP structparSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type yin(yinSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type start_splits(start_splitsSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
@@ -112,8 +93,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type bin(binSEXP);
     Rcpp::traits::input_parameter< int >::type ii(iiSEXP);
     Rcpp::traits::input_parameter< int >::type ll(llSEXP);
+    Rcpp::traits::input_parameter< bool >::type onesigma(onesigmaSEXP);
     Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
-    rcpp_result_gen = Rcpp::wrap(sofk(y, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, silent));
+    Rcpp::traits::input_parameter< double >::type gin(ginSEXP);
+    Rcpp::traits::input_parameter< double >::type structpar(structparSEXP);
+    rcpp_result_gen = Rcpp::wrap(sofk(yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -137,19 +121,72 @@ BEGIN_RCPP
 END_RCPP
 }
 // bmms_base
-Rcpp::List bmms_base(arma::vec& y, arma::mat& X, double g, int mcmc, int burn, arma::field<arma::vec> splits, bool silent);
-RcppExport SEXP _bmms_bmms_base(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP splitsSEXP, SEXP silentSEXP) {
+Rcpp::List bmms_base(arma::vec& y, arma::mat& X, double sigmasq, double g, int mcmc, int burn, arma::field<arma::vec> splits, bool silent);
+RcppExport SEXP _bmms_bmms_base(SEXP ySEXP, SEXP XSEXP, SEXP sigmasqSEXP, SEXP gSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP splitsSEXP, SEXP silentSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type sigmasq(sigmasqSEXP);
     Rcpp::traits::input_parameter< double >::type g(gSEXP);
     Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
     Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
     Rcpp::traits::input_parameter< arma::field<arma::vec> >::type splits(splitsSEXP);
     Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
-    rcpp_result_gen = Rcpp::wrap(bmms_base(y, X, g, mcmc, burn, splits, silent));
+    rcpp_result_gen = Rcpp::wrap(bmms_base(y, X, sigmasq, g, mcmc, burn, splits, silent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// div_by_colsum
+arma::mat div_by_colsum(const arma::mat& J);
+RcppExport SEXP _bmms_div_by_colsum(SEXP JSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type J(JSEXP);
+    rcpp_result_gen = Rcpp::wrap(div_by_colsum(J));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bdet
+double bdet(const arma::mat& X);
+RcppExport SEXP _bmms_bdet(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(bdet(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// totsplit_prior2_ratio
+double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop);
+RcppExport SEXP _bmms_totsplit_prior2_ratio(SEXP tot_split_propSEXP, SEXP tot_split_origSEXP, SEXP norpSEXP, SEXP ssSEXP, SEXP lambda_propSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type tot_split_prop(tot_split_propSEXP);
+    Rcpp::traits::input_parameter< int >::type tot_split_orig(tot_split_origSEXP);
+    Rcpp::traits::input_parameter< int >::type norp(norpSEXP);
+    Rcpp::traits::input_parameter< int >::type ss(ssSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_prop(lambda_propSEXP);
+    rcpp_result_gen = Rcpp::wrap(totsplit_prior2_ratio(tot_split_prop, tot_split_orig, norp, ss, lambda_prop));
+    return rcpp_result_gen;
+END_RCPP
+}
+// split_struct_ratio2
+double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original, int stage, int p, double param);
+RcppExport SEXP _bmms_split_struct_ratio2(SEXP proposedSEXP, SEXP originalSEXP, SEXP stageSEXP, SEXP pSEXP, SEXP paramSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type proposed(proposedSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type original(originalSEXP);
+    Rcpp::traits::input_parameter< int >::type stage(stageSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type param(paramSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_struct_ratio2(proposed, original, stage, p, param));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -159,10 +196,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_soi_binary_cpp", (DL_FUNC) &_bmms_soi_binary_cpp, 14},
     {"_bmms_index_to_subscript", (DL_FUNC) &_bmms_index_to_subscript, 2},
     {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 2},
-    {"_bmms_sof", (DL_FUNC) &_bmms_sof, 9},
-    {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 11},
+    {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 14},
     {"_bmms_sofk_binary", (DL_FUNC) &_bmms_sofk_binary, 9},
-    {"_bmms_bmms_base", (DL_FUNC) &_bmms_bmms_base, 7},
+    {"_bmms_bmms_base", (DL_FUNC) &_bmms_bmms_base, 8},
+    {"_bmms_div_by_colsum", (DL_FUNC) &_bmms_div_by_colsum, 1},
+    {"_bmms_bdet", (DL_FUNC) &_bmms_bdet, 1},
+    {"_bmms_totsplit_prior2_ratio", (DL_FUNC) &_bmms_totsplit_prior2_ratio, 5},
+    {"_bmms_split_struct_ratio2", (DL_FUNC) &_bmms_split_struct_ratio2, 5},
     {NULL, NULL, 0}
 };
 

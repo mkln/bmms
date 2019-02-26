@@ -9,14 +9,23 @@
 
 using namespace std;
 
+double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original,
+                          int stage, int p, double param=20);
 
+arma::mat div_by_colsum(const arma::mat& J);
+  
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar);
+
+double bdet(const arma::mat& X);
+
+double modular_loglikn(const arma::vec& x, const arma::mat& Si);
 
 double modular_loglik0(arma::vec& y, double a, double b);
   
 double modular_loglik1(arma::vec& y, arma::vec& marglik_mean, arma::mat& varloglik, arma::vec& sigmasq_scales, int n_stages);
 
 double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_post, double a, double b);
+
 
 class Module {
 public:
@@ -25,12 +34,18 @@ public:
   arma::vec ej;
   arma::vec ej_next;
   arma::mat Xj;
-  arma::mat Xfull;
+  
+  double bmean;
+  double icept;
+  arma::vec xs;
+  
+  arma::vec xb_mean, xb_sample;
+  //arma::mat Xfull;
   
   arma::mat J_pre;
   arma::mat J_now;
-  arma::mat stretcher;
-  arma::vec normalizer;
+  //arma::mat stretcher;
+  //arma::vec normalizer;
   
   arma::vec grid;
   bool fix_sigma;
@@ -47,6 +62,8 @@ public:
   arma::vec mean_pre;
   double a;
   double b;
+  
+  arma::vec Jcs;
   
   double g; // g-prior
   double ridge;
@@ -70,16 +87,19 @@ public:
   double sigmasq_mean;
   //arma::mat bigsigma;
   
-  arma::mat marglik_module_var; //because there is no previous module
-  arma::mat marglik_integr_var;
-  arma::vec marglik_mean;
+  //arma::mat marglik_module_var; //because there is no previous module
+  //arma::mat marglik_integr_var;
+  //arma::vec marglik_mean;
   
-  void redo(arma::vec&);
+  void redo(const arma::vec&,
+            const arma::mat&,
+            const arma::mat&,
+            const arma::vec&);
   
   // e, X, Jpre, Jnow, prior mean and var, previously sampled theta
   Module(arma::mat&, arma::vec&, arma::mat&, 
          double, arma::mat&, arma::mat&, arma::vec&, arma::vec&, arma::vec&, arma::vec&, 
-         int, bool, double, double);
+         int, double, double, double);
   // empty constructor
   Module();
 };
@@ -96,7 +116,13 @@ public:
   arma::mat X;
   double intercept;
   bool fix_sigma;
+  bool nested;
+  double fixed_sigma_v;
     
+  double structpar;
+  
+  arma::vec xb;
+  
   // limit to number of possible stages
   int max_stages;
   
@@ -112,8 +138,8 @@ public:
   // resolution structure
   arma::field<arma::mat> X_field;
   arma::field<arma::mat> J_field;
-  arma::field<arma::vec> m_field;
-  arma::field<arma::mat> M_field;
+  //arma::field<arma::vec> m_field;
+  //arma::field<arma::mat> M_field;
   
   double a, b;
   
@@ -149,8 +175,8 @@ public:
   // y, X, list of splits for each stage, limit to stages
   ModularLinReg(const arma::vec&, const arma::mat&, 
                 double, 
-                const arma::field<arma::vec>&, int, int, bool, bool,
-                double, double);
+                const arma::field<arma::vec>&, int, int, double, bool,
+                double, double, double);
   
 };
 

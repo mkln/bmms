@@ -21,13 +21,8 @@ load_splits <- function(maxlevs, sname) {
 }
 
 #' @export
-sof <- function(y, X, max_stages, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, silent = TRUE) {
-    .Call('_bmms_sof', PACKAGE = 'bmms', y, X, max_stages, mcmc, burn, lambda, ain, bin, silent)
-}
-
-#' @export
-sofk <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, silent = TRUE) {
-    .Call('_bmms_sofk', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, silent)
+sofk <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0) {
+    .Call('_bmms_sofk', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar)
 }
 
 #' @export
@@ -35,7 +30,24 @@ sofk_binary <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.
     .Call('_bmms_sofk_binary', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ii, ll, silent)
 }
 
-bmms_base <- function(y, X, g, mcmc, burn, splits, silent = TRUE) {
-    .Call('_bmms_bmms_base', PACKAGE = 'bmms', y, X, g, mcmc, burn, splits, silent)
+#' @export
+bmms_base <- function(y, X, sigmasq, g, mcmc, burn, splits, silent = TRUE) {
+    .Call('_bmms_bmms_base', PACKAGE = 'bmms', y, X, sigmasq, g, mcmc, burn, splits, silent)
+}
+
+div_by_colsum <- function(J) {
+    .Call('_bmms_div_by_colsum', PACKAGE = 'bmms', J)
+}
+
+bdet <- function(X) {
+    .Call('_bmms_bdet', PACKAGE = 'bmms', X)
+}
+
+totsplit_prior2_ratio <- function(tot_split_prop, tot_split_orig, norp, ss, lambda_prop) {
+    .Call('_bmms_totsplit_prior2_ratio', PACKAGE = 'bmms', tot_split_prop, tot_split_orig, norp, ss, lambda_prop)
+}
+
+split_struct_ratio2 <- function(proposed, original, stage, p, param) {
+    .Call('_bmms_split_struct_ratio2', PACKAGE = 'bmms', proposed, original, stage, p, param)
 }
 

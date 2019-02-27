@@ -31,10 +31,8 @@ arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int s
     // will select in 0:p-2
     move = bmrandom::rndpp_sample1_comp(all_splits, p-2, starting_from, stage, current_splits.n_elem);
   } catch (...){
-    clog << "Exception occurred: " << endl << current_splits << endl;
-    clog << "p " << p << " starting from " << starting_from << " stage " << stage << " totlev " << current_splits.n_elem << endl;
-    clog << "move " << move << endl;
-    throw 1;
+    clog << "Warning: issue encountered when moving, running alternative proposal." << endl;
+    move = bmrandom::rndpp_sample1_comp_alt(all_splits, p-2, starting_from);
   }
    
   double ip_move_forward = p-1 - all_splits.n_elem ; // = 1/q(new | old)

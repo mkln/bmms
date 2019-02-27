@@ -20,14 +20,18 @@ load_splits <- function(maxlevs, sname) {
     .Call('_bmms_load_splits', PACKAGE = 'bmms', maxlevs, sname)
 }
 
+struct2d_prior_ratio <- function(proposed, original, stage, p, param) {
+    .Call('_bmms_struct2d_prior_ratio', PACKAGE = 'bmms', proposed, original, stage, p, param)
+}
+
 #' @export
 sofk <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0) {
     .Call('_bmms_sofk', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar)
 }
 
 #' @export
-sofk_binary <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ii = 0L, ll = 0L, silent = TRUE) {
-    .Call('_bmms_sofk_binary', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ii, ll, silent)
+sofk_binary <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ii = 0L, ll = 0L, silent = TRUE, structpar = 10) {
+    .Call('_bmms_sofk_binary', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ii, ll, silent, structpar)
 }
 
 #' @export

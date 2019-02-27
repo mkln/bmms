@@ -28,10 +28,11 @@ arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int s
   int move;
   try
   {
-    move = bmrandom::rndpp_sample1_comp(all_splits, p-2, starting_from, stage+1, current_splits.n_elem);
+    // will select in 0:p-2
+    move = bmrandom::rndpp_sample1_comp(all_splits, p-2, starting_from, stage, current_splits.n_elem);
   } catch (...){
-    clog << "Exception occurred: " << all_splits << endl;
-    clog << "p " << p << " starting from" << starting_from << " stage " << stage << " totlev " << current_splits.n_elem << endl;
+    clog << "Exception occurred: " << endl << current_splits << endl;
+    clog << "p " << p << " starting from " << starting_from << " stage " << stage << " totlev " << current_splits.n_elem << endl;
     clog << "move " << move << endl;
     throw 1;
   }
@@ -864,7 +865,8 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
                        unsigned int mcmc = 100, unsigned int burn = 50,
                        double lambda=5.0,
                        int ii=0, int ll=0,
-                       bool silent = true){
+                       bool silent = true,
+                       double structpar=10){
   if(silent){ cout.setstate(std::ios_base::failbit); } else {  cout.clear(); }
   // sample from posterior of changepoints given their number
   // idea:
@@ -934,7 +936,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   double accepted = 0;
   
   cout << "first model" << endl;
-  ModularLinReg base_model(y, X, g, splits(0), 0, max_stages, false, false, 2.1, 1.1, 1.0);
+  ModularLinReg base_model(y, X, g, splits(0), 0, max_stages, 1.0, false, 2.1, 1.1, structpar);
   int m=0;
   
   ybin = y;
@@ -947,6 +949,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   int tot_added_stages = 0;
   int tot_dropped_stages = 0;
   double decay = 2.0;
+  int choices = 4;
   
   for(unsigned int m = 1; m < mcmc; m++){
     Rcpp::checkUserInterrupt();
@@ -962,7 +965,9 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     
     // move, add split, drop split, add stage, drop stage
     // this function only allows move
-    int move_type = bmrandom::rndpp_discrete({.25, .25, .25, .25});
+    
+    int move_type = arma::randi<int>(arma::distr_param(0, choices-1));
+
     if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
       cout << "MOVING [" << m << "]" << endl;
       for(unsigned int s=0; s<n_stages; s++){
@@ -1015,7 +1020,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     if(move_type == 3){
       cout << "REFRESH PARAMS" << endl;
       z = bmrandom::mvtruncnormal(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim, 1.0*In, 1).col(0);
-      base_model = ModularLinReg(z, X, n, splits(m), 0, max_stages, false, false,
+      base_model = ModularLinReg(z, X, g, splits(m), 0, max_stages, 1.0, false,
                                  base_model.a, base_model.b, base_model.structpar);
     }
     
@@ -1045,9 +1050,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     
   } // mcmc loop 
   
-  if(!(ii % 20)) clog << ii << "-[" << ll << " done.]" << endl;
-  
-  MCMCSWITCH = 0;
+  clog << "[100%]" << endl;
   
   //clog << R::qnorm(0.025, -0.16, 1.0, 1, 0) << endl;
   return Rcpp::List::create(

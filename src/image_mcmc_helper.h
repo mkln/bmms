@@ -14,12 +14,14 @@ arma::mat index_to_subscript(const arma::uvec& index, const arma::mat& m);
 class BayesLM2D{
 public:
   
-  bool binary;
+  bool fix_sigma;
   
   arma::mat X_flat;
   arma::cube Xcube;
   
   arma::vec y;
+  
+  arma::mat In;
   
   int p1, p2;
   
@@ -57,13 +59,13 @@ public:
   arma::vec residuals; 
   arma::vec Xb;
   
-  BayesLM2D(arma::vec&, arma::cube&, arma::field<arma::mat>&, arma::mat&, double, bool);
+  BayesLM2D(arma::vec&, arma::cube&, arma::field<arma::mat>&, arma::mat&, double, bool, double);
 };
 
 class ModularLR2D {
 public:
   
-  bool binary;
+  bool fix_sigma;
   
   // input data
   int n;
@@ -94,14 +96,16 @@ public:
   arma::vec ones;
   arma::vec intercept;
   arma::vec icept_sampled;
+  arma::vec sigmasq_sampled;
   arma::cube theta_sampled;
   arma::mat mask_nosplits;
   
   arma::vec Xb_sum;
   //void redo();
-  
+  ModularLR2D();
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double);
-  ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double, bool);
+  ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double, 
+              bool, double);
 };
 
 arma::field<arma::mat> load_splits(int maxlevs);
@@ -109,5 +113,7 @@ arma::field<arma::mat> load_splits(int maxlevs);
 arma::field<arma::mat> merge_splits(arma::field<arma::mat>& old_splits, arma::field<arma::mat> new_splits);
 double gammaprior_mhr(double new_val, double old_val, double alpha=100, double beta=.5);
 
+double struct2d_prior_ratio(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original,
+                            int stage, int p, double param);
 
 #endif

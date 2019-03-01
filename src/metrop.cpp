@@ -748,7 +748,6 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
       cout << "MOVING [" << m << "]" << endl;
       for(int s=n_stages-1; s>-1; s--){
         cout << "  STAGE : " << s << endl;
-        
         // cycle through the splits. either change +1 or -1, or delete
         // for every proposal, choose whether to accept it
         // if accepted, save to splits at this mcmc stage

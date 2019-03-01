@@ -55,3 +55,7 @@ split_struct_ratio2 <- function(proposed, original, stage, p, param) {
     .Call('_bmms_split_struct_ratio2', PACKAGE = 'bmms', proposed, original, stage, p, param)
 }
 
+wavelettize <- function(J) {
+    .Call('_bmms_wavelettize', PACKAGE = 'bmms', J)
+}
+

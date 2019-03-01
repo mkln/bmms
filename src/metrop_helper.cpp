@@ -163,7 +163,7 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   xb_sample = Xj * theta_sample + icept;
   ej_next = ej - xb_sample;
 
-  xb_mean = Xj * (bmean+ mean_post) + icept;
+  xb_mean = Xj * (bmean + mean_post) + icept;
   
 }
 
@@ -188,16 +188,16 @@ void Module::redo(const arma::vec& e,
   } else {
     //sigmasq_sample = fix_sigma;
   }
-  mean_post = bmean + var_post * Xj.t() * (ej - icept - xs*bmean);
+  mean_post = var_post * Xj.t() * (ej - icept - xs*bmean);
   cout << "sigmasq sample " << sigmasq_sample << endl;
   
-  theta_sample = bmrandom::rndpp_mvnormal2(1, mean_post, sigmasq_sample*var_post).t();
+  theta_sample = bmrandom::rndpp_mvnormal2(1, bmean + mean_post, sigmasq_sample*var_post).t();
   theta_p_sample = (Jpre * theta_sample_pre + Jnow * theta_sample);
   
   
   xb_sample = Xj * theta_sample + icept;
   ej_next = ej - xb_sample;
-  xb_mean = Xj * mean_post + icept;
+  xb_mean = Xj * (bmean + mean_post) + icept;
   
   //if(MCMCSWITCH == 1){
   //marglik_module_var = sigmasq_sample * (Xj * var_post * Xj.t()); 
@@ -283,7 +283,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   pones = arma::ones(p, 1);
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
-  J_field(0) = wavelettize(J_field(0));
+  //J_field(0) = wavelettize(J_field(0));
 
   
   X_field(0) = X * J_field(0);
@@ -297,7 +297,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   //cout << "ModularLinReg :: creating other elements after 0 " << endl;
   for(unsigned int j=1; j<n_stages; j++){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
-    J_field(j) = wavelettize(J_field(j));
+    //J_field(j) = wavelettize(J_field(j));
     X_field(j) = X * J_field(j);
   }
   
@@ -376,7 +376,7 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
     cumsplit(s) += bigsplit(s).n_elem;
   }
   J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
-  J_field(s) = wavelettize(J_field(s));
+  //J_field(s) = wavelettize(J_field(s));
   
   X_field(s) = X * J_field(s);
   
@@ -556,7 +556,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   //pones = arma::ones(p, 1);
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
-  J_field(0) = wavelettize(J_field(0));
+  //J_field(0) = wavelettize(J_field(0));
   
   X_field(0) = X * J_field(0);
   
@@ -570,7 +570,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   //cout << "ModularLinReg :: creating other elements after 0 " << endl;
   for(unsigned int j=1; j<n_stages; j++){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
-    J_field(j) = wavelettize(J_field(j));
+    //J_field(j) = wavelettize(J_field(j));
     X_field(j) = X * J_field(j);
   }
   
@@ -650,7 +650,7 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
       cumsplit(s) += bigsplit(s).n_elem;
     }
     J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
-    J_field(s) = wavelettize(J_field(s));
+    //J_field(s) = wavelettize(J_field(s));
     X_field(s) = X * J_field(s);
     
     xb -= modules[s].xb_mean;
@@ -718,7 +718,6 @@ double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::f
   arma::vec proposed_here_diff = arma::diff(arma::join_vert(proposed_unique, arma::ones(1)*p));
   arma::vec original_here_diff = arma::diff(arma::join_vert(original_unique, arma::ones(1)*p));
 
-  
   cout << "SSRATIO CALC" << endl << proposed_here_diff.t() << endl << original_here_diff.t() << endl;
   double rat = 1.0;
   try{
@@ -732,13 +731,13 @@ double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::f
       clog << "Runtime error: diff in splits=0 hence wrong move." << endl;
       throw 1;
     }
-    if(minprop == 1){
-      return 0;
-    }
+    //if(minprop == 1){
+    //  return 0;
+    //}
     rat = pow(arma::accu(1.0/pow(original_here_diff, 2))/arma::accu(1.0/pow(proposed_here_diff, 2)), param); //pow(log(1.0+minprop)/log(1.0+minorig), param);
     //clog << "min prop diff " << proposed_here_diff.min() << ". ratio with orig=" << rat << endl;
     //clog << "alternative " << arma::accu(1.0/pow(original_here_diff, 2))/arma::accu(1.0/pow(proposed_here_diff, 2)) << endl << endl;
-    cout << "ratio " << rat << " mp:" << minprop << " mo:" << minorig << endl;
+    //clog << "ratio " << rat << " mp:" << minprop << " mo:" << minorig << endl;
     return rat;
   } catch(...) {
     // min has no elements error -- happens when proposing drop from 2 to 1.

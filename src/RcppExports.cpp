@@ -206,6 +206,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// wavelettize
+arma::mat wavelettize(const arma::mat& J);
+RcppExport SEXP _bmms_wavelettize(SEXP JSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type J(JSEXP);
+    rcpp_result_gen = Rcpp::wrap(wavelettize(J));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 13},
@@ -220,6 +231,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_bdet", (DL_FUNC) &_bmms_bdet, 1},
     {"_bmms_totsplit_prior2_ratio", (DL_FUNC) &_bmms_totsplit_prior2_ratio, 5},
     {"_bmms_split_struct_ratio2", (DL_FUNC) &_bmms_split_struct_ratio2, 5},
+    {"_bmms_wavelettize", (DL_FUNC) &_bmms_wavelettize, 1},
     {NULL, NULL, 0}
 };
 

@@ -33,6 +33,11 @@ double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_po
   int p1 = inv_var_post.n_cols;
   int n = y.n_elem;
   double result = (n-p1)*log(n*1.0) - (a+n/2.0) * log(b + .5*arma::conv_to<double>::from(y.t()*y - mean_post.t() * inv_var_post * mean_post));
+  if(isnan(result)){
+    cout << y.t() << endl << mean_post.t() << endl << inv_var_post << endl << a << " " << b << endl;
+    cout << arma::conv_to<double>::from(y.t()*y - mean_post.t() * inv_var_post * mean_post) << endl;
+    throw 1;
+  }
   return result;
 }
 
@@ -128,15 +133,15 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   msplits = splits;
   ktype = kernel_type;
   J_now = Jnow;
-  ridge = .1;
-  XtX = Xj.t() * Xj;
-  XtXi = arma::inv_sympd(XtX + (ridge*arma::eye(Xj.n_cols, Xj.n_cols))); 
+  ridge = 0.1;
+  XtX = Xj.t() * Xj + ridge*arma::eye(Xj.n_cols, Xj.n_cols);
+  XtXi = arma::inv_sympd(XtX); 
   mean_pre = arma::zeros(Xj.n_cols);
-  var_pre = arma::diagmat(1.0/(g*Jcs)); //INVERSE ALREADY //g*XtXi; //
+  var_pre = arma::zeros(0,0); //g*XtXi; //
   inv_var_post = (g+1.0)/g * XtX; //var_pre + XtX; //
   //clog << var_pre << endl;
   var_post = g/(g+1.0) * (XtXi); // arma::inv_sympd(inv_var_post);  //
-  mean_post = bmean + var_post * Xj.t() * (ej - icept - xs*bmean);
+  mean_post = var_post * Xj.t() * (ej - icept - xs*bmean);
   In = arma::eye(n,n);
   a = ain; // parametrization: a = mean^2 / variance + 2
   b = bin;  //                  b = (mean^3 + mean*variance) / variance
@@ -151,14 +156,14 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
     sigmasq_sample = fixed_sigma;//1.0;
   }
 
-  theta_sample = bmrandom::rndpp_mvnormal2(1, mean_post, sigmasq_sample*var_post).t();
+  theta_sample = bmrandom::rndpp_mvnormal2(1, mean_post + bmean, sigmasq_sample*var_post).t();
   theta_p_sample = (Jpre * theta_sample_pre + Jnow * theta_sample);
   
   
   xb_sample = Xj * theta_sample + icept;
   ej_next = ej - xb_sample;
 
-  xb_mean = Xj * mean_post + icept;
+  xb_mean = Xj * (bmean+ mean_post) + icept;
   
 }
 
@@ -278,6 +283,8 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   pones = arma::ones(p, 1);
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
+  J_field(0) = wavelettize(J_field(0));
+
   
   X_field(0) = X * J_field(0);
   //
@@ -290,6 +297,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   //cout << "ModularLinReg :: creating other elements after 0 " << endl;
   for(unsigned int j=1; j<n_stages; j++){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
+    J_field(j) = wavelettize(J_field(j));
     X_field(j) = X * J_field(j);
   }
   
@@ -347,7 +355,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
         loglik(s) = modular_loglik2(modules[s].ej, modules[s].mean_post, modules[s].inv_var_post,
                modules[s].a, modules[s].b) + sigprior;
         sigprior += R::dgamma(1.0/sigmasq_scales(s), modules[s].a, 1.0/modules[s].b, 1);
-        
+        cout << "loglik " << loglik(s) << endl;
       }
     }
   } 
@@ -368,6 +376,7 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
     cumsplit(s) += bigsplit(s).n_elem;
   }
   J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
+  J_field(s) = wavelettize(J_field(s));
   
   X_field(s) = X * J_field(s);
   
@@ -547,7 +556,8 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   //pones = arma::ones(p, 1);
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
-
+  J_field(0) = wavelettize(J_field(0));
+  
   X_field(0) = X * J_field(0);
   
   //
@@ -560,6 +570,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   //cout << "ModularLinReg :: creating other elements after 0 " << endl;
   for(unsigned int j=1; j<n_stages; j++){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
+    J_field(j) = wavelettize(J_field(j));
     X_field(j) = X * J_field(j);
   }
   
@@ -639,6 +650,7 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
       cumsplit(s) += bigsplit(s).n_elem;
     }
     J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
+    J_field(s) = wavelettize(J_field(s));
     X_field(s) = X * J_field(s);
     
     xb -= modules[s].xb_mean;
@@ -698,12 +710,16 @@ double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::f
     while(original(stage_original).n_elem==0){
       stage_original--;
     }
-    
   }
-  arma::vec proposed_here_diff = arma::diff(arma::join_vert(arma::sort(proposed(stage_proposed)), arma::ones(1)*p));
+  
+  arma::vec proposed_unique = arma::unique(proposed(stage_proposed));
+  arma::vec original_unique = arma::unique(original(stage_original));
+  
+  arma::vec proposed_here_diff = arma::diff(arma::join_vert(proposed_unique, arma::ones(1)*p));
+  arma::vec original_here_diff = arma::diff(arma::join_vert(original_unique, arma::ones(1)*p));
 
-  arma::vec original_here_diff = arma::diff(arma::join_vert(arma::sort(original(stage_original)), arma::ones(1)*p));
-
+  
+  cout << "SSRATIO CALC" << endl << proposed_here_diff.t() << endl << original_here_diff.t() << endl;
   double rat = 1.0;
   try{
     double minprop = proposed_here_diff.min();
@@ -716,12 +732,17 @@ double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::f
       clog << "Runtime error: diff in splits=0 hence wrong move." << endl;
       throw 1;
     }
-    rat = pow(log(1.0+minprop)/log(1.0+minorig), param);
-    //clog << "ratio " << rat << endl;
+    if(minprop == 1){
+      return 0;
+    }
+    rat = pow(arma::accu(1.0/pow(original_here_diff, 2))/arma::accu(1.0/pow(proposed_here_diff, 2)), param); //pow(log(1.0+minprop)/log(1.0+minorig), param);
+    //clog << "min prop diff " << proposed_here_diff.min() << ". ratio with orig=" << rat << endl;
+    //clog << "alternative " << arma::accu(1.0/pow(original_here_diff, 2))/arma::accu(1.0/pow(proposed_here_diff, 2)) << endl << endl;
+    cout << "ratio " << rat << " mp:" << minprop << " mo:" << minorig << endl;
     return rat;
   } catch(...) {
     // min has no elements error -- happens when proposing drop from 2 to 1.
-    return 1.0;
+    throw 1;
   }
   
 }
@@ -741,4 +762,24 @@ double splitpar_prior(double x, int tot_split, int norp, int ss){
 
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction){
   return 1.0;
+}
+
+//[[Rcpp::export]]
+arma::mat wavelettize(const arma::mat& J){
+  
+  arma::vec Jcs = bmdataman::col_sums(J)/2;
+  arma::mat Jw = J;
+  for(unsigned int j=0; j<J.n_cols; j++){
+    int cc=0;
+    int i=0;
+    while( (cc < Jcs(j)) & (i < J.n_rows)){
+      //for(unsigned int i=0; i<J.n_rows; i++){
+      if(J(i,j)==1){
+        Jw(i,j) = -1;
+        cc++;
+      } 
+      i++;
+    }
+  }
+  return J;
 }

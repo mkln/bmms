@@ -188,5 +188,6 @@ double splitpar_prior(double x, int tot_split, int norp, int ss);
 
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction);
 
+arma::mat wavelettize(const arma::mat& J);
 
 #endif

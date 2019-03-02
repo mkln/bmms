@@ -779,9 +779,9 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
       for(int s=n_stages-1; s>-1; s--){
         cout << "  STAGE : " << s << endl;
         unsigned int curr_n_split = splits(m)(s).n_elem;
-        if(splits(m)(s).n_elem < 7){
+        //if(splits(m)(s).n_elem < 7){
           splits(m) = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
-        }
+        //}
         if(splits(m)(s).n_elem > curr_n_split){
           tot_added_splits++;
         }

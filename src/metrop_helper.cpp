@@ -33,11 +33,11 @@ double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_po
   int p1 = inv_var_post.n_cols;
   int n = y.n_elem;
   double result = (n-p1)*log(n*1.0) - (a+n/2.0) * log(b + .5*arma::conv_to<double>::from(y.t()*y - mean_post.t() * inv_var_post * mean_post));
-  if(isnan(result)){
-    cout << y.t() << endl << mean_post.t() << endl << inv_var_post << endl << a << " " << b << endl;
-    cout << arma::conv_to<double>::from(y.t()*y - mean_post.t() * inv_var_post * mean_post) << endl;
-    throw 1;
-  }
+  //if(isnan(result)){
+  //  cout << y.t() << endl << mean_post.t() << endl << inv_var_post << endl << a << " " << b << endl;
+  //  cout << arma::conv_to<double>::from(y.t()*y - mean_post.t() * inv_var_post * mean_post) << endl;
+  //  throw 1;
+  //}
   return result;
 }
 

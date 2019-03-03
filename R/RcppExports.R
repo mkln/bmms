@@ -25,8 +25,8 @@ struct2d_prior_ratio <- function(proposed, original, stage, p, param) {
 }
 
 #' @export
-sofk <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0) {
-    .Call('_bmms_sofk', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar)
+sofk <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0, trysmooth = FALSE) {
+    .Call('_bmms_sofk', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth)
 }
 
 #' @export
@@ -57,5 +57,17 @@ split_struct_ratio2 <- function(proposed, original, stage, p, param) {
 
 wavelettize <- function(J) {
     .Call('_bmms_wavelettize', PACKAGE = 'bmms', J)
+}
+
+Jcol_ilogitsmooth <- function(J, r) {
+    .Call('_bmms_Jcol_ilogitsmooth', PACKAGE = 'bmms', J, r)
+}
+
+Jcol_pnormsmooth <- function(J, r) {
+    .Call('_bmms_Jcol_pnormsmooth', PACKAGE = 'bmms', J, r)
+}
+
+J_smooth <- function(J, radius) {
+    .Call('_bmms_J_smooth', PACKAGE = 'bmms', J, radius)
 }
 

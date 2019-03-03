@@ -85,7 +85,7 @@ arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current
     if(stage>0){
       proposed_model.change_module(stage, proposed_splits(stage)); //  = ModularLinReg(y, X, proposed_splits, base_model.max_stages);//
     } else {
-      proposed_model = ModularLinReg(y, X, base_model.g_prior, proposed_splits, base_model.kernel_type, base_model.max_stages, 
+      proposed_model = ModularLinReg(y, X, base_model.g_prior, proposed_splits, base_model.rad, base_model.max_stages, 
                                      base_model.fixed_sigma_v, base_model.fixed_splits,
                                      base_model.a, base_model.b, base_model.structpar);
     }
@@ -226,7 +226,7 @@ arma::field<arma::vec> proposal_drop_split(const arma::field<arma::vec>& current
       proposed_model.change_module(stage, proposed_splits(stage)); // = ModularLinReg(y, X, proposed_splits, base_model.max_stages); //
     } else {
       proposed_model = ModularLinReg(y, X, base_model.g_prior, proposed_splits, 
-                                     base_model.kernel_type, base_model.max_stages, 
+                                     base_model.rad, base_model.max_stages, 
                                      base_model.fixed_sigma_v, base_model.fixed_splits,
                                      base_model.a, base_model.b, base_model.structpar);
     }
@@ -304,7 +304,7 @@ arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& curre
       proposed_model.change_module(stage, proposed_splits(stage)); // = ModularLinReg(y, X, proposed_splits, base_model.max_stages); //
     } else {
       proposed_model = ModularLinReg(y, X, base_model.g_prior, proposed_splits, 
-                                     base_model.kernel_type, base_model.max_stages, 
+                                     base_model.rad, base_model.max_stages, 
                                      base_model.fixed_sigma_v, base_model.fixed_splits,
                                      base_model.a, base_model.b, base_model.structpar);
     }
@@ -490,7 +490,7 @@ arma::field<arma::vec> proposal_add_split(const arma::field<arma::vec>& current_
       //  base_model.fix_sigma << endl <<
       //  base_model.fixed_splits;
       proposed_model = ModularLinReg(y, X, base_model.g_prior, proposed_splits, 
-                                     base_model.kernel_type, base_model.max_stages, 
+                                     base_model.rad, base_model.max_stages, 
                                      base_model.fixed_sigma_v, base_model.fixed_splits,
                                      base_model.a, base_model.b, base_model.structpar);
     }
@@ -641,7 +641,8 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
                 bool onesigma = true,
                 bool silent = true,
                 double gin=0.01,
-                double structpar=1.0){
+                double structpar=1.0,
+                bool trysmooth=false){
   if(silent){ cout.setstate(std::ios_base::failbit); } else {  cout.clear(); }
   // sample from posterior of changepoints given their number
   // idea:
@@ -661,7 +662,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
   double g=gin;
   
   MCMCSWITCH = 1;
-  int choices = onesigma? 3 : 4;
+  int choices = 3; //onesigma? 3 : 4;
   
   double icept;
   arma::mat theta_mcmc = arma::zeros(mcmc - burn, p);
@@ -674,7 +675,8 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
   arma::field<arma::field<arma::vec>> splits_save = arma::field<arma::field<arma::vec>>(mcmc - burn);
   
   arma::mat sigmasq_ms = arma::zeros(mcmc - burn, max_stages);
-  arma::mat sigmasq_mcmc = arma::vec(mcmc - burn);
+  arma::vec sigmasq_mcmc = arma::vec(mcmc - burn);
+  arma::vec radius_mcmc = arma::vec(mcmc-burn);
   //arma::mat pred_mcmc = arma::zeros(mcmc, n);
   
   // initial field of splits is a simple split at 2
@@ -708,8 +710,14 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
    double fixed_sigma=-1, bool fixed_grids = true,
    double ain=2.1, double bin=1.1)
    */
-
-  ModularLinReg base_model(y, X, g, splits(0), 0, max_stages, onesigma? 1.0 : -1.0, false, ain, bin, structpar);
+  
+  
+  double radius = 0.0;
+  if(trysmooth){
+    radius = .5;
+  }
+  
+  ModularLinReg base_model(y, X, g, splits(0), radius, max_stages, onesigma? 1.0 : -1.0, false, ain, bin, structpar);
   int m=0;
   
   arma::mat In = arma::eye(n,n);
@@ -806,26 +814,40 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
     }
     
     if(!onesigma){
-      if(move_type == 3){
-        cout << "REFRESH PARAMS" << endl;
-        base_model = ModularLinReg(y, X, g, splits(m), 0, max_stages, -1.0, false, ain, bin, structpar);
-      }
+      //if(move_type == 3){
+        cout << "REFRESH" << endl;
+        base_model = ModularLinReg(y, X, g, splits(m), radius, max_stages, -1.0, false, ain, bin, structpar);
+    //}
     } else {
       Module lastmodule = base_model.modules[base_model.n_stages-1];
       arma::mat Px =  lastmodule.Xj * lastmodule.XtXi * lastmodule.Xj.t();
       double beta_post = arma::conv_to<double>::from(.5*(lastmodule.ej.t() * (lastmodule.In - lastmodule.g/(lastmodule.g+1.0) * lastmodule.Px) * lastmodule.ej));
       
-      //sigmasq_sample = 1.0/bmrandom::rndpp_gamma(a + n/2.0, 1.0/(b + beta_post));
-      
-      //arma::vec res = y - X * base_model.mu_field(base_model.n_stages-1);
-      // sigma
-      //double beta_post = arma::conv_to<double>::from(.5*(res.t()*res));
-      //double a = ain;
-      //double b = bin;
       sigmasq_sample = 1.0 / bmrandom::rndpp_gamma(ain + n/2.0, 1.0/(bin + beta_post));
       //clog << sigmasq_sample << endl;
-      base_model = ModularLinReg(y, X, g, splits(m), 0, max_stages, sigmasq_sample, false, ain, bin, structpar);
+      base_model = ModularLinReg(y, X, g, splits(m), radius, max_stages, sigmasq_sample, false, ain, bin, structpar);
     }
+    
+    // burnin: find smoothing radius
+    if(trysmooth){
+      double radius_propose = exp( log(radius) + arma::randn()*.1 );
+      if(radius_propose > 10){
+        radius_propose = 10;
+      }
+      if(radius_propose != radius){
+        ModularLinReg radius_update(y, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
+        
+        double prob = exp(arma::accu(radius_update.loglik - base_model.loglik));// * pow(radius / radius_propose, 1.0);
+        
+        prob = prob > 1 ? 1 : prob;
+        int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
+        if(accepted_proposal == 1){
+          radius = radius_propose;
+          base_model = radius_update;
+        } 
+      } 
+    }
+    
     /*
     if(move_type== 3){
       cout << "ADD STAGE" << endl;
@@ -854,6 +876,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
       theta_mcmc.row(i) = base_model.the_sample_field(base_model.n_stages-1).t();
       theta_ms(i) = base_model.the_sample_field;
       icept_mcmc(i) = arma::mean(y - X*theta_mcmc.row(i).t());
+      radius_mcmc(i) = radius;
       //theta_mcmc.row(i) = base_model.the_sample_field(base_model.n_stages-1).t();
       //mu_mcmc.row(i) = base_model.mu_field(base_model.n_stages-1).t();
       //theta_ms(i) = base_model.the_sample_field;
@@ -879,6 +902,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
     //Rcpp::Named("mu") = mu_mcmc,
     //Rcpp::Named("mu_ms") = mu_ms,
     Rcpp::Named("intercept") = icept_mcmc,
+    Rcpp::Named("radius") = radius_mcmc,
     Rcpp::Named("theta") = theta_mcmc,
     Rcpp::Named("theta_ms") = theta_ms,
     Rcpp::Named("sigmasq") = sigmasq_mcmc

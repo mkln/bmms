@@ -10,10 +10,10 @@
 using namespace std;
 
 double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original,
-                          int stage, int p, double param=20);
+                           int stage, int p, double param=20);
 
 arma::mat div_by_colsum(const arma::mat& J);
-  
+
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar);
 
 double bdet(const arma::mat& X);
@@ -21,7 +21,7 @@ double bdet(const arma::mat& X);
 double modular_loglikn(const arma::vec& x, const arma::mat& Si);
 
 double modular_loglik0(arma::vec& y, double a, double b);
-  
+
 double modular_loglik1(arma::vec& y, arma::vec& marglik_mean, arma::mat& varloglik, arma::vec& sigmasq_scales, int n_stages);
 
 double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_post, double a, double b);
@@ -29,7 +29,6 @@ double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_po
 
 class Module {
 public:
-  int ktype;
   
   arma::vec ej;
   arma::vec ej_next;
@@ -99,14 +98,15 @@ public:
   // e, X, Jpre, Jnow, prior mean and var, previously sampled theta
   Module(arma::mat&, arma::vec&, arma::mat&, 
          double, arma::mat&, arma::mat&, arma::vec&, arma::vec&, arma::vec&, arma::vec&, 
-         int, double, double, double);
+         double, double, double);
   // empty constructor
   Module();
 };
 
 class ModularLinReg {
 public:
-  int kernel_type;
+  
+  double rad;
   arma::mat In;
   // input data
   int n;
@@ -118,7 +118,7 @@ public:
   bool fix_sigma;
   bool nested;
   double fixed_sigma_v;
-    
+  
   double structpar;
   
   arma::vec xb;
@@ -175,7 +175,7 @@ public:
   // y, X, list of splits for each stage, limit to stages
   ModularLinReg(const arma::vec&, const arma::mat&, 
                 double, 
-                const arma::field<arma::vec>&, int, int, double, bool,
+                const arma::field<arma::vec>&, double, int, double, bool,
                 double, double, double);
   
 };
@@ -189,5 +189,15 @@ double splitpar_prior(double x, int tot_split, int norp, int ss);
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction);
 
 arma::mat wavelettize(const arma::mat& J);
+//double rcircle(const double& x, int width, double radius=0);
+//arma::vec rcircle_vec(const arma::vec& vx, int width, double radius=0);
+//arma::vec rcircle_Jcol(const arma::vec& Jcol, double radius=0);
+//arma::mat rcircle_J(const arma::mat& J, double radius=0);
+
+arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r);
+arma::vec Jcol_pnormsmooth(const arma::vec& J, double r=0);
+arma::mat J_smooth(const arma::mat& J, double radius=0);
+double ilogit(const double& x, const double& r);
+
 
 #endif

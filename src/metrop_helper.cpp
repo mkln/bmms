@@ -103,7 +103,7 @@ Module::Module(){
 
 Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
                arma::mat& Jpre, arma::mat& Jnow, arma::vec& mean_post_pre, arma::vec& theta_sample_pre,
-               arma::vec& ingrid, arma::vec& splits, int kernel_type, double fixed_sigma=-1,
+               arma::vec& ingrid, arma::vec& splits, double fixed_sigma=-1,
                double ain=2.1, double bin=1.1){
   //cout << "ModularLinReg :: module 0 " << endl;
   //Xfull = X_full;
@@ -131,7 +131,6 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   grid = ingrid;
   g = g_prior;
   msplits = splits;
-  ktype = kernel_type;
   J_now = Jnow;
   ridge = 0.1;
   XtX = Xj.t() * Xj + ridge*arma::eye(Xj.n_cols, Xj.n_cols);
@@ -155,14 +154,14 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   } else {
     sigmasq_sample = fixed_sigma;//1.0;
   }
-
+  
   theta_sample = bmrandom::rndpp_mvnormal2(1, mean_post + bmean, sigmasq_sample*var_post).t();
   theta_p_sample = (Jpre * theta_sample_pre + Jnow * theta_sample);
   
   
   xb_sample = Xj * theta_sample + icept;
   ej_next = ej - xb_sample;
-
+  
   xb_mean = Xj * (bmean + mean_post) + icept;
   
 }
@@ -213,13 +212,13 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
                              const arma::mat& Xin, 
                              double g, 
                              const arma::field<arma::vec>& in_splits, 
-                             int kernel, int set_max_stages, 
+                             double radius, int set_max_stages, 
                              double fixed_sigma=-1, bool fixed_grids = true,
                              double ain=2.1, double bin=1.1,
                              double spar=1.0){
   
-  kernel_type = kernel;
-  // kernel 0 = step functions; 1 = gaussian // [future]
+  rad = radius;
+  
   a = ain;
   b = bin;
   fixed_splits = fixed_grids;
@@ -284,7 +283,8 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   //J_field(0) = wavelettize(J_field(0));
-
+  J_field(0) = J_smooth(J_field(0), rad);
+  
   
   X_field(0) = X * J_field(0);
   //
@@ -298,6 +298,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   for(unsigned int j=1; j<n_stages; j++){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     //J_field(j) = wavelettize(J_field(j));
+    J_field(j) = J_smooth(J_field(j), rad);
     X_field(j) = X * J_field(j);
   }
   
@@ -308,7 +309,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   cout << "-adding first module " << fixed_sigma_v << endl;
   Module adding_module(X, y, X_field(0), g_prior, faux_J_previous, J_field(0), 
                        faux_theta_previous_sample, faux_theta_previous_sample, grid, 
-                       bigsplit(0), kernel_type, fixed_sigma_v, a, b);
+                       bigsplit(0), fixed_sigma_v, a, b);
   cout << "added." << endl;
   modules.push_back(adding_module);
   xb += modules[0].xb_mean;
@@ -326,7 +327,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
     adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), 
                            J_field(s-1), J_field(s), 
                            modules[s-1].mean_post, modules[s-1].theta_sample,
-                           grid, bigsplit(s), kernel_type, fixed_sigma_v, a, b);
+                           grid, bigsplit(s), fixed_sigma_v, a, b);
     //cout << "--added." << endl;
     modules.push_back(adding_module);
     theta_p_scales(s) = modules[s].theta_p_sample;
@@ -377,13 +378,14 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
   }
   J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
   //J_field(s) = wavelettize(J_field(s));
+  J_field(s) = J_smooth(J_field(s), rad);
   
   X_field(s) = X * J_field(s);
   
   Module adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), 
                                 J_field(s-1), J_field(s), 
                                 modules[s-1].mean_post, modules[s-1].theta_sample,
-                                grid, bigsplit(s), kernel_type, fixed_sigma_v, a, b);
+                                grid, bigsplit(s), fixed_sigma_v, a, b);
   modules.push_back(adding_module);
   xb += modules[s].xb_mean;
   
@@ -441,14 +443,14 @@ void ModularLinReg::delete_last_module(){
   modules.pop_back();
   
   /*
-  arma::mat varloglik = modules[n_stages-1].marglik_integr_var;
-  for(int s=0; s<n_stages-1; s++){
-  //if(0){ //n_stages>1){
-  varloglik += modules[s].marglik_module_var;
-  }
-  //}
-  loglik = modular_loglik(y, modules[n_stages-1].marglik_mean, varloglik, sigmasq_scales, n_stages);
-  */
+   arma::mat varloglik = modules[n_stages-1].marglik_integr_var;
+   for(int s=0; s<n_stages-1; s++){
+   //if(0){ //n_stages>1){
+   varloglik += modules[s].marglik_module_var;
+   }
+   //}
+   loglik = modular_loglik(y, modules[n_stages-1].marglik_mean, varloglik, sigmasq_scales, n_stages);
+   */
   if(!fixed_splits){
     if(fix_sigma){
       for(int s=0; s<n_stages; s++){ 
@@ -473,8 +475,8 @@ void ModularLinReg::redo(){
   
   //for(int j=0; j<10000; j++){
   modules[0] = Module(X, y, X_field(0), g_prior, faux_J_previous, J_field(0), 
-                       faux_theta_previous_sample, faux_theta_previous_sample, grid, 
-                       bigsplit(0), kernel_type, fixed_sigma_v, a, b);
+                      faux_theta_previous_sample, faux_theta_previous_sample, grid, 
+                      bigsplit(0), fixed_sigma_v, a, b);
   
   mu_field(0) = modules[0].J_now * modules[0].mean_post; //modules[0].J_now * modules[0].mean_post;
   the_sample_field(0) = modules[0].J_now * modules[0].theta_sample;
@@ -557,6 +559,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   //J_field(0) = wavelettize(J_field(0));
+  J_field(0) = J_smooth(J_field(0), rad);
   
   X_field(0) = X * J_field(0);
   
@@ -571,6 +574,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   for(unsigned int j=1; j<n_stages; j++){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     //J_field(j) = wavelettize(J_field(j));
+    J_field(j) = J_smooth(J_field(j), rad);
     X_field(j) = X * J_field(j);
   }
   
@@ -580,7 +584,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   
   cout << "-adding first module [change_all] " << fixed_sigma_v << endl;
   Module adding_module(X, y, X_field(0), g_prior, faux_J_previous, J_field(0), 
-                       faux_theta_previous_sample, faux_theta_previous_sample, grid, bigsplit(0), kernel_type, fixed_sigma_v, a, b);
+                       faux_theta_previous_sample, faux_theta_previous_sample, grid, bigsplit(0), fixed_sigma_v, a, b);
   cout << "added." << endl;
   modules.push_back(adding_module);
   
@@ -597,7 +601,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
     adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), 
                            J_field(s-1), J_field(s), 
                            modules[s-1].mean_post, modules[s-1].theta_sample,
-                           grid, bigsplit(s), kernel_type, false, a, b);
+                           grid, bigsplit(s), false, a, b);
     //cout << "--added." << endl;
     modules.push_back(adding_module);
     
@@ -651,12 +655,14 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
     }
     J_field(s) = bmfuncs::multi_split(pones, bigsplit(s), p);
     //J_field(s) = wavelettize(J_field(s));
+    J_field(s) = J_smooth(J_field(s), rad);
+    
     X_field(s) = X * J_field(s);
     
     xb -= modules[s].xb_mean;
     Module adding_module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), 
                          J_field(s-1), J_field(s), 
-                         modules[s-1].mean_post, modules[s-1].theta_sample, grid, bigsplit(s), kernel_type, fixed_sigma_v, a, b);
+                         modules[s-1].mean_post, modules[s-1].theta_sample, grid, bigsplit(s), fixed_sigma_v, a, b);
     modules[s] = adding_module;
     theta_p_scales(s) = modules[s].theta_p_sample;
     mu_field(s) = mu_field(s-1) + modules[s].J_now * modules[s].mean_post;//mu_field(s-1) + modules[s].J_now * modules[s].mean_post;
@@ -699,7 +705,7 @@ double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, i
 
 //[[Rcpp::export]]
 double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original,
-                          int stage, int p, double param){
+                           int stage, int p, double param){
   int stage_proposed=stage, stage_original=stage;
   if(stage==-1){
     stage_proposed = proposed.n_elem-1;
@@ -717,7 +723,7 @@ double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::f
   
   arma::vec proposed_here_diff = arma::diff(arma::join_vert(proposed_unique, arma::ones(1)*p));
   arma::vec original_here_diff = arma::diff(arma::join_vert(original_unique, arma::ones(1)*p));
-
+  
   cout << "SSRATIO CALC" << endl << proposed_here_diff.t() << endl << original_here_diff.t() << endl;
   double rat = 1.0;
   try{
@@ -765,7 +771,6 @@ double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, in
 
 //[[Rcpp::export]]
 arma::mat wavelettize(const arma::mat& J){
-  
   arma::vec Jcs = bmdataman::col_sums(J)/2;
   arma::mat Jw = J;
   for(unsigned int j=0; j<J.n_cols; j++){
@@ -782,3 +787,130 @@ arma::mat wavelettize(const arma::mat& J){
   }
   return J;
 }
+
+
+double ilogit(const double& x, const double& r){
+  return 1.0/(1 + exp(-.5/r * x));
+}
+
+
+//[[Rcpp::export]]
+arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r){
+  if(r == 0){
+    return J;
+  }
+  double p = J.n_elem;
+  r = r*p / 100.0;
+  arma::vec ix_ones = arma::conv_to<arma::vec>::from(arma::find(J==1));
+  arma::vec result = arma::zeros(J.n_elem);
+  
+  double meanix_min = ix_ones.min();
+  double meanix_max = ix_ones.max();
+  if(meanix_max-meanix_min < 2){
+    meanix_min -= .5;
+    meanix_max += .5;
+  }
+  for(unsigned int i=0; i<result.n_elem; i++){
+    double where = (i+0.0);
+    result(i) = ilogit(where - meanix_min+.0, r);
+    result(i) = result(i) + 1-ilogit(where - meanix_max+.0, r);
+  }
+  return (result-result.min())/(result.max()-result.min());
+}
+
+
+//[[Rcpp::export]]
+arma::vec Jcol_pnormsmooth(const arma::vec& J, double r){
+  if(r == 0){
+    return J;
+  }
+  double p = J.n_elem;
+  r = r*p / 100.0;
+  arma::vec ix_ones = arma::conv_to<arma::vec>::from(arma::find(J==1));
+  arma::vec result = arma::zeros(J.n_elem);
+  
+  double meanix_min = ix_ones.min();
+  double meanix_max = ix_ones.max();
+  if(meanix_max-meanix_min < 2){
+    meanix_min -= .5;
+    meanix_max += .5;
+  }
+  for(unsigned int i=0; i<result.n_elem; i++){
+    double where = (i+0.0);
+    result(i) = R::pnorm(where, meanix_min+.0, r, 1, 0);
+    result(i) = result(i) + 1-R::pnorm(where, meanix_max+.0, r, 1, 0);
+  }
+  return (result-result.min())/(result.max()-result.min());
+}
+
+//[[Rcpp::export]]
+arma::mat J_smooth(const arma::mat& J, double radius){
+  if(radius==0){
+    return J;
+  }
+  arma::mat result = arma::zeros(J.n_rows, J.n_cols);
+  for(unsigned int j=0; j<J.n_cols; j++){
+    result.col(j) = Jcol_ilogitsmooth(J.col(j), radius);
+  }
+  for(unsigned int i=0; i<J.n_rows; i++){
+    result.row(i) = result.row(i) / arma::accu(result.row(i));
+  }
+  return result;
+}
+
+/*
+ //[[Rcpp::export]]
+ double rcircle(const double& x, int width, double radius){
+ double a = width/2.0;
+ if(x < -2*a){
+ return(0.0);
+ }
+ if(x > 2*a){
+ return(0.0);
+ }
+ if(x < -a){
+ return( .5 * (1 - pow(1 - pow(abs(-2*a-x+radius)/a, 2*a/radius), radius*.5)) );
+ }
+ if(x > a){
+ return( .5 * (1 - pow(1 - pow(abs(2*a-x-radius)/a, 2*a/radius), radius*.5)) ); 
+ }
+ if(x < 0){
+ return( .5 * (1 + pow(1 - pow(abs(x+radius)/a, 2*a/radius), radius*.5)) );
+ } else {
+ return( .5 * (1 + pow(1 - pow(abs(x-radius)/a, 2*a/radius), radius*.5)) );
+ }
+ }
+ 
+ //[[Rcpp::export]]
+ arma::vec rcircle_vec(const arma::vec& vx, int width, double radius){
+ arma::vec result = arma::zeros(vx.n_elem);
+ for(unsigned int i=0; i<result.n_elem; i++){
+ result(i) = rcircle(vx(i), width, radius);
+ }
+ //result = (result-result.min())/(result.max()-result.min());
+ return(result);
+ }
+ 
+ //[[Rcpp::export]]
+ arma::vec rcircle_Jcol(const arma::vec& Jcol, double radius){
+ // column of 1 and 0 as usual J
+ int width = arma::accu(Jcol);
+ double meanix = arma::mean(arma::conv_to<arma::vec>::from(arma::find(Jcol==1)));
+ arma::vec vx = arma::linspace(0, Jcol.n_elem-1, Jcol.n_elem);
+ vx = vx-meanix;
+ //clog << vx << endl;
+ return rcircle_vec(vx, width, radius);
+ }
+ 
+ //[[Rcpp::export]]
+ arma::mat rcircle_J(const arma::mat& J, double radius){
+ arma::mat result = arma::zeros(J.n_rows, J.n_cols);
+ for(unsigned int j=0; j<J.n_cols; j++){
+ result.col(j) = rcircle_Jcol(J.col(j), radius);
+ }
+ for(unsigned int i=0; i<J.n_rows; i++){
+ result.row(i) = result.row(i) / arma::accu(result.row(i));
+ }
+ return result;
+ }
+ */

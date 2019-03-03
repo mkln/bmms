@@ -93,8 +93,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sofk
-Rcpp::List sofk(const arma::vec& yin, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool onesigma, bool silent, double gin, double structpar);
-RcppExport SEXP _bmms_sofk(SEXP yinSEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP onesigmaSEXP, SEXP silentSEXP, SEXP ginSEXP, SEXP structparSEXP) {
+Rcpp::List sofk(const arma::vec& yin, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool onesigma, bool silent, double gin, double structpar, bool trysmooth);
+RcppExport SEXP _bmms_sofk(SEXP yinSEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP onesigmaSEXP, SEXP silentSEXP, SEXP ginSEXP, SEXP structparSEXP, SEXP trysmoothSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -112,7 +112,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
     Rcpp::traits::input_parameter< double >::type gin(ginSEXP);
     Rcpp::traits::input_parameter< double >::type structpar(structparSEXP);
-    rcpp_result_gen = Rcpp::wrap(sofk(yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar));
+    Rcpp::traits::input_parameter< bool >::type trysmooth(trysmoothSEXP);
+    rcpp_result_gen = Rcpp::wrap(sofk(yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -217,6 +218,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Jcol_ilogitsmooth
+arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r);
+RcppExport SEXP _bmms_Jcol_ilogitsmooth(SEXP JSEXP, SEXP rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type J(JSEXP);
+    Rcpp::traits::input_parameter< double >::type r(rSEXP);
+    rcpp_result_gen = Rcpp::wrap(Jcol_ilogitsmooth(J, r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Jcol_pnormsmooth
+arma::vec Jcol_pnormsmooth(const arma::vec& J, double r);
+RcppExport SEXP _bmms_Jcol_pnormsmooth(SEXP JSEXP, SEXP rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type J(JSEXP);
+    Rcpp::traits::input_parameter< double >::type r(rSEXP);
+    rcpp_result_gen = Rcpp::wrap(Jcol_pnormsmooth(J, r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// J_smooth
+arma::mat J_smooth(const arma::mat& J, double radius);
+RcppExport SEXP _bmms_J_smooth(SEXP JSEXP, SEXP radiusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type J(JSEXP);
+    Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(J_smooth(J, radius));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 13},
@@ -224,7 +261,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_index_to_subscript", (DL_FUNC) &_bmms_index_to_subscript, 2},
     {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 2},
     {"_bmms_struct2d_prior_ratio", (DL_FUNC) &_bmms_struct2d_prior_ratio, 5},
-    {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 14},
+    {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 15},
     {"_bmms_sofk_binary", (DL_FUNC) &_bmms_sofk_binary, 10},
     {"_bmms_bmms_base", (DL_FUNC) &_bmms_bmms_base, 8},
     {"_bmms_div_by_colsum", (DL_FUNC) &_bmms_div_by_colsum, 1},
@@ -232,6 +269,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_totsplit_prior2_ratio", (DL_FUNC) &_bmms_totsplit_prior2_ratio, 5},
     {"_bmms_split_struct_ratio2", (DL_FUNC) &_bmms_split_struct_ratio2, 5},
     {"_bmms_wavelettize", (DL_FUNC) &_bmms_wavelettize, 1},
+    {"_bmms_Jcol_ilogitsmooth", (DL_FUNC) &_bmms_Jcol_ilogitsmooth, 2},
+    {"_bmms_Jcol_pnormsmooth", (DL_FUNC) &_bmms_Jcol_pnormsmooth, 2},
+    {"_bmms_J_smooth", (DL_FUNC) &_bmms_J_smooth, 2},
     {NULL, NULL, 0}
 };
 

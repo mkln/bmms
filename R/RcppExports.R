@@ -59,6 +59,10 @@ wavelettize <- function(J) {
     .Call('_bmms_wavelettize', PACKAGE = 'bmms', J)
 }
 
+tline <- function(x, m) {
+    .Call('_bmms_tline', PACKAGE = 'bmms', x, m)
+}
+
 Jcol_ilogitsmooth <- function(J, r) {
     .Call('_bmms_Jcol_ilogitsmooth', PACKAGE = 'bmms', J, r)
 }

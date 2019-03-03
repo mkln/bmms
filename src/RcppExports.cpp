@@ -218,6 +218,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// tline
+double tline(const double& x, const double& m);
+RcppExport SEXP _bmms_tline(SEXP xSEXP, SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double& >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(tline(x, m));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Jcol_ilogitsmooth
 arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r);
 RcppExport SEXP _bmms_Jcol_ilogitsmooth(SEXP JSEXP, SEXP rSEXP) {
@@ -269,6 +281,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_totsplit_prior2_ratio", (DL_FUNC) &_bmms_totsplit_prior2_ratio, 5},
     {"_bmms_split_struct_ratio2", (DL_FUNC) &_bmms_split_struct_ratio2, 5},
     {"_bmms_wavelettize", (DL_FUNC) &_bmms_wavelettize, 1},
+    {"_bmms_tline", (DL_FUNC) &_bmms_tline, 2},
     {"_bmms_Jcol_ilogitsmooth", (DL_FUNC) &_bmms_Jcol_ilogitsmooth, 2},
     {"_bmms_Jcol_pnormsmooth", (DL_FUNC) &_bmms_Jcol_pnormsmooth, 2},
     {"_bmms_J_smooth", (DL_FUNC) &_bmms_J_smooth, 2},

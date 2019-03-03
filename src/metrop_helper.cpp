@@ -793,6 +793,17 @@ double ilogit(const double& x, const double& r){
   return 1.0/(1 + exp(-.5/r * x));
 }
 
+//[[Rcpp::export]]
+double tline(const double& x, const double& m){
+  double y = m*x + .5;
+  if(y < 0){
+    return 0;
+  }
+  if(y > 1){
+    return 1;
+  }
+  return y;
+}
 
 //[[Rcpp::export]]
 arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r){
@@ -810,13 +821,20 @@ arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r){
     meanix_min -= .5;
     meanix_max += .5;
   }
-  for(unsigned int i=0; i<result.n_elem; i++){
-    double where = (i+0.0);
-    result(i) = ilogit(where - meanix_min+.0, r);
-    result(i) = result(i) + 1-ilogit(where - meanix_max+.0, r);
+  if( r > 0 ){
+    for(unsigned int i=0; i<result.n_elem; i++){
+      double where = (i+0.0);
+      result(i) = 1 + ilogit(where - meanix_min, r) - ilogit(where - meanix_max, r);
+    }
+  } else {
+    for(unsigned int i=0; i<result.n_elem; i++){
+      double where = (i+0.0);
+      result(i) = min( tline(where - meanix_min, -.1/r), 1 - tline(where - meanix_max, -.1/r));
+    }
   }
   return (result-result.min())/(result.max()-result.min());
 }
+
 
 
 //[[Rcpp::export]]

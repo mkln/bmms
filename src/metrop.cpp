@@ -831,8 +831,8 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
     // burnin: find smoothing radius
     if(trysmooth){
       double radius_propose = exp( log(radius) + arma::randn()*.1 );
-      if(radius_propose > 10){
-        radius_propose = 10;
+      if(abs(radius_propose) > 10){
+        radius_propose = 10 * radius_propose/abs(radius_propose);
       }
       if(radius_propose != radius){
         ModularLinReg radius_update(y, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
@@ -1181,7 +1181,5 @@ Rcpp::List bmms_base(arma::vec& y, arma::mat& X,
     Rcpp::Named("theta") = theta_mcmc,
     Rcpp::Named("theta_ms") = theta_ms,
     Rcpp::Named("sigmasq") = sigmasq_mcmc,
-    Rcpp::Named("lmlik") = lmlik_mcmc
-  );
+    Rcpp::Named("loglik") = lmlik_mcmc );
 }
-

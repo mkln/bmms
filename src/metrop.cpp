@@ -10,7 +10,7 @@ int MCMCSWITCH = 0;
 arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int stage, int split, int p, double decay, bool nested=true){
   //cout << "[][][][][][][][] proposal move rj [][][][][][][][]" << endl;
   arma::vec all_splits = arma::zeros(0);
-  if(nested & false){ 
+  if(!nested){ 
     for(unsigned int s=0; s<current_splits.n_elem; s++){
       if(current_splits(s).n_elem > 0){
         all_splits = arma::join_vert(all_splits, current_splits(s));
@@ -144,7 +144,7 @@ arma::vec proposal_drop_rj(const arma::field<arma::vec>& current_splits,
   
   //cout << "[][][][][][][][] proposal move rj [][][][][][][][]" << endl;
   int all_splits_elem = 0;//arma::zeros(0);
-  if(nested & false){
+  if(!nested){
     for(unsigned int s=0; s<current_splits.n_elem; s++){
       all_splits_elem += current_splits(s).n_elem;
     }
@@ -416,7 +416,7 @@ arma::vec proposal_add_rj(const arma::field<arma::vec>& current_splits,
                           int stage, int p, int n, double lambda_prop=10.0,
                           bool nested=true){ //, int stage){
   arma::vec all_splits = arma::zeros(0);
-  if(nested & false){
+  if(!nested){
     for(unsigned int s=0; s<current_splits.n_elem; s++){
       if(current_splits(s).n_elem > 0){
         all_splits = arma::join_vert(all_splits, current_splits(s));
@@ -701,21 +701,12 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
   double accepted = 0;
   
   cout << "first model" << endl;
-  /*
-   *(const arma::vec& yin, 
-   const arma::mat& Xin, 
-   double g, 
-   const arma::field<arma::vec>& in_splits, 
-   int kernel, int set_max_stages, 
-   double fixed_sigma=-1, bool fixed_grids = true,
-   double ain=2.1, double bin=1.1)
-   */
-  
   
   double radius = 0.0;
   if(trysmooth){
     radius = .5;
   }
+  
   
   ModularLinReg base_model(y, X, g, splits(0), radius, max_stages, onesigma? 1.0 : -1.0, false, ain, bin, structpar);
   int m=0;
@@ -764,7 +755,14 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
           int curr_split = splits(m)(s)(j);
           //arma::vec diffs_pre = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
           //arma::field<arma::vec> splitspre = base_model.bigsplit;
-          splits(m) = proposal_move_split(splits(m), s, j, y, X, p, n, base_model, decay);
+          arma::field<arma::vec> tempsplits = splits(m);
+          try{
+            tempsplits = proposal_move_split(splits(m), s, j, y, X, p, n, base_model, decay);
+            splits(m) = tempsplits;
+          } catch(...){
+            clog << "Warning, got error in MCMC [moving] -- staying at old splits." << endl;
+            splits(m) = tempsplits;
+          }
           /*arma::vec diffs_post = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
           if(diffs_post.min() == 0){
             clog << "originally" << endl << splitspre << endl << "then splitseq: " << endl;
@@ -787,14 +785,21 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
       for(int s=n_stages-1; s>-1; s--){
         cout << "  STAGE : " << s << endl;
         unsigned int curr_n_split = splits(m)(s).n_elem;
-        //if(splits(m)(s).n_elem < 7){
-          splits(m) = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
-        //}
-        if(splits(m)(s).n_elem > curr_n_split){
-          tot_added_splits++;
+        
+        arma::field<arma::vec> tempsplits = splits(m);
+        try{
+          if(splits(m)(s).n_elem < 15){
+            tempsplits = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
+          }
+          if(splits(m)(s).n_elem > curr_n_split){
+            tot_added_splits++;
+          }
+          splits(m) = tempsplits;
+        } catch(...){
+          clog << "Warning, got error in MCMC [adding] -- staying at old splits." << endl;
+          splits(m) = tempsplits;
         }
       }
-      //cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
     }
     if(move_type == 2){
       cout << "DROP SPLIT" << endl;
@@ -803,10 +808,17 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         if(splits(m)(s).n_elem > 1){
           // can only drop on lower level with more than one element, or last level 
           unsigned int curr_n_split = splits(m)(s).n_elem;
-          splits(m) = proposal_drop_split_2(splits(m), s, y, X, p, n, base_model, lambda);
-          if(splits(m)(s).n_elem != curr_n_split){
-            //clog << m << " " << s << " was different from before: " << splits(m)(s).n_elem << " vs " << curr_n_split << endl;
-            tot_dropped_splits++;
+          arma::field<arma::vec> tempsplits = splits(m);
+          try{
+            tempsplits = proposal_drop_split_2(splits(m), s, y, X, p, n, base_model, lambda);
+            if(splits(m)(s).n_elem != curr_n_split){
+              //clog << m << " " << s << " was different from before: " << splits(m)(s).n_elem << " vs " << curr_n_split << endl;
+              tot_dropped_splits++;
+            }
+            splits(m) = tempsplits;
+          } catch(...){
+            clog << "Warning, got error in MCMC [drop] -- staying at old splits." << endl;
+            splits(m) = tempsplits;
           }
         }
       }
@@ -830,22 +842,26 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
     
     // burnin: find smoothing radius
     if(trysmooth){
-      double radius_propose = exp( log(radius) + arma::randn()*.1 );
-      if(abs(radius_propose) > 10){
-        radius_propose = 10 * radius_propose/abs(radius_propose);
-      }
-      if(radius_propose != radius){
-        ModularLinReg radius_update(y, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
-        
-        double prob = exp(arma::accu(radius_update.loglik - base_model.loglik));// * pow(radius / radius_propose, 1.0);
-        
-        prob = prob > 1 ? 1 : prob;
-        int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
-        if(accepted_proposal == 1){
-          radius = radius_propose;
-          base_model = radius_update;
+      try{
+        double radius_propose = exp( log(radius) + arma::randn()*.5 );
+        if(abs(radius_propose) > 10){
+          radius_propose = 10 * radius_propose/abs(radius_propose);
+        }
+        if(radius_propose != radius){
+          ModularLinReg radius_update(y, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
+          
+          double prob = exp(arma::accu(radius_update.loglik - base_model.loglik));// * pow(radius / radius_propose, 1.0);
+          
+          prob = prob > 1 ? 1 : prob;
+          int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
+          if(accepted_proposal == 1){
+            radius = radius_propose;
+            base_model = radius_update;
+          } 
         } 
-      } 
+      } catch(...){
+        clog << "Warning, got error in MCMC [radius] -- staying at old radius." << endl;
+      }
     }
     
     /*

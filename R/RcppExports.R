@@ -71,7 +71,15 @@ Jcol_pnormsmooth <- function(J, r) {
     .Call('_bmms_Jcol_pnormsmooth', PACKAGE = 'bmms', J, r)
 }
 
-J_smooth <- function(J, radius) {
-    .Call('_bmms_J_smooth', PACKAGE = 'bmms', J, radius)
+J_smooth <- function(J, radius, nested) {
+    .Call('_bmms_J_smooth', PACKAGE = 'bmms', J, radius, nested)
+}
+
+multi_split_nonnested <- function(prevmat, newsplits, p) {
+    .Call('_bmms_multi_split_nonnested', PACKAGE = 'bmms', prevmat, newsplits, p)
+}
+
+multi_split_new <- function(pones, splits, p) {
+    .Call('_bmms_multi_split_new', PACKAGE = 'bmms', pones, splits, p)
 }
 

@@ -255,14 +255,41 @@ BEGIN_RCPP
 END_RCPP
 }
 // J_smooth
-arma::mat J_smooth(const arma::mat& J, double radius);
-RcppExport SEXP _bmms_J_smooth(SEXP JSEXP, SEXP radiusSEXP) {
+arma::mat J_smooth(const arma::mat& J, double radius, bool nested);
+RcppExport SEXP _bmms_J_smooth(SEXP JSEXP, SEXP radiusSEXP, SEXP nestedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type J(JSEXP);
     Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
-    rcpp_result_gen = Rcpp::wrap(J_smooth(J, radius));
+    Rcpp::traits::input_parameter< bool >::type nested(nestedSEXP);
+    rcpp_result_gen = Rcpp::wrap(J_smooth(J, radius, nested));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multi_split_nonnested
+arma::mat multi_split_nonnested(const arma::mat& prevmat, arma::vec newsplits, int p);
+RcppExport SEXP _bmms_multi_split_nonnested(SEXP prevmatSEXP, SEXP newsplitsSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type prevmat(prevmatSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type newsplits(newsplitsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(multi_split_nonnested(prevmat, newsplits, p));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multi_split_new
+arma::mat multi_split_new(const arma::vec& pones, const arma::vec& splits, int p);
+RcppExport SEXP _bmms_multi_split_new(SEXP ponesSEXP, SEXP splitsSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type pones(ponesSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(multi_split_new(pones, splits, p));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -284,7 +311,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_tline", (DL_FUNC) &_bmms_tline, 2},
     {"_bmms_Jcol_ilogitsmooth", (DL_FUNC) &_bmms_Jcol_ilogitsmooth, 2},
     {"_bmms_Jcol_pnormsmooth", (DL_FUNC) &_bmms_Jcol_pnormsmooth, 2},
-    {"_bmms_J_smooth", (DL_FUNC) &_bmms_J_smooth, 2},
+    {"_bmms_J_smooth", (DL_FUNC) &_bmms_J_smooth, 3},
+    {"_bmms_multi_split_nonnested", (DL_FUNC) &_bmms_multi_split_nonnested, 3},
+    {"_bmms_multi_split_new", (DL_FUNC) &_bmms_multi_split_new, 3},
     {NULL, NULL, 0}
 };
 

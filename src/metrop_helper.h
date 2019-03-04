@@ -9,6 +9,9 @@
 
 using namespace std;
 
+
+arma::mat multi_split_nonnested(const arma::mat& prevmat, arma::vec newsplits, int p);
+
 double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original,
                            int stage, int p, double param=20);
 
@@ -196,7 +199,7 @@ arma::mat wavelettize(const arma::mat& J);
 
 arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r);
 arma::vec Jcol_pnormsmooth(const arma::vec& J, double r=0);
-arma::mat J_smooth(const arma::mat& J, double radius=0);
+arma::mat J_smooth(const arma::mat& J, double radius=0, bool nested=false);
 double ilogit(const double& x, const double& r);
 
 

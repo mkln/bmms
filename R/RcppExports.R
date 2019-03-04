@@ -79,7 +79,3 @@ multi_split_nonnested <- function(prevmat, newsplits, p) {
     .Call('_bmms_multi_split_nonnested', PACKAGE = 'bmms', prevmat, newsplits, p)
 }
 
-multi_split_new <- function(pones, splits, p) {
-    .Call('_bmms_multi_split_new', PACKAGE = 'bmms', pones, splits, p)
-}
-

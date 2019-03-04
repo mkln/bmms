@@ -280,19 +280,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// multi_split_new
-arma::mat multi_split_new(const arma::vec& pones, const arma::vec& splits, int p);
-RcppExport SEXP _bmms_multi_split_new(SEXP ponesSEXP, SEXP splitsSEXP, SEXP pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type pones(ponesSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type splits(splitsSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(multi_split_new(pones, splits, p));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 13},
@@ -313,7 +300,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_Jcol_pnormsmooth", (DL_FUNC) &_bmms_Jcol_pnormsmooth, 2},
     {"_bmms_J_smooth", (DL_FUNC) &_bmms_J_smooth, 3},
     {"_bmms_multi_split_nonnested", (DL_FUNC) &_bmms_multi_split_nonnested, 3},
-    {"_bmms_multi_split_new", (DL_FUNC) &_bmms_multi_split_new, 3},
     {NULL, NULL, 0}
 };
 

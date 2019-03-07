@@ -26,7 +26,7 @@ arma::vec proposal_jumplr_rj(const arma::field<arma::vec>& current_splits, int s
   
   // determining move
   int move;
-  if(p > 500){
+  if((p > 500) & false){
     try
     {
       // will select in 0:p-2
@@ -788,7 +788,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         
         arma::field<arma::vec> tempsplits = splits(m);
         try{
-          if(splits(m)(s).n_elem < 15){
+          if(splits(m)(s).n_elem < 10){
             tempsplits = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
           }
           if(splits(m)(s).n_elem > curr_n_split){
@@ -850,7 +850,8 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         if(radius_propose != radius){
           ModularLinReg radius_update(y, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
           
-          double prob = exp(arma::accu(radius_update.loglik - base_model.loglik));// * pow(radius / radius_propose, 1.0);
+          double prob = exp(arma::accu(radius_update.loglik - base_model.loglik)) * 
+            exp(-radius_propose + radius) * radius_propose / radius;
           
           prob = prob > 1 ? 1 : prob;
           int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
@@ -863,8 +864,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         clog << "Warning, got error in MCMC [radius] -- staying at old radius." << endl;
       }
     }
-    
-    /*
+        /*
     if(move_type== 3){
       cout << "ADD STAGE" << endl;
       int old_stages = base_model.n_stages;

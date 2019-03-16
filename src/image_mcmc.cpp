@@ -2,8 +2,17 @@
 //[[Rcpp::depends(RcppArmadillo)]]
 
 #include "image_mcmc_helper.h"
-
 using namespace std;
+
+
+//' @export
+//[[Rcpp::export]]
+arma::field<arma::mat> load_splits(int maxlevs, std::string sname){
+  arma::field<arma::mat> splits(maxlevs);
+  splits.load(sname);
+  splits.print();
+  return splits;
+}
 
 // given a mask of splits,
 // move onesplit to another location around it (radius fixed)
@@ -333,7 +342,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits,
       //clog << "randomly moving L=" << rnd_moving_lev << endl;
       int num_splits = bmms_t.modules[bmms_t.n_stages-1].splitmat(rnd_moving_lev).n_rows;
       if ( num_splits == 0) {
-        clog << bmms_t.modules[bmms_t.n_stages-1].splitmat << endl;
+        //clog << bmms_t.modules[bmms_t.n_stages-1].splitmat << endl;
       }
       int rnd_moving_split = arma::randi<int>(arma::distr_param(0, num_splits-1));
       //clog << "randomly moving S=" << rnd_moving_split << endl;
@@ -764,7 +773,9 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
     num_levs = bmms_t.n_stages;
     
     // gibbs latent
-    z = bmrandom::mvtruncnormal_eye1(bmms_t.Xb_sum, trunc_lowerlim, trunc_upperlim).col(0);
+    //z = bmrandom::mvtruncnormal_eye1(bmms_t.Xb_sum, trunc_lowerlim, trunc_upperlim).col(0);
+    arma::vec w = bmrandom::rpg(arma::ones(y.n_elem), bmms_t.Xb_sum);
+    z = 1.0/w % (y-.5);
     bmms_t = ModularLR2D(z, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma, 1.0);
     
     

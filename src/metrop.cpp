@@ -89,11 +89,11 @@ arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current
                                      base_model.fixed_sigma_v, base_model.fixed_splits,
                                      base_model.a, base_model.b, base_model.structpar);
     }
-
+    
     //clog << "------------ move" << endl; 
     // comparison after a move can be done comparing marginal likelihoods
     ssratio = split_struct_ratio2(proposed_model.bigsplit, 
-                                         base_model.bigsplit, stage, base_model.p, base_model.structpar);
+                                  base_model.bigsplit, stage, base_model.p, base_model.structpar);
     if(!isfinite(ssratio)){
       clog << "problem with moving. here's original" << endl;
       clog << base_model.bigsplit << endl;
@@ -106,18 +106,18 @@ arma::field<arma::vec> proposal_move_split(const arma::field<arma::vec>& current
     double prob = false ? exp(proposed_model.loglik(stage) - base_model.loglik(stage)) : exp(arma::accu(proposed_model.loglik - base_model.loglik));
     prob = prob * rj_prob * ssratio;
     
-/*
-    clog << "mlik ratio of move: " <<  prob << endl;
-    
-    clog << "stage: " << stage <<  ". mlr move " << prob << " " << rj_prob << endl <<
-      ">" << proposed_model.loglik.t() <<  
-      ">" << base_model.loglik.t() << endl;
-    clog << proposed_model.loglik(stage) - base_model.loglik(stage) << endl;
-    
-    clog << arma::join_horiz(proposed_model.modules[0].mean_post, base_model.modules[0].mean_post) << endl;
-    */
-      //  arma::accu(proposed_model.loglik) << " " << arma::accu(base_model.loglik) << " : " << 
-      //    arma::accu(proposed_model.loglik - base_model.loglik) << endl;
+    /*
+     clog << "mlik ratio of move: " <<  prob << endl;
+     
+     clog << "stage: " << stage <<  ". mlr move " << prob << " " << rj_prob << endl <<
+     ">" << proposed_model.loglik.t() <<  
+     ">" << base_model.loglik.t() << endl;
+     clog << proposed_model.loglik(stage) - base_model.loglik(stage) << endl;
+     
+     clog << arma::join_horiz(proposed_model.modules[0].mean_post, base_model.modules[0].mean_post) << endl;
+     */
+    //  arma::accu(proposed_model.loglik) << " " << arma::accu(base_model.loglik) << " : " << 
+    //    arma::accu(proposed_model.loglik - base_model.loglik) << endl;
     //clog << "here: " << proposed_model.loglik(stage) << " vs " << base_model.loglik(stage) << endl;
     
     prob = prob > 1 ? 1 : prob;
@@ -309,13 +309,12 @@ arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& curre
                                      base_model.a, base_model.b, base_model.structpar);
     }
     prob = false ? exp(proposed_model.loglik(stage) - base_model.loglik(stage)) : exp(arma::accu(proposed_model.loglik - base_model.loglik));
-    prob = prob * rj_prob * ssratio;
-    
     //clog << "------------ drop" << endl; 
     ssratio = split_struct_ratio2(proposed_model.bigsplit, 
-                                         base_model.bigsplit, stage, base_model.p, base_model.structpar);
+                                  base_model.bigsplit, stage, base_model.p, base_model.structpar);
     prob = prob * rj_prob * ssratio;
-
+    
+  
     //clog << proposed_model.loglik << " " << base_model.loglik << endl;
     //clog << mlr << " " << rj_prob << endl;
   }
@@ -390,13 +389,13 @@ arma::field<arma::vec> proposal_drop_stage(const arma::field<arma::vec>& current
   
   Module prop_last = proposed_model.modules[base_model.n_stages-1];
   prob = exp(modular_loglik0(proposed_model.modules[prop_stages-1].ej, proposed_model.modules[prop_stages-1].a, proposed_model.modules[prop_stages-1].b)
-    - base_model.loglik(proposed_model.n_stages-1));
-    
-    //exp(modular_loglikn(prop_last.ej - prop_last.xb_mean, 1.0/prop_last.sigmasq_sample * base_model.In) 
-         //             - base_model.loglik(base_model.n_stages-2)) * 
-    //rj_prob *
-    //ssratio;
-
+               - base_model.loglik(proposed_model.n_stages-1));
+  
+  //exp(modular_loglikn(prop_last.ej - prop_last.xb_mean, 1.0/prop_last.sigmasq_sample * base_model.In) 
+  //             - base_model.loglik(base_model.n_stages-2)) * 
+  //rj_prob *
+  //ssratio;
+  
   prob = prob > 1 ? 1 : prob;
   int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
   if(accepted_proposal == 1){
@@ -449,7 +448,7 @@ arma::vec proposal_add_rj(const arma::field<arma::vec>& current_splits,
                           current_splits(stage).n_elem, p<n?p:n, 
                                                           current_splits.n_elem - stage - 1, 
                                                           lambda_prop);//ip_move_forward / ip_move_backward * totsplit_prior_ratio(all_splits.n_elem + 1, all_splits.n_elem, p<n?p:n, stage);
-
+  
   return results;
 }
 
@@ -500,11 +499,11 @@ arma::field<arma::vec> proposal_add_split(const arma::field<arma::vec>& current_
     // same stages
     //clog << "------------ add" << endl; 
     ssratio = split_struct_ratio2(proposed_model.bigsplit, 
-                                         base_model.bigsplit, stage, base_model.p, base_model.structpar);
+                                  base_model.bigsplit, stage, base_model.p, base_model.structpar);
     
     double prob = false ? exp(proposed_model.loglik(stage) - base_model.loglik(stage)) : exp(arma::accu(proposed_model.loglik - base_model.loglik));
     prob = prob * rj_prob * ssratio;
-
+    
     
     prob = prob > 1 ? 1 : prob;
     double accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
@@ -557,7 +556,7 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
                                           const arma::vec& y, const arma::mat& X, int p, int n,
                                           ModularLinReg& base_model, int max_levels){
   //clog << "  !! trying to add new stage !! " << endl;
-
+  
   
   int base_stages = base_model.n_stages;
   
@@ -585,19 +584,19 @@ arma::field<arma::vec> proposal_add_stage(const arma::field<arma::vec>& current_
       cout << "proposal model for NEW STAGE built" << endl;
       
       double ssratio = split_struct_ratio2(proposed_model.bigsplit, 
-                                    base_model.bigsplit, -1, base_model.p, base_model.structpar);
+                                           base_model.bigsplit, -1, base_model.p, base_model.structpar);
       
       // compare with empty model
       Module base_last = base_model.modules[base_model.n_stages-1];
       double prob = exp(proposed_model.loglik(proposed_model.n_stages-1) - 
                         modular_loglik0(base_model.modules[base_stages-1].ej, base_model.modules[base_stages-1].a, base_model.modules[base_stages-1].b)) *
                         rj_prob * ssratio;
-        
-        //exp(proposed_model.loglik(proposed_model.n_stages-1) - 
-                    //    modular_loglikn(base_last.ej - base_last.xb_mean, 1.0/base_last.sigmasq_sample * base_model.In)
-                    //    ) * 
-                    //    rj_prob *
-                     //   ssratio;
+      
+      //exp(proposed_model.loglik(proposed_model.n_stages-1) - 
+      //    modular_loglikn(base_last.ej - base_last.xb_mean, 1.0/base_last.sigmasq_sample * base_model.In)
+      //    ) * 
+      //    rj_prob *
+      //   ssratio;
       //cout << "adding? MLR " << exp(proposed_model.loglik - base_model.loglik) << endl;
       prob = prob > 1 ? 1 : prob;
       int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
@@ -764,13 +763,13 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
             splits(m) = tempsplits;
           }
           /*arma::vec diffs_post = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
-          if(diffs_post.min() == 0){
-            clog << "originally" << endl << splitspre << endl << "then splitseq: " << endl;
-            clog << base_model.split_seq << endl;
-            clog << base_model.bigsplit << endl;
-            clog << "n stages " << base_model.n_stages << endl;
-            throw 1;
-          }*/
+           if(diffs_post.min() == 0){
+           clog << "originally" << endl << splitspre << endl << "then splitseq: " << endl;
+           clog << base_model.split_seq << endl;
+           clog << base_model.bigsplit << endl;
+           clog << "n stages " << base_model.n_stages << endl;
+           throw 1;
+           }*/
           proposed++;
           if(curr_split != splits(m)(s)(j)){
             tot_moved ++;
@@ -827,9 +826,9 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
     
     if(!onesigma){
       //if(move_type == 3){
-        cout << "REFRESH" << endl;
-        base_model = ModularLinReg(y, X, g, splits(m), radius, max_stages, -1.0, false, ain, bin, structpar);
-    //}
+      cout << "REFRESH" << endl;
+      base_model = ModularLinReg(y, X, g, splits(m), radius, max_stages, -1.0, false, ain, bin, structpar);
+      //}
     } else {
       Module lastmodule = base_model.modules[base_model.n_stages-1];
       arma::mat Px =  lastmodule.Xj * lastmodule.XtXi * lastmodule.Xj.t();
@@ -864,29 +863,29 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         clog << "Warning, got error in MCMC [radius] -- staying at old radius." << endl;
       }
     }
-        /*
-    if(move_type== 3){
-      cout << "ADD STAGE" << endl;
-      int old_stages = base_model.n_stages;
-      
-      splits(m) = proposal_add_stage(splits(m), y, X, p, n, base_model, max_stages);
-      if(old_stages != base_model.n_stages){
-        tot_added_stages++;
-      }
-      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
-    }
-    if(move_type== 4){
-      cout << "DROP STAGE" << endl;
-      int old_stages = base_model.n_stages;
-      if(n_stages>1){
-        splits(m) = proposal_drop_stage(splits(m), base_model);
-      } 
-      if(old_stages != base_model.n_stages){
-        tot_dropped_stages++;
-      }
-      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
-    }*/
-
+    /*
+     if(move_type== 3){
+     cout << "ADD STAGE" << endl;
+     int old_stages = base_model.n_stages;
+     
+     splits(m) = proposal_add_stage(splits(m), y, X, p, n, base_model, max_stages);
+     if(old_stages != base_model.n_stages){
+     tot_added_stages++;
+     }
+     cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+     }
+     if(move_type== 4){
+     cout << "DROP STAGE" << endl;
+     int old_stages = base_model.n_stages;
+     if(n_stages>1){
+     splits(m) = proposal_drop_stage(splits(m), base_model);
+     } 
+     if(old_stages != base_model.n_stages){
+     tot_dropped_stages++;
+     }
+     cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+     }*/
+    
     if(m > burn-1){
       int i = m-burn;
       theta_mcmc.row(i) = base_model.the_sample_field(base_model.n_stages-1).t();
@@ -946,9 +945,8 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   int p = X.n_cols;
   int max_stages = start_splits.n_elem;
   
-  double g=n/2.0;
+  double g=n;///2.0;
   
-  MCMCSWITCH = 1;
   
   arma::mat theta_mcmc = arma::zeros(mcmc - burn, p);
   arma::mat mu_mcmc = arma::zeros(mcmc - burn, p);
@@ -957,6 +955,8 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   
   arma::field<arma::field<arma::vec>> splits = arma::field<arma::field<arma::vec>>(mcmc);
   arma::field<arma::field<arma::vec>> splits_save = arma::field<arma::field<arma::vec>>(mcmc - burn);
+  
+  arma::vec icept_mcmc(mcmc-burn);
   
   arma::mat sigmasq_ms = arma::zeros(mcmc - burn, max_stages);
   arma::mat sigmasq_mcmc = arma::vec(mcmc - burn);
@@ -990,8 +990,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   trunc_upperlim.elem(yzeros).fill(0.0);
   
   arma::mat In = arma::eye(n,n);
-  
-  
+ 
   int more_or_less = 0; // 0=move, 1=add/del
   int which_mol = 0; // index used to remove or add split at a stage
   
@@ -1005,11 +1004,12 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   double accepted = 0;
   
   cout << "first model" << endl;
-  ModularLinReg base_model(y, X, g, splits(0), 0, max_stages, 1.0, false, 2.1, 1.1, structpar);
+  
+  ModularLinReg base_model(y, X, g, splits(0), 0, max_stages, -1.0, false, 2.1, 1.1, structpar);
   int m=0;
   
   ybin = y;
-  z = X * base_model.the_sample_field(base_model.n_stages-1);
+  z = 2*y-1;//X * base_model.the_sample_field(base_model.n_stages-1);
   
   cout << "first model done " << endl;
   int tot_added_splits = 0;
@@ -1018,7 +1018,7 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
   int tot_added_stages = 0;
   int tot_dropped_stages = 0;
   double decay = 2.0;
-  int choices = 4;
+  int choices = 3;
   
   for(unsigned int m = 1; m < mcmc; m++){
     Rcpp::checkUserInterrupt();
@@ -1036,19 +1036,35 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     // this function only allows move
     
     int move_type = arma::randi<int>(arma::distr_param(0, choices-1));
-
+    
     if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
       cout << "MOVING [" << m << "]" << endl;
-      for(unsigned int s=0; s<n_stages; s++){
+      for(int s=n_stages-1; s>-1; s--){
         cout << "  STAGE : " << s << endl;
-        
         // cycle through the splits. either change +1 or -1, or delete
         // for every proposal, choose whether to accept it
         // if accepted, save to splits at this mcmc stage
         for(unsigned int j=0; j<splits(m)(s).n_elem; j++){
           cout << "    SPLIT : " << j << endl;
           int curr_split = splits(m)(s)(j);
-          splits(m) = proposal_move_split(splits(m), s, j, y, X, p, n, base_model, decay);
+          //arma::vec diffs_pre = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
+          //arma::field<arma::vec> splitspre = base_model.bigsplit;
+          arma::field<arma::vec> tempsplits = splits(m);
+          try{
+            tempsplits = proposal_move_split(splits(m), s, j, y, X, p, n, base_model, decay);
+            splits(m) = tempsplits;
+          } catch(...){
+            clog << "Warning, got error in MCMC [moving] -- staying at old splits." << endl;
+            splits(m) = tempsplits;
+          }
+          /*arma::vec diffs_post = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
+           if(diffs_post.min() == 0){
+           clog << "originally" << endl << splitspre << endl << "then splitseq: " << endl;
+           clog << base_model.split_seq << endl;
+           clog << base_model.bigsplit << endl;
+           clog << "n stages " << base_model.n_stages << endl;
+           throw 1;
+           }*/
           proposed++;
           if(curr_split != splits(m)(s)(j)){
             tot_moved ++;
@@ -1056,52 +1072,69 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
           }
         } // split loop
       }
-      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+      //cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
     }
     if(move_type == 1){
       cout << "ADD SPLIT" << endl;
-      for(unsigned int s=0; s<n_stages; s++){
+      for(int s=n_stages-1; s>-1; s--){
         cout << "  STAGE : " << s << endl;
         unsigned int curr_n_split = splits(m)(s).n_elem;
-        splits(m) = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
-        if(splits(m)(s).n_elem > curr_n_split){
-          tot_added_splits++;
+        
+        arma::field<arma::vec> tempsplits = splits(m);
+        try{
+          if(splits(m)(s).n_elem < 10){
+            tempsplits = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
+          }
+          if(splits(m)(s).n_elem > curr_n_split){
+            tot_added_splits++;
+          }
+          splits(m) = tempsplits;
+        } catch(...){
+          clog << "Warning, got error in MCMC [adding] -- staying at old splits." << endl;
+          splits(m) = tempsplits;
         }
       }
-      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
     }
     if(move_type == 2){
       cout << "DROP SPLIT" << endl;
-      for(unsigned int s=0; s<n_stages; s++){
+      for(int s=n_stages-1; s>-1; s--){
         cout << "  STAGE : " << s << endl;
-        if((splits(m)(s).n_elem > 1) || ((splits(m)(s).n_elem == 1) & (s==n_stages-1) & s>0)){
+        if(splits(m)(s).n_elem > 1){
           // can only drop on lower level with more than one element, or last level 
           unsigned int curr_n_split = splits(m)(s).n_elem;
-          splits(m) = proposal_drop_split_2(splits(m), s, y, X, p, n, base_model, lambda);
-          if(splits(m)(s).n_elem != curr_n_split){
-            //clog << m << " " << s << " was different from before: " << splits(m)(s).n_elem << " vs " << curr_n_split << endl;
-            tot_dropped_splits++;
+          arma::field<arma::vec> tempsplits = splits(m);
+          try{
+            tempsplits = proposal_drop_split_2(splits(m), s, y, X, p, n, base_model, lambda);
+            if(splits(m)(s).n_elem != curr_n_split){
+              //clog << m << " " << s << " was different from before: " << splits(m)(s).n_elem << " vs " << curr_n_split << endl;
+              tot_dropped_splits++;
+            }
+            splits(m) = tempsplits;
+          } catch(...){
+            clog << "Warning, got error in MCMC [drop] -- staying at old splits." << endl;
+            splits(m) = tempsplits;
           }
         }
       }
-      cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
-    }
-    if(move_type == 3){
-      cout << "REFRESH PARAMS" << endl;
-      z = bmrandom::mvtruncnormal(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim, 1.0*In, 1).col(0);
-      base_model = ModularLinReg(z, X, g, splits(m), 0, max_stages, 1.0, false,
-                                 base_model.a, base_model.b, base_model.structpar);
+      //cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
     }
     
+    //if(move_type == 3){
+    cout << "REFRESH PARAMS" << endl;
+    z = 2*y-1;//bmrandom::mvtruncnormal_eye1(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim).col(0);
+    base_model = ModularLinReg(z, X, g, splits(m), 0, max_stages, -1.0, false,
+                               base_model.a, base_model.b, base_model.structpar);
+    //}
+    
+    //clog << z.t() << endl;
     if(m > burn-1){
       int i = m-burn;
       //clog << base_model.theta_p_scales << endl;
       
       theta_mcmc.row(i) = base_model.theta_p_scales(base_model.n_stages-1).t();
       theta_ms(i) = base_model.theta_p_scales;
-      sigmasq_ms.row(i) = base_model.sigmasq_scales.t();
-      sigmasq_mcmc(i) = base_model.sigmasq_scales(base_model.n_stages-1);
       splits_save(i) = splits(m);
+      icept_mcmc(i) = base_model.intercept;//arma::mean(y - X*theta_mcmc.row(i).t());
     }
     
     if(mcmc > 100){
@@ -1128,10 +1161,334 @@ Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X,
     //Rcpp::Named("mu_ms") = mu_ms,
     Rcpp::Named("theta") = theta_mcmc,
     Rcpp::Named("theta_ms") = theta_ms,
-    Rcpp::Named("sigmasq") = sigmasq_mcmc,
-    Rcpp::Named("sigmasq_ms") = sigmasq_ms
+    Rcpp::Named("intercept") = icept_mcmc
   );
 }
+
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::List sofk_binary2(const arma::vec& yin, const arma::mat& X, 
+                const arma::field<arma::vec>& start_splits, 
+                unsigned int mcmc = 100, unsigned int burn = 50,
+                double lambda=5.0,
+                double ain=2.1, double bin=1.1,
+                int ii=0, int ll=0,
+                bool onesigma = true,
+                bool silent = true,
+                double gin=0.01,
+                double structpar=1.0,
+                bool trysmooth=false){
+  if(silent){ cout.setstate(std::ios_base::failbit); } else {  cout.clear(); }
+  // sample from posterior of changepoints given their number
+  // idea:
+  // each stage will use increasing number of changepoints
+  // posterior from first used as offset
+  
+  //double icept = arma::mean(yin);
+  //arma::vec xs = bmdataman::col_sums(X.t());
+  //arma::vec y = yin-icept;
+  //double bmean = arma::conv_to<double>::from(arma::inv_sympd(xs.t()*xs)*xs.t()*y);
+  arma::vec y = yin; //y-xs*bmean;
+  
+  int n = y.n_elem;
+  int p = X.n_cols;
+  int max_stages = start_splits.n_elem;
+  
+  arma::vec z(n);
+  
+  double g=gin;
+  
+  MCMCSWITCH = 1;
+  int choices = 3; //onesigma? 3 : 4;
+  
+  double icept;
+  arma::mat theta_mcmc = arma::zeros(mcmc - burn, p);
+  //arma::mat mu_mcmc = arma::zeros(mcmc - burn, p);
+  arma::vec icept_mcmc = arma::zeros(mcmc-burn);
+  arma::field<arma::field<arma::vec>> theta_ms = arma::field<arma::field<arma::vec>>(mcmc - burn);
+  arma::field<arma::field<arma::vec>> mu_ms = arma::field<arma::field<arma::vec>>(mcmc - burn);
+  
+  arma::field<arma::field<arma::vec>> splits = arma::field<arma::field<arma::vec>>(mcmc);
+  arma::field<arma::field<arma::vec>> splits_save = arma::field<arma::field<arma::vec>>(mcmc - burn);
+  
+  arma::mat sigmasq_ms = arma::zeros(mcmc - burn, max_stages);
+  arma::vec sigmasq_mcmc = arma::vec(mcmc - burn);
+  arma::vec radius_mcmc = arma::vec(mcmc-burn);
+  //arma::mat pred_mcmc = arma::zeros(mcmc, n);
+  
+  // initial field of splits is a simple split at 2
+  splits(0) = arma::field<arma::vec>(max_stages);
+  splits(0) = start_splits;//sample_no_replace(p-2, numsplits);
+  //clog << splits(0)(0) << endl;
+  //splits(0)(1) = arma::ones(1)*(p-3); 
+  
+  arma::uvec yones = arma::find(y == 1);
+  arma::uvec yzeros = arma::find(y == 0);
+  
+  // y=1 is truncated lower by 0. upper=inf
+  // y=0 is truncated upper by 0, lower=-inf
+  
+  arma::vec trunc_lowerlim = arma::zeros(n);
+  trunc_lowerlim.elem(yones).fill(0.0);
+  trunc_lowerlim.elem(yzeros).fill(-arma::datum::inf);
+  
+  arma::vec trunc_upperlim = arma::zeros(n);
+  trunc_upperlim.elem(yones).fill(arma::datum::inf);
+  trunc_upperlim.elem(yzeros).fill(0.0);
+  
+  z = 2*y-1;//X * base_model.the_sample_field(base_model.n_stages-1);
+  
+  arma::field<arma::vec> current_splits = arma::field<arma::vec>(max_stages);
+  //arma::field<arma::vec> proposed_splits = arma::field<arma::vec>(max_stages);
+  
+  int more_or_less = 0; // 0=move, 1=add/del
+  int which_mol = 0; // index used to remove or add split at a stage
+  
+  int move_instage = 0; // -1=move to left, 1=move to right
+  int move_outstage = 0; // 0=stay, 1=add a split to next stage
+  
+  double prob=0;
+  int accepted_proposal;
+  
+  double proposed = 0;
+  double accepted = 0;
+  
+  cout << "first model" << endl;
+  
+  double radius = 0.0;
+  if(trysmooth){
+    radius = .5;
+  }
+  
+  
+  ModularLinReg base_model(z, X, g, splits(0), radius, max_stages, onesigma? 1.0 : -1.0, false, ain, bin, structpar);
+  int m=0;
+  
+  arma::mat In = arma::eye(n,n);
+  cout << "first model done " << endl;
+  int tot_added_splits = 0;
+  int tot_dropped_splits = 0;
+  int tot_moved = 0;
+  int tot_added_stages = 0;
+  int tot_dropped_stages = 0;
+  double decay = 2.0;
+  double sigmasq_sample = 1.0;
+  
+  for(unsigned int m = 1; m < mcmc; m++){
+    //clog << m << endl;
+    Rcpp::checkUserInterrupt();
+    cout << "========================================" << endl;
+    //cout << "starting from" << endl;
+    //cout << splits(m-1) << endl;
+    //cout << "----------------------------------------" << endl;
+    cout << "MCMC : " << m << endl;
+    // start by copying last splits. we will change it if proposals are accepted
+    splits(m) = splits(m-1);
+    
+    int n_stages = base_model.n_stages;
+    //clog << n_stages << endl;
+    
+    // mean
+    
+    // move, add split, drop split, add stage, drop stage
+    // this function only allows move
+    //clog << "here 1" << endl;
+    int move_type = arma::randi<int>(arma::distr_param(0, choices-1));
+    //clog << "here 2 " << endl;
+    
+    if(move_type == 0){    // cycle through the stages. for each stage we go through the splits
+      cout << "MOVING [" << m << "]" << endl;
+      for(int s=n_stages-1; s>-1; s--){
+        cout << "  STAGE : " << s << endl;
+        // cycle through the splits. either change +1 or -1, or delete
+        // for every proposal, choose whether to accept it
+        // if accepted, save to splits at this mcmc stage
+        for(unsigned int j=0; j<splits(m)(s).n_elem; j++){
+          cout << "    SPLIT : " << j << endl;
+          int curr_split = splits(m)(s)(j);
+          //arma::vec diffs_pre = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
+          //arma::field<arma::vec> splitspre = base_model.bigsplit;
+          arma::field<arma::vec> tempsplits = splits(m);
+          try{
+            tempsplits = proposal_move_split(splits(m), s, j, y, X, p, n, base_model, decay);
+            splits(m) = tempsplits;
+          } catch(...){
+            clog << "Warning, got error in MCMC [moving] -- staying at old splits." << endl;
+            splits(m) = tempsplits;
+          }
+          /*arma::vec diffs_post = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
+           if(diffs_post.min() == 0){
+           clog << "originally" << endl << splitspre << endl << "then splitseq: " << endl;
+           clog << base_model.split_seq << endl;
+           clog << base_model.bigsplit << endl;
+           clog << "n stages " << base_model.n_stages << endl;
+           throw 1;
+           }*/
+          proposed++;
+          if(curr_split != splits(m)(s)(j)){
+            tot_moved ++;
+            accepted++;
+          }
+        } // split loop
+      }
+      //cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+    }
+    if(move_type == 1){
+      cout << "ADD SPLIT" << endl;
+      for(int s=n_stages-1; s>-1; s--){
+        cout << "  STAGE : " << s << endl;
+        unsigned int curr_n_split = splits(m)(s).n_elem;
+        
+        arma::field<arma::vec> tempsplits = splits(m);
+        try{
+          if(splits(m)(s).n_elem < 10){
+            tempsplits = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
+          }
+          if(splits(m)(s).n_elem > curr_n_split){
+            tot_added_splits++;
+          }
+          splits(m) = tempsplits;
+        } catch(...){
+          clog << "Warning, got error in MCMC [adding] -- staying at old splits." << endl;
+          splits(m) = tempsplits;
+        }
+      }
+    }
+    if(move_type == 2){
+      cout << "DROP SPLIT" << endl;
+      for(int s=n_stages-1; s>-1; s--){
+        cout << "  STAGE : " << s << endl;
+        if(splits(m)(s).n_elem > 1){
+          // can only drop on lower level with more than one element, or last level 
+          unsigned int curr_n_split = splits(m)(s).n_elem;
+          arma::field<arma::vec> tempsplits = splits(m);
+          //try{
+            tempsplits = proposal_drop_split_2(splits(m), s, y, X, p, n, base_model, lambda);
+            if(splits(m)(s).n_elem != curr_n_split){
+              //clog << m << " " << s << " was different from before: " << splits(m)(s).n_elem << " vs " << curr_n_split << endl;
+              tot_dropped_splits++;
+            }
+            splits(m) = tempsplits;
+          /*} catch(...){
+            clog << "Warning, got error in MCMC [drop] -- staying at old splits." << endl;
+            splits(m) = tempsplits;
+          }*/
+        }
+      }
+      //cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+    }
+    
+    //z = bmrandom::mvtruncnormal_eye1(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim).col(0);
+    arma::vec w = bmrandom::rpg(arma::ones(y.n_elem), base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1));
+    z = 1.0/w % (y-.5);
+    
+    if(!onesigma){
+      //if(move_type == 3){
+      cout << "REFRESH" << endl;
+      base_model = ModularLinReg(z, X, g, splits(m), radius, max_stages, -1.0, false, ain, bin, structpar);
+      //}
+    } else {
+      Module lastmodule = base_model.modules[base_model.n_stages-1];
+      arma::mat Px =  lastmodule.Xj * lastmodule.XtXi * lastmodule.Xj.t();
+      double beta_post = arma::conv_to<double>::from(.5*(lastmodule.ej.t() * (lastmodule.In - lastmodule.g/(lastmodule.g+1.0) * lastmodule.Px) * lastmodule.ej));
+      
+      sigmasq_sample = 1.0 / bmrandom::rndpp_gamma(ain + n/2.0, 1.0/(bin + beta_post));
+      //clog << sigmasq_sample << endl;
+      base_model = ModularLinReg(z, X, g, splits(m), radius, max_stages, sigmasq_sample, false, ain, bin, structpar);
+    }
+    
+    // burnin: find smoothing radius
+    if(trysmooth){
+      try{
+        double radius_propose = exp( log(radius) + arma::randn()*.5 );
+        if(abs(radius_propose) > 10){
+          radius_propose = 10 * radius_propose/abs(radius_propose);
+        }
+        if(radius_propose != radius){
+          ModularLinReg radius_update(z, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
+          
+          double prob = exp(arma::accu(radius_update.loglik - base_model.loglik)) * 
+            exp(-radius_propose + radius) * radius_propose / radius;
+          
+          prob = prob > 1 ? 1 : prob;
+          int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
+          if(accepted_proposal == 1){
+            radius = radius_propose;
+            base_model = radius_update;
+          } 
+        } 
+      } catch(...){
+        clog << "Warning, got error in MCMC [radius] -- staying at old radius." << endl;
+      }
+    } else {
+      //z = bmrandom::mvtruncnormal_eye1(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim).col(0);
+      base_model = ModularLinReg(z, X, g, splits(m), radius, max_stages, -1.0, false, ain, bin, structpar);
+    }
+    
+    /*
+     if(move_type== 3){
+     cout << "ADD STAGE" << endl;
+     int old_stages = base_model.n_stages;
+     
+     splits(m) = proposal_add_stage(splits(m), y, X, p, n, base_model, max_stages);
+     if(old_stages != base_model.n_stages){
+     tot_added_stages++;
+     }
+     cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+     }
+     if(move_type== 4){
+     cout << "DROP STAGE" << endl;
+     int old_stages = base_model.n_stages;
+     if(n_stages>1){
+     splits(m) = proposal_drop_stage(splits(m), base_model);
+     } 
+     if(old_stages != base_model.n_stages){
+     tot_dropped_stages++;
+     }
+     cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
+     }*/
+    
+    if(m > burn-1){
+      int i = m-burn;
+      theta_mcmc.row(i) = base_model.the_sample_field(base_model.n_stages-1).t();
+      theta_ms(i) = base_model.the_sample_field;
+      icept_mcmc(i) = base_model.intercept; //arma::mean(z - X*theta_mcmc.row(i).t());
+      radius_mcmc(i) = radius;
+      //theta_mcmc.row(i) = base_model.the_sample_field(base_model.n_stages-1).t();
+      //mu_mcmc.row(i) = base_model.mu_field(base_model.n_stages-1).t();
+      //theta_ms(i) = base_model.the_sample_field;
+      //sigmasq_ms.row(i) = base_model.sigmasq_scales.t();
+      if(onesigma){
+        sigmasq_mcmc(i) = sigmasq_sample;
+      } else {
+        sigmasq_mcmc(i) = base_model.sigmasq_scales(base_model.n_stages-1);
+      }
+      splits_save(i) = splits(m);
+    }
+    
+    if(mcmc > 200){
+      if(!(m % (mcmc/5))){
+        clog << "[" << round(100*m/mcmc) << "%]";
+      } 
+    } 
+    
+  } // mcmc loop 
+  clog << "[100%]" << endl;
+  return Rcpp::List::create(
+    Rcpp::Named("splits") = splits_save,
+    //Rcpp::Named("mu") = mu_mcmc,
+    //Rcpp::Named("mu_ms") = mu_ms,
+    Rcpp::Named("intercept") = icept_mcmc,
+    Rcpp::Named("radius") = radius_mcmc,
+    Rcpp::Named("theta") = theta_mcmc,
+    Rcpp::Named("theta_ms") = theta_ms,
+    Rcpp::Named("sigmasq") = sigmasq_mcmc
+    //Rcpp::Named("sigmasq_ms") = sigmasq_ms
+  );
+}
+
+
 
 //' @export
 // [[Rcpp::export]]
@@ -1198,4 +1555,24 @@ Rcpp::List bmms_base(arma::vec& y, arma::mat& X,
     Rcpp::Named("theta_ms") = theta_ms,
     Rcpp::Named("sigmasq") = sigmasq_mcmc,
     Rcpp::Named("loglik") = lmlik_mcmc );
+}
+
+//' @export
+//[[Rcpp::export]]
+Rcpp::List bmms_vs(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
+                   const arma::field<arma::vec>& starting,
+                   int mcmc_in,
+                   arma::vec gg, 
+                   arma::vec module_prior_par, bool binary=false){
+  
+  ModularVS bmms_vs_fit(y_in, Xall_in,
+                        starting,
+                        mcmc_in, gg, module_prior_par, binary);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("theta") = bmms_vs_fit.beta_store,
+    Rcpp::Named("gamma") = bmms_vs_fit.gamma_store,
+    Rcpp::Named("intercept") = bmms_vs_fit.intercept
+    );
+  
 }

@@ -22,18 +22,18 @@ sofk <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ai
 }
 
 #' @export
-sofk_binary <- function(y, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ii = 0L, ll = 0L, silent = TRUE, structpar = 10) {
-    .Call('_bmms_sofk_binary', PACKAGE = 'bmms', y, X, start_splits, mcmc, burn, lambda, ii, ll, silent, structpar)
-}
-
-#' @export
-sofk_binary2 <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0, trysmooth = FALSE) {
-    .Call('_bmms_sofk_binary2', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth)
+sofk_binary <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0, trysmooth = FALSE) {
+    .Call('_bmms_sofk_binary', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth)
 }
 
 #' @export
 bmms_base <- function(y, X, sigmasq, g, mcmc, burn, splits, silent = TRUE) {
     .Call('_bmms_bmms_base', PACKAGE = 'bmms', y, X, sigmasq, g, mcmc, burn, splits, silent)
+}
+
+#' @export
+bmms_debug <- function(y, X, sigmasq, g, mcmc, burn, splits, silent = TRUE) {
+    .Call('_bmms_bmms_debug', PACKAGE = 'bmms', y, X, sigmasq, g, mcmc, burn, splits, silent)
 }
 
 #' @export

@@ -91,28 +91,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sofk_binary
-Rcpp::List sofk_binary(const arma::vec& y, const arma::mat& X, arma::field<arma::vec> start_splits, unsigned int mcmc, unsigned int burn, double lambda, int ii, int ll, bool silent, double structpar);
-RcppExport SEXP _bmms_sofk_binary(SEXP ySEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP silentSEXP, SEXP structparSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::field<arma::vec> >::type start_splits(start_splitsSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type mcmc(mcmcSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< int >::type ii(iiSEXP);
-    Rcpp::traits::input_parameter< int >::type ll(llSEXP);
-    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
-    Rcpp::traits::input_parameter< double >::type structpar(structparSEXP);
-    rcpp_result_gen = Rcpp::wrap(sofk_binary(y, X, start_splits, mcmc, burn, lambda, ii, ll, silent, structpar));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sofk_binary2
-Rcpp::List sofk_binary2(const arma::vec& yin, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool onesigma, bool silent, double gin, double structpar, bool trysmooth);
-RcppExport SEXP _bmms_sofk_binary2(SEXP yinSEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP onesigmaSEXP, SEXP silentSEXP, SEXP ginSEXP, SEXP structparSEXP, SEXP trysmoothSEXP) {
+Rcpp::List sofk_binary(const arma::vec& yin, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool onesigma, bool silent, double gin, double structpar, bool trysmooth);
+RcppExport SEXP _bmms_sofk_binary(SEXP yinSEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP onesigmaSEXP, SEXP silentSEXP, SEXP ginSEXP, SEXP structparSEXP, SEXP trysmoothSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -131,7 +111,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type gin(ginSEXP);
     Rcpp::traits::input_parameter< double >::type structpar(structparSEXP);
     Rcpp::traits::input_parameter< bool >::type trysmooth(trysmoothSEXP);
-    rcpp_result_gen = Rcpp::wrap(sofk_binary2(yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth));
+    rcpp_result_gen = Rcpp::wrap(sofk_binary(yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -150,6 +130,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::field<arma::vec> >::type splits(splitsSEXP);
     Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
     rcpp_result_gen = Rcpp::wrap(bmms_base(y, X, sigmasq, g, mcmc, burn, splits, silent));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bmms_debug
+int bmms_debug(arma::vec& y, arma::mat& X, double sigmasq, double g, int mcmc, int burn, arma::field<arma::vec> splits, bool silent);
+RcppExport SEXP _bmms_bmms_debug(SEXP ySEXP, SEXP XSEXP, SEXP sigmasqSEXP, SEXP gSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP splitsSEXP, SEXP silentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type sigmasq(sigmasqSEXP);
+    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::vec> >::type splits(splitsSEXP);
+    Rcpp::traits::input_parameter< bool >::type silent(silentSEXP);
+    rcpp_result_gen = Rcpp::wrap(bmms_debug(y, X, sigmasq, g, mcmc, burn, splits, silent));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -176,9 +174,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 13},
     {"_bmms_soi_binary_cpp", (DL_FUNC) &_bmms_soi_binary_cpp, 14},
     {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 15},
-    {"_bmms_sofk_binary", (DL_FUNC) &_bmms_sofk_binary, 10},
-    {"_bmms_sofk_binary2", (DL_FUNC) &_bmms_sofk_binary2, 15},
+    {"_bmms_sofk_binary", (DL_FUNC) &_bmms_sofk_binary, 15},
     {"_bmms_bmms_base", (DL_FUNC) &_bmms_bmms_base, 8},
+    {"_bmms_bmms_debug", (DL_FUNC) &_bmms_bmms_debug, 8},
     {"_bmms_bmms_vs", (DL_FUNC) &_bmms_bmms_vs, 7},
     {NULL, NULL, 0}
 };

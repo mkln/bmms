@@ -165,7 +165,7 @@ arma::vec proposal_drop_rj(const arma::field<arma::vec>& current_splits,
   results(0) = move;
   results(1) = ip_move_forward / ip_move_backward * totsplit_prior2_ratio(current_splits(stage).n_elem - 1, 
           current_splits(stage).n_elem, p<n?p:n, 
-                                          current_splits.n_elem - stage - 1, 
+                                          0,//current_splits.n_elem - stage - 1, 
                                           lambda_prop);
   //ip_move_forward / ip_move_backward * totsplit_prior_ratio(all_splits_elem - 1, all_splits_elem, p<n?p:n, stage);
   //cout << "drop split? " << ip_move_forward << " <> " << ip_move_backward << " :: " << results(1) << endl;
@@ -312,10 +312,6 @@ arma::field<arma::vec> proposal_drop_split_2(const arma::field<arma::vec>& curre
     ssratio = split_struct_ratio2(proposed_model.bigsplit, 
                                   base_model.bigsplit, stage, base_model.p, base_model.structpar);
     prob = prob * rj_prob * ssratio;
-    
-    
-    //clog << proposed_model.loglik << " " << base_model.loglik << endl;
-    //clog << mlr << " " << rj_prob << endl;
   }
   
   prob = prob > 1 ? 1 : prob;
@@ -445,7 +441,7 @@ arma::vec proposal_add_rj(const arma::field<arma::vec>& current_splits,
   results(1) = ip_move_forward / ip_move_backward * 
     totsplit_prior2_ratio(current_splits(stage).n_elem + 1, 
                           current_splits(stage).n_elem, p<n?p:n, 
-                                                          current_splits.n_elem - stage - 1, 
+                                                          0,//current_splits.n_elem - stage - 1, 
                                                           lambda_prop);//ip_move_forward / ip_move_backward * totsplit_prior_ratio(all_splits.n_elem + 1, all_splits.n_elem, p<n?p:n, stage);
   
   return results;
@@ -788,9 +784,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         
         arma::field<arma::vec> tempsplits = splits(m);
         try{
-          if(splits(m)(s).n_elem < 10){
-            tempsplits = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
-          }
+          tempsplits = proposal_add_split(splits(m), s, y, X, p, n, base_model, lambda);
           if(splits(m)(s).n_elem > curr_n_split){
             tot_added_splits++;
           }
@@ -851,8 +845,8 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
         if(radius_propose != radius){
           ModularLinReg radius_update(y, X, g, splits(m), radius_propose, max_stages, -1.0, false, ain, bin, structpar);
           
-          double prob = exp(arma::accu(radius_update.loglik - base_model.loglik)) * 
-            exp(-radius_propose + radius) * radius_propose / radius;
+          double prob = exp(arma::accu(radius_update.loglik - base_model.loglik));// * 
+            //exp(-radius_propose + radius) * radius_propose / radius; //exp(1) prior
           
           prob = prob > 1 ? 1 : prob;
           int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});

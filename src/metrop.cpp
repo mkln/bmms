@@ -165,7 +165,7 @@ arma::vec proposal_drop_rj(const arma::field<arma::vec>& current_splits,
   results(0) = move;
   results(1) = ip_move_forward / ip_move_backward * totsplit_prior2_ratio(current_splits(stage).n_elem - 1, 
           current_splits(stage).n_elem, p<n?p:n, 
-                                          0,//current_splits.n_elem - stage - 1, 
+                                          current_splits.n_elem - stage - 1, 
                                           lambda_prop);
   //ip_move_forward / ip_move_backward * totsplit_prior_ratio(all_splits_elem - 1, all_splits_elem, p<n?p:n, stage);
   //cout << "drop split? " << ip_move_forward << " <> " << ip_move_backward << " :: " << results(1) << endl;
@@ -441,7 +441,7 @@ arma::vec proposal_add_rj(const arma::field<arma::vec>& current_splits,
   results(1) = ip_move_forward / ip_move_backward * 
     totsplit_prior2_ratio(current_splits(stage).n_elem + 1, 
                           current_splits(stage).n_elem, p<n?p:n, 
-                                                          0,//current_splits.n_elem - stage - 1, 
+                                                          current_splits.n_elem - stage - 1, 
                                                           lambda_prop);//ip_move_forward / ip_move_backward * totsplit_prior_ratio(all_splits.n_elem + 1, all_splits.n_elem, p<n?p:n, stage);
   
   return results;

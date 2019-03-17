@@ -65,6 +65,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Jcol_ilogitsmooth
+arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r);
+RcppExport SEXP _bmms_Jcol_ilogitsmooth(SEXP JSEXP, SEXP rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type J(JSEXP);
+    Rcpp::traits::input_parameter< double >::type r(rSEXP);
+    rcpp_result_gen = Rcpp::wrap(Jcol_ilogitsmooth(J, r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// J_smooth
+arma::mat J_smooth(const arma::mat& J, double radius, bool nested);
+RcppExport SEXP _bmms_J_smooth(SEXP JSEXP, SEXP radiusSEXP, SEXP nestedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type J(JSEXP);
+    Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
+    Rcpp::traits::input_parameter< bool >::type nested(nestedSEXP);
+    rcpp_result_gen = Rcpp::wrap(J_smooth(J, radius, nested));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sofk
 Rcpp::List sofk(const arma::vec& yin, const arma::mat& X, const arma::field<arma::vec>& start_splits, unsigned int mcmc, unsigned int burn, double lambda, double ain, double bin, int ii, int ll, bool onesigma, bool silent, double gin, double structpar, bool trysmooth);
 RcppExport SEXP _bmms_sofk(SEXP yinSEXP, SEXP XSEXP, SEXP start_splitsSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP lambdaSEXP, SEXP ainSEXP, SEXP binSEXP, SEXP iiSEXP, SEXP llSEXP, SEXP onesigmaSEXP, SEXP silentSEXP, SEXP ginSEXP, SEXP structparSEXP, SEXP trysmoothSEXP) {
@@ -173,6 +198,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 2},
     {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 13},
     {"_bmms_soi_binary_cpp", (DL_FUNC) &_bmms_soi_binary_cpp, 14},
+    {"_bmms_Jcol_ilogitsmooth", (DL_FUNC) &_bmms_Jcol_ilogitsmooth, 2},
+    {"_bmms_J_smooth", (DL_FUNC) &_bmms_J_smooth, 3},
     {"_bmms_sofk", (DL_FUNC) &_bmms_sofk, 15},
     {"_bmms_sofk_binary", (DL_FUNC) &_bmms_sofk_binary, 15},
     {"_bmms_bmms_base", (DL_FUNC) &_bmms_bmms_base, 8},

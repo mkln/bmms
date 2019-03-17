@@ -22,7 +22,7 @@ double tline(const double& x, const double& m){
   return y;
 }
 
-
+//[[Rcpp::export]]
 arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r){
   if(r == 0){
     return J;
@@ -81,7 +81,7 @@ arma::vec Jcol_pnormsmooth(const arma::vec& J, double r){
 }
 
 
-
+//[[Rcpp::export]]
 arma::mat J_smooth(const arma::mat& J, double radius, bool nested){
   if(radius==0){
     return J;
@@ -610,8 +610,9 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   //J_field(0) = wavelettize(J_field(0));
-  J_field(0) = J_smooth(J_field(0), rad, nested);
-  
+  if(rad != 0){
+    J_field(0) = J_smooth(J_field(0), rad * (n_stages-0), nested);
+  }
   
   X_field(0) = X * J_field(0);
   //
@@ -630,7 +631,9 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
       arma::mat bigmat = bmfuncs::multi_split(pones, bigsplit(j-1), p);
       J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
     }
-    J_field(j) = J_smooth(J_field(j), rad, nested);
+    if(rad != 0){
+      J_field(j) = J_smooth(J_field(j), rad * (n_stages-j), nested);
+    }
     X_field(j) = X * J_field(j);
   }
   
@@ -718,8 +721,9 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
     J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
   }
   
-  J_field(s) = J_smooth(J_field(s), rad, nested);
-  
+  if(rad != 0){
+    J_field(s) = J_smooth(J_field(s), rad * (n_stages-s), nested);
+  }
   X_field(s) = X * J_field(s);
   
   Module adding_module = Module(X, modules[s-1].ej_next, X_field(s), pow(g_prior, 1.0/(s+1.0)), 
@@ -899,8 +903,9 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   //J_field(0) = wavelettize(J_field(0));
-  J_field(0) = J_smooth(J_field(0), rad, nested);
-  
+  if(rad != 0){
+    J_field(0) = J_smooth(J_field(0), rad * (n_stages-0), nested);
+  }
   X_field(0) = X * J_field(0);
   
   //
@@ -919,7 +924,9 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
       J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
     }
     //J_field(j) = wavelettize(J_field(j));
-    J_field(j) = J_smooth(J_field(j), rad, nested);
+    if(rad != 0){
+      J_field(j) = J_smooth(J_field(j), rad * (n_stages-j), nested);
+    }
     X_field(j) = X * J_field(j);
   }
   
@@ -1004,7 +1011,9 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
       arma::mat bigmat = bmfuncs::multi_split(pones, bigsplit(j-1), p);
       J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
     }
-    J_field(s) = J_smooth(J_field(s), rad, nested);
+    if(rad != 0){
+      J_field(s) = J_smooth(J_field(s), rad * (n_stages-s), nested);
+    }
     X_field(s) = X * J_field(s);
     
     xb -= modules[s].xb_mean;

@@ -536,7 +536,6 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
                           bool fixsigma = false){
   //former name: model_test
   
-  //arma::field<arma::mat> old_splits,
   // vectorize X using splits
   // build blr model
   // propose split changes [move]

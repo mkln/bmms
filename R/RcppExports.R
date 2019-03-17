@@ -16,6 +16,14 @@ soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ri
     .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma)
 }
 
+Jcol_ilogitsmooth <- function(J, r) {
+    .Call('_bmms_Jcol_ilogitsmooth', PACKAGE = 'bmms', J, r)
+}
+
+J_smooth <- function(J, radius, nested) {
+    .Call('_bmms_J_smooth', PACKAGE = 'bmms', J, radius, nested)
+}
+
 #' @export
 sofk <- function(yin, X, start_splits, mcmc = 100L, burn = 50L, lambda = 5.0, ain = 2.1, bin = 1.1, ii = 0L, ll = 0L, onesigma = TRUE, silent = TRUE, gin = 0.01, structpar = 1.0, trysmooth = FALSE) {
     .Call('_bmms_sofk', PACKAGE = 'bmms', yin, X, start_splits, mcmc, burn, lambda, ain, bin, ii, ll, onesigma, silent, gin, structpar, trysmooth)

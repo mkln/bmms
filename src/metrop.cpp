@@ -164,7 +164,8 @@ arma::vec proposal_drop_rj(const arma::field<arma::vec>& current_splits,
   arma::vec results = arma::zeros(2);
   results(0) = move;
   results(1) = ip_move_forward / ip_move_backward * totsplit_prior2_ratio(current_splits(stage).n_elem - 1, 
-          current_splits(stage).n_elem, p<n?p:n, 
+                                          current_splits(stage).n_elem, 
+                                          p<n?p:n, 
                                           current_splits.n_elem - stage - 1, 
                                           lambda_prop);
   //ip_move_forward / ip_move_backward * totsplit_prior_ratio(all_splits_elem - 1, all_splits_elem, p<n?p:n, stage);
@@ -1327,6 +1328,49 @@ Rcpp::List bmms_vs(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in,
     Rcpp::Named("theta") = bmms_vs_fit.beta_store,
     Rcpp::Named("gamma") = bmms_vs_fit.gamma_store,
     Rcpp::Named("intercept") = bmms_vs_fit.intercept
+  );
+  
+}
+//' @export
+//[[Rcpp::export]]
+Rcpp::List bmms_vs2(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
+                   const arma::field<arma::vec>& starting,
+                   int mcmc_in,
+                   arma::vec gg, 
+                   arma::vec module_prior_par, bool binary=false){
+  
+  ModularVS2 bmms_vs_fit(y_in, Xall_in,
+                        starting,
+                        mcmc_in, gg, module_prior_par, binary);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("theta") = bmms_vs_fit.beta_store,
+    Rcpp::Named("gamma") = bmms_vs_fit.gamma_store,
+    Rcpp::Named("intercept") = bmms_vs_fit.intercept,
+    Rcpp::Named("logliks") = bmms_vs_fit.logliks_stored
+  );
+  
+}
+
+//' @export
+//[[Rcpp::export]]
+Rcpp::List bmms_vs_tester(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
+                    const arma::field<arma::vec>& gamma,
+                    const arma::field<arma::vec>& gamma_alt,
+                    arma::vec gg, 
+                    arma::vec module_prior_par){
+  
+  ModularVS2 bmms_vs_fit(y_in, Xall_in,
+                         gamma,
+                         0, gg, module_prior_par, false);
+  
+  ModularVS2 bmms_vs_fit2(y_in, Xall_in,
+                         gamma_alt,
+                         0, gg, module_prior_par, false);
+  
+  return Rcpp::List::create(
+    Rcpp::Named("LP1") = bmms_vs_fit.logliks,
+    Rcpp::Named("LP2") = bmms_vs_fit2.logliks
   );
   
 }

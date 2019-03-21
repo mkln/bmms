@@ -231,10 +231,10 @@ arma::mat multi_split_nonnested(const arma::mat& prevmat, arma::vec newsplits, i
 
 
 ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
-                            const arma::field<arma::vec>& starting,
-                            int mcmc_in,
-                            arma::vec gg, 
-                            arma::vec module_prior_par, bool binary=false){
+                     const arma::field<arma::vec>& starting,
+                     int mcmc_in,
+                     arma::vec gg, 
+                     arma::vec module_prior_par, bool binary=false){
   
   K = Xall_in.n_elem;
   //clog << K << endl;
@@ -327,6 +327,174 @@ ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_i
       } 
     }
   }
+}
+
+ModularVS2::ModularVS2(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
+                       const arma::field<arma::vec>& starting,
+                       int mcmc_in,
+                       arma::vec gg, 
+                       arma::vec module_prior_par, bool binary=false){
+  
+  K = Xall_in.n_elem;
+  //clog << K << endl;
+  mcmc = mcmc_in;
+  y = y_in;
+  Xall = Xall_in;
+  resid = y;
+  
+  n = y.n_elem;
+  arma::vec z(n);
+  arma::mat zsave(n, mcmc);
+  
+  z = (y-0.5)*2;
+  
+  arma::uvec yones = arma::find(y == 1);
+  arma::uvec yzeros = arma::find(y == 0);
+  
+  // y=1 is truncated lower by 0. upper=inf
+  // y=0 is truncated upper by 0, lower=-inf
+  
+  arma::vec trunc_lowerlim = arma::zeros(n);
+  trunc_lowerlim.elem(yones).fill(0.0);
+  trunc_lowerlim.elem(yzeros).fill(-arma::datum::inf);
+  
+  arma::vec trunc_upperlim = arma::zeros(n);
+  trunc_upperlim.elem(yones).fill(arma::datum::inf);
+  trunc_upperlim.elem(yzeros).fill(0.0);
+  
+  arma::mat In = arma::eye(n,n);
+  logliks = arma::zeros(K);
+  proposed_logliks = arma::zeros(K);
+  
+  logliks_stored = arma::zeros(K, mcmc);
+  
+  z_all = arma::zeros(n, K);
+  
+  intercept = arma::zeros(K, mcmc);
+  beta_store = arma::field<arma::mat>(K);
+  gamma_store = arma::field<arma::mat>(K);
+  gamma_start = starting;
+  
+  for(int j=0; j<K; j++){
+    gamma_start(j) = arma::zeros(Xall(j).n_cols);
+    for(unsigned int h=0; h<Xall(j).n_cols; h++){
+      gamma_start(j)(h) = bmrandom::rndpp_bern(0.1);
+    }
+    beta_store(j) = arma::zeros(Xall(j).n_cols, mcmc);
+    gamma_store(j) = arma::zeros(Xall(j).n_cols, mcmc);
+  }
+  
+  clog << "init";
+  
+  for(int j=0; j<K; j++){
+    if(j == 0){
+      if(binary){
+        arma::vec w = bmrandom::rpg(arma::ones(y.n_elem), arma::zeros(y.n_elem));
+        z = 1.0/w % (y-.5);
+        z_all.col(j) = z;
+      } else {
+        z_all.col(j) = y;
+      }
+    } else {
+      z_all.col(j) = z_all.col(j-1) - modules[j-1].linear_predictor;
+    }
+    VarSelOps adding_module(z_all.col(j), Xall(j), gamma_start(j), gg(j), module_prior_par(j), binary?true:false, 0); // no mcmc
+    modules.push_back(adding_module);
+    proposed_modules.push_back(adding_module);
+    logliks(j) = modules[j].loglik;
+    proposed_logliks(j) = proposed_modules[j].loglik;
+  }
+  clog << "." << endl;
+  int accepted = 0;
+  
+  for(int m=0; m<mcmc; m++){
+    Rcpp::checkUserInterrupt();
+    //clog << "> m: " << m << endl;
+    z_all_proposed = z_all;
+    proposed_modules = modules;
+    
+    for(int j=0; j<K; j++){
+      //clog << "j: " << j << endl;
+      // create alternative
+      //proposed_modules = modules;
+      
+      for(int cc=0; cc<Xall(j).n_cols; cc++){
+        // update each variable individually
+        // sample gammas from alternative
+        proposed_modules[j] = modules[j];
+        proposed_modules[j].forward(cc);
+        // get logpost from following moduels
+        proposed_logliks(j) = proposed_modules[j].loglik; 
+        
+        for(int s=j+1; s<K; s++){
+          // assign new residuals on j+1:K and get logposts
+          //clog << "s: " << s << endl;
+          //proposed_modules[s] = modules[s];
+          z_all_proposed.col(s) = z_all_proposed.col(s-1) - proposed_modules[s-1].linear_predictor;
+          proposed_modules[s].change_y(z_all_proposed.col(s));
+          proposed_logliks(s) = proposed_modules[s].loglik;
+          if((j==0) & (cc<2)){
+            //clog << proposed_modules[s].loglik << endl;
+          }
+        }
+        
+        double prob = exp(arma::accu(proposed_logliks - logliks));
+        //if(cc < 2){
+        //  clog << "--" << endl;
+        //  clog << "j: " << j << " " << proposed_logliks.t() << " " << logliks.t() << endl;
+        //}
+        
+        prob = prob > 1 ? 1 : prob;
+        int accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
+        if(accepted_proposal == 1){
+          // accept all changes to j:K modules
+          modules = proposed_modules;
+          logliks = proposed_logliks;
+          z_all = z_all_proposed;
+          accepted++;
+        } else {
+          // reset changes
+          proposed_modules = modules;
+          proposed_logliks = logliks;
+          z_all_proposed = z_all;
+        }
+      }
+      // storage
+      //clog << "  beta store" << endl;
+      beta_store(j).col(m) = modules[j].beta_stored.col(0);
+      //clog << "  gamma store" << endl;
+      gamma_store(j).col(m) = modules[j].gamma_stored.col(0);
+      //clog << "  gamma start" << endl;
+      gamma_start(j) = modules[j].gamma_stored.col(0);
+      intercept(j, m) = modules[j].icept_stored(0);// onemodule.intercept;
+      logliks_stored(j, m) = logliks(j);
+    }
+    
+    for(int j=0; j<K; j++){
+      if(j == 0){
+        if(binary){
+          arma::vec w = bmrandom::rpg(arma::ones(y.n_elem), modules[j].linear_predictor);
+          z = 1.0/w % (y-.5);
+          z_all.col(j) = z;
+        } else {
+          z_all.col(j) = y;
+        }
+      } else {
+        z_all.col(j) = z_all.col(j-1) - modules[j-1].linear_predictor;
+      }
+      modules[j] = VarSelOps(z_all.col(j), Xall(j), gamma_start(j), gg(j), module_prior_par(j), binary?true:false, 0); // no mcmc
+      logliks(j) = modules[j].loglik;
+      proposed_logliks(j) = proposed_modules[j].loglik;
+    }
+    
+    if(mcmc > 100){
+      if(!(m % (mcmc / 10))){
+        clog << m << " " << max(abs(z)) << endl;
+      } 
+    }
+  }
+  //clog << "tot accepted: " << accepted << endl;
+  
 }
 
 arma::mat div_by_colsum(const arma::mat& J){
@@ -425,9 +593,9 @@ Module::Module(){
 
 
 Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
-                      arma::mat& Jpre, arma::mat& Jnow, arma::vec& mean_post_pre, arma::vec& theta_sample_pre,
-                      arma::vec& ingrid, arma::vec& splits, double fixed_sigma=-1,
-                      double ain=2.1, double bin=1.1){
+               arma::mat& Jpre, arma::mat& Jnow, arma::vec& mean_post_pre, arma::vec& theta_sample_pre,
+               arma::vec& ingrid, arma::vec& splits, double fixed_sigma=-1,
+               double ain=2.1, double bin=1.1){
   //cout << "ModularLinReg :: module 0 " << endl;
   //Xfull = X_full;
   
@@ -492,9 +660,9 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
 }
 
 void Module::redo(const arma::vec& e,
-                         const arma::mat& Jpre, 
-                         const arma::mat& Jnow,
-                         const arma::vec& theta_sample_pre){
+                  const arma::mat& Jpre, 
+                  const arma::mat& Jnow,
+                  const arma::vec& theta_sample_pre){
   ej = e;
   cout << "redoing module" << endl;
   icept = arma::mean(ej);
@@ -534,13 +702,13 @@ void Module::redo(const arma::vec& e,
 
 
 ModularLinReg::ModularLinReg(const arma::vec& yin, 
-                                    const arma::mat& Xin, 
-                                    double g, 
-                                    const arma::field<arma::vec>& in_splits, 
-                                    double radius, int set_max_stages, 
-                                    double fixed_sigma=-1, bool fixed_grids = true,
-                                    double ain=2.1, double bin=1.1,
-                                    double spar=1.0){
+                             const arma::mat& Xin, 
+                             double g, 
+                             const arma::field<arma::vec>& in_splits, 
+                             double radius, int set_max_stages, 
+                             double fixed_sigma=-1, bool fixed_grids = true,
+                             double ain=2.1, double bin=1.1,
+                             double spar=1.0){
   
   
   rad = radius;
@@ -623,7 +791,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   cout << "? 3 " << endl;
   // structure of all other modules
   cout << "ModularLinReg :: creating other elements after 0 " << endl;
-
+  
   for(unsigned int j=1; j<n_stages; j++){
     if(nested){
       J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
@@ -1053,7 +1221,6 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
   } 
 }
 
-
 double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop){
   double ck = lambda_prop * pow(2.0, ss);
   double proposal = (- ck * tot_split_prop * std::log(tot_split_prop));
@@ -1062,8 +1229,14 @@ double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, i
 }
 
 
+double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop){
+  //lambda_prop is 1/variance;
+  double means = pow(2, ss);
+  return exp(-lambda_prop/2.0 * pow(tot_split_prop - means, 2) + lambda_prop/2.0 * pow(tot_split_orig - means, 2) ); //prior_ratio;
+}
+
 double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::field<arma::vec>& original,
-                                  int stage, int p, double param){
+                           int stage, int p, double param){
   int stage_proposed=stage, stage_original=stage;
   if(stage==-1){
     stage_proposed = proposed.n_elem-1;
@@ -1111,11 +1284,6 @@ double split_struct_ratio2(const arma::field<arma::vec>& proposed, const arma::f
   
 }
 
-double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop){
-  //lambda_prop is 1/variance;
-  double means = pow(2, ss);
-  return exp(-lambda_prop/2.0 * pow(tot_split_prop - means, 2) + lambda_prop/2.0 * pow(tot_split_orig - means, 2) ); //prior_ratio;
-}
 
 double splitpar_prior(double x, int tot_split, int norp, int ss){
   //lambda_prop is 1/variance;
@@ -1145,4 +1313,99 @@ arma::mat wavelettize(const arma::mat& J){
   }
   return J;
 }
+
+
+VarSelOps::VarSelOps(const arma::vec& yy, const arma::mat& XX, const arma::vec& prior,
+                     double gin=-1.0, double model_prior_par_in=1, bool fix_sigma=false, int iter=0){
+  //clog << "creating " << endl;
+  y = yy;
+  X = XX;
+  mcmc = iter;
+  
+  p = X.n_cols;
+  arma::vec p_indices = arma::linspace<arma::vec>(0, p-1, p);
+  n = y.n_elem;
+  
+  fixsigma = fix_sigma;
+  model_prior_par = model_prior_par_in;
+  g = gin;
+  
+  //clog << "initing " << endl;
+  icept_stored = arma::zeros(mcmc==0? 1: mcmc);
+  beta_stored = arma::zeros(p, mcmc==0? 1: mcmc);
+  gamma_stored = arma::zeros(p, mcmc==0? 1: mcmc);
+  sigmasq_stored = arma::zeros(mcmc==0? 1: mcmc);
+  
+  gamma = arma::uvec(p);
+  for(int j=0; j<p; j++){
+    gamma(j) = 1*bmrandom::boolbern(prior(j));
+  }
+  
+  
+  //clog << "BS2 " << endl;
+  gammaix = arma::find(gamma);
+  //clog << "test  1" << endl;
+  sampled_model = bmmodels::BayesLMg(y, X.cols(gammaix), g, true, fixsigma);
+  
+  loglik = sampled_model.marglik - model_prior_par*sampled_model.p;
+  
+  
+  //clog << "lin pred " << endl;
+  // only ok for mcmc=1
+  linear_predictor = X.cols(gammaix) * sampled_model.b + sampled_model.icept;
+}
+
+void VarSelOps::forward(int ix){
+  // changes a single variable
+  mcmc = 1;
+  int m = 0;
+  //clog << "init forward " << endl;
+  //clog << ix << endl;
+  gamma_proposal = gamma;
+  //clog << gamma_proposal << endl;
+  gamma_proposal(ix) = 1-gamma(ix);
+  //clog << gamma_proposal << endl;
+  arma::uvec gammaix_proposal = arma::find(gamma_proposal);
+  //clog << "changing X " << endl;
+  gammaix = gammaix_proposal;
+  gamma = gamma_proposal;
+  
+  //clog << "sampling " << endl;
+  sampled_model = bmmodels::BayesLMg(y, X.cols(gammaix), g, true, fixsigma);
+  
+  loglik = sampled_model.marglik - model_prior_par*sampled_model.p;
+  //clog << "forward: " << loglik << endl;
+  
+  arma::vec beta_full = arma::zeros(p);
+  beta_full.elem(gammaix) = sampled_model.b;
+  icept_stored(m) = sampled_model.icept;
+  beta_stored.col(m) = beta_full;
+  gamma_stored.col(m) = arma::conv_to<arma::vec>::from(gamma);
+  sigmasq_stored(m) = sampled_model.sigmasq;
+  //clog << "linear pred " << endl;
+  linear_predictor = X.cols(gammaix) * sampled_model.b + sampled_model.icept;
+}
+
+void VarSelOps::change_y(const arma::vec& newy){
+  int m = 0;
+  // no sampling of gamma, keep everything as is, recalculate logposterior
+  //clog << "changing y " << endl;
+  y = newy;
+  n = y.n_elem;
+  
+  //clog << "sampling  " << endl;
+  sampled_model = bmmodels::BayesLMg(y, X.cols(gammaix), g, false, fixsigma); // false = no sampling, just take the logpost
+  loglik = sampled_model.marglik - model_prior_par*sampled_model.p;
+  
+  //arma::vec beta_full = arma::zeros(p);
+  //beta_full.elem(gammaix) = sampled_model.b;
+  
+  //icept_stored(m) = sampled_model.icept;
+  //beta_stored.col(m) = beta_full;
+  //gamma_stored.col(m) = arma::conv_to<arma::vec>::from(gamma);
+  //sigmasq_stored(m) = sampled_model.sigmasq;
+  //clog << "finding lin pred " << endl;
+  //linear_predictor = X.cols(gammaix) * sampled_model.b + sampled_model.icept;
+}
+
 

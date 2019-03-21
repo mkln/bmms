@@ -16,7 +16,6 @@ inline double blm_marglik(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var
 
 class BayesLM2D{
 public:
-  
   bool fix_sigma;
   
   arma::mat X_flat;
@@ -36,6 +35,7 @@ public:
   arma::vec regions;
   
   double lambda;
+  double g;
   
   bmmodels::BayesLM flatmodel; //***
   //VSModule selector;
@@ -62,12 +62,12 @@ public:
   arma::vec residuals; 
   arma::vec Xb;
   
-  BayesLM2D(arma::vec&, arma::cube&, arma::field<arma::mat>&, arma::mat&, double, bool, double);
+  BayesLM2D(arma::vec&, arma::cube&, arma::field<arma::mat>&, arma::mat&, double, bool, double, double);
 };
 
 inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d, 
                      arma::field<arma::mat>& splits, arma::mat& mask_forbid, 
-                     double lambda_in, bool fixed_sigmasq, double sigmasqin = -1.0){
+                     double lambda_in, bool fixed_sigmasq, double sigmasqin = -1.0, double gin=-1){
   
   //cout << "[BayesLM2D] starting setup" << endl; 
   fix_sigma = fixed_sigmasq;
@@ -86,6 +86,7 @@ inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d,
   p2 = X2d.n_cols;
   
   lambda = lambda_in;
+  g = gin;
   
   y = yin;
   In = arma::eye(y.n_elem, y.n_elem);
@@ -103,7 +104,7 @@ inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d,
   
   //cout << "[BayesLM2D] fitting flat model" << endl;
   //cout << fix_sigma << " " << sigmasq_sampled << endl;
-  flatmodel = bmmodels::BayesLM(y, X_flat, lambda, fix_sigma, sigmasq_sampled); 
+  flatmodel = bmmodels::BayesLM(y, X_flat, lambda, fix_sigma, sigmasq_sampled, g); 
   //flatmodel = VSModule(y, X_flat, lambda, fix_sigma);
   
   //cout << "[BayesLM2D] saving" << endl;
@@ -136,7 +137,7 @@ inline void BayesLM2D::change_splits(arma::field<arma::mat>& splits){
   X_flat = bm2d::cube_to_mat_by_region(Xcube, groupmask, regions);
   effective_dimension = X_flat.n_cols;
   
-  flatmodel = bmmodels::BayesLM(y, X_flat, lambda, fix_sigma, sigmasq_sampled); 
+  flatmodel = bmmodels::BayesLM(y, X_flat, lambda, fix_sigma, sigmasq_sampled, g); 
   //flatmodel = VSModule(y, X_flat, lambda, fix_sigma);
   
   if(!fix_sigma){
@@ -180,6 +181,7 @@ public:
   int p1, p2;
   
   double lambda; // ridge
+  double g;
   
   arma::vec y;
   arma::cube X2d;
@@ -213,7 +215,7 @@ public:
   ModularLR2D();
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double);
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double, 
-              bool, double);
+              bool, double, double);
 };
 
 inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, const arma::field<arma::mat>& in_splits, 
@@ -250,7 +252,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
     for(unsigned int j=0; j<s+1; j++){
       current_split_field(j) = in_splits(j);
     }
-    BayesLM2D adding_module(residuals, X2d, current_split_field, mask_nosplits, lambda, fix_sigma);
+    BayesLM2D adding_module(residuals, X2d, current_split_field, mask_nosplits, lambda*(n_stages-s), fix_sigma);
     modules.push_back(adding_module);
     logliks(s) = adding_module.logmarglik() + sigprior;
     theta_sampled.slice(s) = adding_module.beta_sampled;
@@ -271,7 +273,7 @@ inline ModularLR2D::ModularLR2D(){
 
 inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, const arma::field<arma::mat>& in_splits, 
                          arma::mat& mask_forbid, int set_max_stages=5, double lambda_in = 0.5, 
-                         bool fixed_sigma=false, double sigmasqin=-1.0){
+                         bool fixed_sigma=false, double sigmasqin=-1.0, double gin = -1){
   
   max_stages = set_max_stages;
   fix_sigma = fixed_sigma;
@@ -296,6 +298,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
   X2d = Xin;
   
   lambda = lambda_in;
+  g = gin;
   
   mask_nosplits = mask_forbid;
   
@@ -318,8 +321,8 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
       current_split_field(j) = in_splits(j);
     }
     BayesLM2D adding_module(residuals, X2d, 
-                            current_split_field, mask_nosplits, lambda, 
-                            fix_sigma, sigmasq_sampled(s));
+                            current_split_field, mask_nosplits, lambda*(n_stages-s), 
+                            fix_sigma, sigmasq_sampled(s), g);
     modules.push_back(adding_module);
     logliks(s) = adding_module.logmarglik() + sigprior;
     //clog << "v1" << endl;
@@ -384,7 +387,7 @@ inline void ModularLR2D::add_new_module(const arma::field<arma::mat>& in_splits)
   for(unsigned int j=0; j<s+1; j++){
     current_split_field(j) = in_splits(j);
   }
-  BayesLM2D adding_module(y, X2d, current_split_field, mask_nosplits, lambda, fix_sigma);
+  BayesLM2D adding_module(y, X2d, current_split_field, mask_nosplits, lambda*(n_stages-s+1), fix_sigma, g);
   modules.push_back(adding_module);
   n_stages ++;
   arma::vec old_logliks = logliks;

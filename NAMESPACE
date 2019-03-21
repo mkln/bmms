@@ -3,6 +3,8 @@
 export(bmms_base)
 export(bmms_debug)
 export(bmms_vs)
+export(bmms_vs2)
+export(bmms_vs_tester)
 export(load_splits)
 export(sofk)
 export(sofk_binary)

@@ -7,13 +7,13 @@ load_splits <- function(maxlevs, sname) {
 }
 
 #'@export
-soi_cpp <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = FALSE) {
-    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask)
+soi_cpp <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = FALSE) {
+    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data)
 }
 
 #'@export
-soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_splitmask = TRUE, fixsigma = FALSE) {
-    .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_splitmask, fixsigma)
+soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0) {
+    .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g)
 }
 
 Jcol_ilogitsmooth <- function(J, r) {
@@ -47,5 +47,15 @@ bmms_debug <- function(y, X, sigmasq, g, mcmc, burn, splits, silent = TRUE) {
 #' @export
 bmms_vs <- function(y_in, Xall_in, starting, mcmc_in, gg, module_prior_par, binary = FALSE) {
     .Call('_bmms_bmms_vs', PACKAGE = 'bmms', y_in, Xall_in, starting, mcmc_in, gg, module_prior_par, binary)
+}
+
+#' @export
+bmms_vs2 <- function(y_in, Xall_in, starting, mcmc_in, gg, module_prior_par, binary = FALSE) {
+    .Call('_bmms_bmms_vs2', PACKAGE = 'bmms', y_in, Xall_in, starting, mcmc_in, gg, module_prior_par, binary)
+}
+
+#' @export
+bmms_vs_tester <- function(y_in, Xall_in, gamma, gamma_alt, gg, module_prior_par) {
+    .Call('_bmms_bmms_vs_tester', PACKAGE = 'bmms', y_in, Xall_in, gamma, gamma_alt, gg, module_prior_par)
 }
 

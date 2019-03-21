@@ -185,6 +185,91 @@ public:
   arma::field<arma::mat> gamma_store;
   arma::field<arma::vec> gamma_start;
 };
+class BayesSelect2{
+public:
+  // data
+  bool fix_sigma;
+  int p, n;
+  double icept, g, yty, yPxy, alpha, beta, marglik;
+  arma::vec y, ycenter;
+  
+  void change_X(const arma::mat&);
+  double get_marglik(bool);
+  
+  BayesSelect2();
+  //BayesLMg(const arma::vec&, const arma::mat&, bool);
+  //BayesLMg(arma::vec, arma::mat, double);
+  BayesSelect2(const arma::vec&, const arma::mat&, double, bool);
+  //BayesLMg(arma::vec, arma::mat, arma::mat);
+};
+
+class VarSelOps{
+public:
+  arma::vec y;
+  arma::mat X;
+  int n, p;
+  
+  arma::uvec gamma;
+  arma::uvec gamma_proposal;
+  bmmodels::BayesLMg sampled_model;
+  double loglik;
+  
+  //arma::vec gamma_start_prior; //prior prob of values to start from
+  
+  arma::vec sampling_order;
+  double model_prior_par;
+  bool fixsigma;
+  double g;
+  int mcmc;
+  
+  
+  void forward(int);
+  void change_y(const arma::vec&);
+  
+  arma::uvec gammaix;
+  
+  arma::vec icept_stored;
+  arma::mat gamma_stored;
+  arma::mat beta_stored;
+  arma::vec sigmasq_stored;
+  
+  
+  arma::vec linear_predictor;
+  
+  VarSelOps(const arma::vec&, const arma::mat&, const arma::vec&, double, double, bool, int);
+};
+
+class ModularVS2 {
+public:
+  int K;
+  int mcmc;
+  
+  //std::vector<VSModule> varsel_modules;
+  
+  arma::vec y;
+  int n;
+  arma::field<arma::mat> Xall;
+  arma::vec resid;
+  arma::mat z_all;
+  arma::mat z_all_proposed;
+  
+  //ModularVS(const arma::vec&, const arma::field<arma::mat>&, int, double, arma::vec);
+  ModularVS2(const arma::vec&, const arma::field<arma::mat>&, 
+            const arma::field<arma::vec>&,
+            int, arma::vec, arma::vec, bool);
+  
+  std::vector<VarSelOps> modules;
+  std::vector<VarSelOps> proposed_modules;
+  
+  arma::vec logliks;
+  arma::mat logliks_stored;
+  arma::vec proposed_logliks;
+    
+  arma::mat intercept;
+  arma::field<arma::mat> beta_store;
+  arma::field<arma::mat> gamma_store;
+  arma::field<arma::vec> gamma_start;
+};
 
 
 double ilogit(const double& x, const double& r);
@@ -220,6 +305,19 @@ double splitpar_prior(double x, int tot_split, int norp, int ss);
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction);
 
 arma::mat wavelettize(const arma::mat& J);
+
+
+// log density of mvnormal mean 0 -- only useful in ratios with gpriors
+inline double m0mvnorm_dens_gratio(double yy, double yPxy, double g, double p){
+  return -0.5*p*log(g+1.0) + 0.5*g/(g+1.0) * yPxy - 0.5*yy;
+}
+
+// marglik of y ~ N(Xb, e In) with conjugate priors mean 0
+//-- only useful in ratios with gpriors
+// and gprior for b
+inline double clm_marglik_gratio(double yy, double yPxy, double g, int n, double p, double a, double b){
+  return -0.5*p*log(g+1.0) - (a+n/2.0)*log(b + 0.5*(yy - g/(g+1.0) * yPxy));
+}
 
 
 #endif

@@ -16,6 +16,11 @@ soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ri
     .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g)
 }
 
+#'@export
+mixed_binary_cpp <- function(y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0, g_vs = 1.0, module_prior_par_vs = 1.0) {
+    .Call('_bmms_mixed_binary_cpp', PACKAGE = 'bmms', y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, g_vs, module_prior_par_vs)
+}
+
 Jcol_ilogitsmooth <- function(J, r) {
     .Call('_bmms_Jcol_ilogitsmooth', PACKAGE = 'bmms', J, r)
 }

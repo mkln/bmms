@@ -198,6 +198,9 @@ public:
   std::vector<BayesLM2D> modules;
   
   void change_module(int, arma::field<arma::mat>&);
+  void propose_change_module(int, arma::field<arma::mat>&);
+  void confirm_change_module(int, arma::field<arma::mat>&);
+  
   //void change_all(arma::field<arma::mat>&);
   void add_new_module(const arma::field<arma::mat>&);
   void delete_last_module();
@@ -357,6 +360,88 @@ inline void ModularLR2D::change_module(int which_level, arma::field<arma::mat>& 
   }
   
   for(unsigned int s = which_level; s<n_stages; s++){
+    arma::field<arma::mat> current_split_field(s+1);
+    for(unsigned int j=0; j<s+1; j++){
+      current_split_field(j) = in_splits(j);
+    }
+    
+    //BayesLM2D adding_module(residuals, X2d, current_split_field);
+    modules[s].change_splits(current_split_field);
+    logliks(s) = modules[s].logmarglik() + sigprior;
+    icept_sampled(s) = modules[s].icept_sampled;
+    theta_sampled.slice(s) = modules[s].beta_sampled;
+    sigmasq_sampled(s) = modules[s].sigmasq_sampled;
+    residuals = modules[s].residuals;
+    if(!fix_sigma){
+      sigprior += R::dgamma(1.0/modules[s].sigmasq_sampled, modules[s].flatmodel.alpha, 1.0/modules[s].flatmodel.beta, 1); //***
+    }
+  }
+  
+  Xb_sum = arma::zeros(n);
+  for(unsigned int s = 0; s<n_stages; s++){
+    Xb_sum += modules[s].Xb;
+  }
+}
+
+inline void ModularLR2D::propose_change_module(int which_level, arma::field<arma::mat>& in_splits){
+  splitsub = in_splits;
+  
+  arma::vec residuals;
+  if(which_level > 0){
+    residuals = modules[which_level-1].residuals;
+  } else {
+    residuals = y;
+  }
+  
+  double sigprior = 0.0;
+  if(!fix_sigma){
+    for(unsigned int s = 0; s<which_level; s++){
+      sigprior += R::dgamma(1.0/modules[s].sigmasq_sampled, modules[s].flatmodel.alpha, 1.0/modules[s].flatmodel.beta, 1); //***
+    }
+  }
+  
+  int s = which_level;
+  arma::field<arma::mat> current_split_field(s+1);
+  for(unsigned int j=0; j<s+1; j++){
+    current_split_field(j) = in_splits(j);
+  }
+  
+  //BayesLM2D adding_module(residuals, X2d, current_split_field);
+  modules[s].change_splits(current_split_field);
+  logliks(s) = modules[s].logmarglik() + sigprior;
+  icept_sampled(s) = modules[s].icept_sampled;
+  theta_sampled.slice(s) = modules[s].beta_sampled;
+  sigmasq_sampled(s) = modules[s].sigmasq_sampled;
+  residuals = modules[s].residuals;
+  if(!fix_sigma){
+    sigprior += R::dgamma(1.0/modules[s].sigmasq_sampled, modules[s].flatmodel.alpha, 1.0/modules[s].flatmodel.beta, 1); //***
+  }
+  
+  
+  Xb_sum = arma::zeros(n);
+  for(unsigned int s = 0; s<n_stages; s++){
+    Xb_sum += modules[s].Xb;
+  }
+}
+
+inline void ModularLR2D::confirm_change_module(int which_level, arma::field<arma::mat>& in_splits){
+  splitsub = in_splits;
+  
+  arma::vec residuals;
+  if(which_level > 0){
+    residuals = modules[which_level-1].residuals;
+  } else {
+    residuals = y;
+  }
+  
+  double sigprior = 0.0;
+  if(!fix_sigma){
+    for(unsigned int s = 0; s<which_level; s++){
+      sigprior += R::dgamma(1.0/modules[s].sigmasq_sampled, modules[s].flatmodel.alpha, 1.0/modules[s].flatmodel.beta, 1); //***
+    }
+  }
+  
+  for(unsigned int s = which_level+1; s<n_stages; s++){
     arma::field<arma::mat> current_split_field(s+1);
     for(unsigned int j=0; j<s+1; j++){
       current_split_field(j) = in_splits(j);

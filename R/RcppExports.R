@@ -12,6 +12,16 @@ soi_cpp <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcm
 }
 
 #'@export
+soi2_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = FALSE, save_more_data = FALSE, fixsigma = FALSE, g = -1.0) {
+    .Call('_bmms_soi2_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g)
+}
+
+#'@export
+soi_tester <- function(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, g = -1.0) {
+    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g)
+}
+
+#'@export
 soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0) {
     .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g)
 }
@@ -21,12 +31,13 @@ mixed_binary_cpp <- function(y, X, X_g, centers, mask_forbid, lambda_centers, la
     .Call('_bmms_mixed_binary_cpp', PACKAGE = 'bmms', y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, g_vs, module_prior_par_vs)
 }
 
-Jcol_ilogitsmooth <- function(J, r) {
-    .Call('_bmms_Jcol_ilogitsmooth', PACKAGE = 'bmms', J, r)
+reshape_mat <- function(X) {
+    .Call('_bmms_reshape_mat', PACKAGE = 'bmms', X)
 }
 
-J_smooth <- function(J, radius, nested) {
-    .Call('_bmms_J_smooth', PACKAGE = 'bmms', J, radius, nested)
+#'@export
+hp_binary_cpp <- function(y, X, X_g, centers, mask_forbid, Xlocations, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0, g_vs = 1.0, module_prior_par_vs = 1.0) {
+    .Call('_bmms_hp_binary_cpp', PACKAGE = 'bmms', y, X, X_g, centers, mask_forbid, Xlocations, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, g_vs, module_prior_par_vs)
 }
 
 #' @export

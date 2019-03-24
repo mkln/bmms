@@ -646,7 +646,7 @@ Rcpp::List sofk(const arma::vec& yin, const arma::mat& X,
   // posterior from first used as offset
   
   //double icept = arma::mean(yin);
-  //arma::vec xs = bmdataman::col_sums(X.t());
+  //arma::vec xs = bmfuncs::col_sums(X.t());
   //arma::vec y = yin-icept;
   //double bmean = arma::conv_to<double>::from(arma::inv_sympd(xs.t()*xs)*xs.t()*y);
   arma::vec y = yin; //y-xs*bmean;
@@ -924,7 +924,7 @@ Rcpp::List sofk_binary(const arma::vec& yin, const arma::mat& X,
   // posterior from first used as offset
   
   //double icept = arma::mean(yin);
-  //arma::vec xs = bmdataman::col_sums(X.t());
+  //arma::vec xs = bmfuncs::col_sums(X.t());
   //arma::vec y = yin-icept;
   //double bmean = arma::conv_to<double>::from(arma::inv_sympd(xs.t()*xs)*xs.t()*y);
   arma::vec y = yin; //y-xs*bmean;
@@ -1055,14 +1055,6 @@ Rcpp::List sofk_binary(const arma::vec& yin, const arma::mat& X,
             clog << "Warning, got error in MCMC [moving] -- staying at old splits." << endl;
             splits(m) = tempsplits;
           }
-          /*arma::vec diffs_post = arma::diff(arma::sort(base_model.bigsplit(base_model.n_stages-1)));
-           if(diffs_post.min() == 0){
-           clog << "originally" << endl << splitspre << endl << "then splitseq: " << endl;
-           clog << base_model.split_seq << endl;
-           clog << base_model.bigsplit << endl;
-           clog << "n stages " << base_model.n_stages << endl;
-           throw 1;
-           }*/
           proposed++;
           if(curr_split != splits(m)(s)(j)){
             tot_moved ++;
@@ -1163,30 +1155,6 @@ Rcpp::List sofk_binary(const arma::vec& yin, const arma::mat& X,
       //z = bmrandom::mvtruncnormal_eye1(base_model.intercept + X * base_model.the_sample_field(base_model.n_stages-1), trunc_lowerlim, trunc_upperlim).col(0);
       base_model = ModularLinReg(z, X, g, splits(m), radius, max_stages, -1.0, false, ain, bin, structpar);
     }
-    
-    /*
-     if(move_type== 3){
-     cout << "ADD STAGE" << endl;
-     int old_stages = base_model.n_stages;
-     
-     splits(m) = proposal_add_stage(splits(m), y, X, p, n, base_model, max_stages);
-     if(old_stages != base_model.n_stages){
-     tot_added_stages++;
-     }
-     cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
-     }
-     if(move_type== 4){
-     cout << "DROP STAGE" << endl;
-     int old_stages = base_model.n_stages;
-     if(n_stages>1){
-     splits(m) = proposal_drop_stage(splits(m), base_model);
-     } 
-     if(old_stages != base_model.n_stages){
-     tot_dropped_stages++;
-     }
-     cout << base_model.theta_p_scales(base_model.n_stages-1).t() << endl;
-     }*/
-    
     if(m > burn-1){
       int i = m-burn;
       theta_mcmc.row(i) = base_model.the_sample_field(base_model.n_stages-1).t();
@@ -1331,6 +1299,7 @@ Rcpp::List bmms_vs(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in,
   );
   
 }
+
 //' @export
 //[[Rcpp::export]]
 Rcpp::List bmms_vs2(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 

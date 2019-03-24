@@ -7,228 +7,6 @@
 using namespace std;
 
 
-double ilogit(const double& x, const double& r){
-  return 1.0/(1 + exp(-.5/r * x));
-}
-
-double tline(const double& x, const double& m){
-  double y = m*x + .5;
-  if(y < 0){
-    return 0;
-  }
-  if(y > 1){
-    return 1;
-  }
-  return y;
-}
-
-//[[Rcpp::export]]
-arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r){
-  if(r == 0){
-    return J;
-  }
-  double p = J.n_elem;
-  r = r*p / 100.0;
-  arma::vec ix_ones = arma::conv_to<arma::vec>::from(arma::find(J==1));
-  arma::vec result = arma::zeros(J.n_elem);
-  double meanix_min;
-  double meanix_max;
-  
-  meanix_min = ix_ones.min();
-  meanix_max = ix_ones.max();
-  
-  if(meanix_max-meanix_min < 2){
-    meanix_min -= .5;
-    meanix_max += .5;
-  }
-  if( r > 0 ){
-    for(unsigned int i=0; i<result.n_elem; i++){
-      double where = (i+0.0);
-      result(i) = 1 + ilogit(where - meanix_min, r) - ilogit(where - meanix_max, r);
-    }
-  } else {
-    for(unsigned int i=0; i<result.n_elem; i++){
-      double where = (i+0.0);
-      result(i) = min( tline(where - meanix_min, -.1/r), 1 - tline(where - meanix_max, -.1/r));
-    }
-  }
-  return (result-result.min())/(result.max()-result.min());
-}
-
-
-
-arma::vec Jcol_pnormsmooth(const arma::vec& J, double r){
-  if(r == 0){
-    return J;
-  }
-  double p = J.n_elem;
-  r = r*p / 100.0;
-  arma::vec ix_ones = arma::conv_to<arma::vec>::from(arma::find(J==1));
-  arma::vec result = arma::zeros(J.n_elem);
-  
-  double meanix_min = ix_ones.min();
-  double meanix_max = ix_ones.max();
-  if(meanix_max-meanix_min < 2){
-    meanix_min -= .5;
-    meanix_max += .5;
-  }
-  for(unsigned int i=0; i<result.n_elem; i++){
-    double where = (i+0.0);
-    result(i) = R::pnorm(where, meanix_min+.0, r, 1, 0);
-    result(i) = result(i) + 1-R::pnorm(where, meanix_max+.0, r, 1, 0);
-  }
-  return (result-result.min())/(result.max()-result.min());
-}
-
-
-//[[Rcpp::export]]
-arma::mat J_smooth(const arma::mat& J, double radius, bool nested){
-  if(radius==0){
-    return J;
-  }
-  arma::mat result = arma::zeros(J.n_rows, J.n_cols);
-  for(unsigned int j=0; j<J.n_cols; j++){
-    result.col(j) = Jcol_ilogitsmooth(J.col(j), radius);
-  }
-  if(nested){
-    for(unsigned int i=0; i<J.n_rows; i++){
-      result.row(i) = result.row(i) / arma::accu(result.row(i));
-    }
-  }
-  return result;
-}
-
-/*
- //[[Rcpp::export]]
- double rcircle(const double& x, int width, double radius){
- double a = width/2.0;
- if(x < -2*a){
- return(0.0);
- }
- if(x > 2*a){
- return(0.0);
- }
- if(x < -a){
- return( .5 * (1 - pow(1 - pow(abs(-2*a-x+radius)/a, 2*a/radius), radius*.5)) );
- }
- if(x > a){
- return( .5 * (1 - pow(1 - pow(abs(2*a-x-radius)/a, 2*a/radius), radius*.5)) ); 
- }
- if(x < 0){
- return( .5 * (1 + pow(1 - pow(abs(x+radius)/a, 2*a/radius), radius*.5)) );
- } else {
- return( .5 * (1 + pow(1 - pow(abs(x-radius)/a, 2*a/radius), radius*.5)) );
- }
- }
- 
- //[[Rcpp::export]]
- arma::vec rcircle_vec(const arma::vec& vx, int width, double radius){
- arma::vec result = arma::zeros(vx.n_elem);
- for(unsigned int i=0; i<result.n_elem; i++){
- result(i) = rcircle(vx(i), width, radius);
- }
- //result = (result-result.min())/(result.max()-result.min());
- return(result);
- }
- 
- //[[Rcpp::export]]
- arma::vec rcircle_Jcol(const arma::vec& Jcol, double radius){
- // column of 1 and 0 as usual J
- int width = arma::accu(Jcol);
- double meanix = arma::mean(arma::conv_to<arma::vec>::from(arma::find(Jcol==1)));
- arma::vec vx = arma::linspace(0, Jcol.n_elem-1, Jcol.n_elem);
- vx = vx-meanix;
- //clog << vx << endl;
- return rcircle_vec(vx, width, radius);
- }
- 
- //[[Rcpp::export]]
- arma::mat rcircle_J(const arma::mat& J, double radius){
- arma::mat result = arma::zeros(J.n_rows, J.n_cols);
- for(unsigned int j=0; j<J.n_cols; j++){
- result.col(j) = rcircle_Jcol(J.col(j), radius);
- }
- for(unsigned int i=0; i<J.n_rows; i++){
- result.row(i) = result.row(i) / arma::accu(result.row(i));
- }
- return result;
- }
- */
-
-arma::mat multi_split_nonnested(const arma::mat& prevmat, arma::vec newsplits, int p){
-  arma::vec jumps = arma::zeros(p);
-  for(unsigned int i=0; i<newsplits.n_elem; i++){
-    jumps(newsplits(i)+1) = 1;
-  }
-  jumps = 1+arma::cumsum(jumps);
-  int totcol = prevmat.n_cols;
-  
-  arma::vec colchecker = arma::zeros(p);
-  arma::vec cols_to_be_changed = arma::zeros(0);
-  arma::vec num_changes_bycol = arma::zeros(0);
-  
-  for(unsigned int j=0; j<prevmat.n_cols; j++){
-    // if a jump happens when this column has 1, then the colchecker will have >2 unique val 
-    // one must be 0, the other can be 1 or more, but only if there's another one there has been a change
-    colchecker = prevmat.col(j) % jumps;
-    arma::vec uniques = arma::unique(colchecker);
-    bool changed = uniques.n_elem > 2;
-    if(changed) { 
-      cols_to_be_changed = arma::join_vert(cols_to_be_changed, arma::ones(1)*j);
-      num_changes_bycol = arma::join_vert(num_changes_bycol, arma::ones(1)*(uniques.n_elem-2));
-      totcol = totcol + uniques.n_elem - 2;
-    }
-  }
-  //clog << cols_to_be_changed.t() << endl;
-  //clog << num_changes_bycol.t() << endl;
-  //clog << totcol << endl;
-  arma::vec cols_notto_be_changed = arma::zeros(0);
-  arma::mat returnmat = arma::zeros(prevmat.n_rows, totcol);
-  int changing=0;
-  int ccol = 0;
-  for(unsigned int j=0; j<prevmat.n_cols; j++){
-    //clog << "j = " << j << endl;
-    if(j == cols_to_be_changed(changing)){
-      //clog << "column needs to be changed, with " << num_changes_bycol(changing) << " changes" << endl;
-      int target = j;
-      arma::vec targetvec = prevmat.col(target);
-      for(int c=0; c<num_changes_bycol(changing); c++){
-        //clog << "  change c=" << c;
-        int addhere = prevmat.n_cols + ccol;
-        //clog << " will affect column " << addhere << endl;
-        jumps = jumps-1;
-        jumps.elem(arma::find(jumps==-1)).fill(0);
-        returnmat.col(addhere) = targetvec % jumps;
-        returnmat.col(target) = targetvec - returnmat.col(addhere);
-        ccol ++;
-        target = addhere;
-        targetvec = returnmat.col(target);
-      }
-      if(changing < cols_to_be_changed.n_elem-1) {
-        changing++; 
-      }
-    } else {
-      //clog << "column does not need to be changed" << endl;
-      cols_notto_be_changed = arma::join_vert(cols_notto_be_changed, arma::ones(1)*j);
-      returnmat.col(j) = prevmat.col(j);
-    }
-  }
-  
-  //clog << cols_notto_be_changed.t() << endl;
-  returnmat = bmdataman::exclude(returnmat, cols_notto_be_changed);
-  
-  // fix
-  for(unsigned int j=0; j<returnmat.n_cols; j++){
-    arma::vec replacement = returnmat.col(j);
-    replacement.elem(arma::find(replacement > 1)).fill(1);
-    replacement.elem(arma::find(replacement < 0)).fill(0);
-    returnmat.col(j) = replacement;
-  }
-  
-  return returnmat;
-}
-
-
 
 ModularVS::ModularVS(const arma::vec& y_in, const arma::field<arma::mat>& Xall_in, 
                      const arma::field<arma::vec>& starting,
@@ -497,15 +275,6 @@ ModularVS2::ModularVS2(const arma::vec& y_in, const arma::field<arma::mat>& Xall
   
 }
 
-arma::mat div_by_colsum(const arma::mat& J){
-  arma::vec jcs = bmdataman::col_sums(J);
-  arma::mat result = arma::zeros(J.n_rows, J.n_cols);
-  for(unsigned int i=0; i<result.n_cols; i++){
-    result.col(i) = J.col(i) / jcs(i);
-  }
-  return result;
-}
-
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar){
   //cout << arma::size(x) << " " << arma::size(mean) << " " << arma::size(covar) << endl;
   double val, sign, cov_logdet;
@@ -532,19 +301,12 @@ double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_po
   return result;
 }
 
+
 double modular_loglik0(arma::vec& y, double a, double b){
   int n = y.n_elem;
   double result = (n)*log(n*1.0) - (a+n/2.0) * log(b + .5*arma::conv_to<double>::from(y.t()*y));
   return result;
 }
-
-
-double bdet(const arma::mat& X){
-  double val, sign;
-  arma::log_det(val, sign, X);
-  return val;
-}
-
 
 double modular_loglikn(const arma::vec& x, const arma::mat& Si){
   int p = Si.n_cols;
@@ -605,7 +367,7 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   pj = Xj.n_cols;
   
   icept = arma::mean(ej);
-  xs = bmdataman::col_sums(Xj.t());
+  xs = bmfuncs::col_sums(Xj.t());
   //ej = ej - icept;
   bmean = arma::conv_to<double>::from(arma::inv_sympd(xs.t()*xs)*xs.t()*ej);
   //ej = ej - xs*bmean;
@@ -617,7 +379,7 @@ Module::Module(arma::mat& X_full, arma::vec& e, arma::mat& X, double g_prior,
   }
   
   // how much of a coarsening each variable of this module is
-  //Jcs = bmdataman::col_sums(Jnow);
+  //Jcs = bmfuncs::col_sums(Jnow);
   // prior variance = gres: g Jcs   ie large variance if many regressors are being coarsened, small otherwise
   //gprior: g(X'X)^-1  
   grid = ingrid;
@@ -666,7 +428,7 @@ void Module::redo(const arma::vec& e,
   ej = e;
   cout << "redoing module" << endl;
   icept = arma::mean(ej);
-  xs = bmdataman::col_sums(Xj.t());
+  xs = bmfuncs::col_sums(Xj.t());
   //ej = ej - icept;
   bmean = arma::conv_to<double>::from(arma::inv_sympd(xs.t()*xs)*xs.t()*ej);
   //ej = ej - xs*bmean;
@@ -779,7 +541,7 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   //J_field(0) = wavelettize(J_field(0));
   if(rad != 0){
-    J_field(0) = J_smooth(J_field(0), rad * (n_stages-0), nested);
+    J_field(0) = bmfuncs::J_smooth(J_field(0), rad * (n_stages-0), nested);
   }
   
   X_field(0) = X * J_field(0);
@@ -797,10 +559,10 @@ ModularLinReg::ModularLinReg(const arma::vec& yin,
       J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     } else {
       arma::mat bigmat = bmfuncs::multi_split(pones, bigsplit(j-1), p);
-      J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
+      J_field(j) = bmfuncs::multi_split_nonnested(bigmat, bmfuncs::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
     }
     if(rad != 0){
-      J_field(j) = J_smooth(J_field(j), rad * (n_stages-j), nested);
+      J_field(j) = bmfuncs::J_smooth(J_field(j), rad * (n_stages-j), nested);
     }
     X_field(j) = X * J_field(j);
   }
@@ -886,11 +648,11 @@ void ModularLinReg::add_new_module(arma::vec& new_splits){
     J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
   } else {
     arma::mat bigmat = bmfuncs::multi_split(pones, bigsplit(j-1), p);
-    J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
+    J_field(j) = bmfuncs::multi_split_nonnested(bigmat, bmfuncs::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
   }
   
   if(rad != 0){
-    J_field(s) = J_smooth(J_field(s), rad * (n_stages-s), nested);
+    J_field(s) = bmfuncs::J_smooth(J_field(s), rad * (n_stages-s), nested);
   }
   X_field(s) = X * J_field(s);
   
@@ -1072,7 +834,7 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   J_field(0) = bmfuncs::multi_split(pones, split_seq(0), p);
   //J_field(0) = wavelettize(J_field(0));
   if(rad != 0){
-    J_field(0) = J_smooth(J_field(0), rad * (n_stages-0), nested);
+    J_field(0) = bmfuncs::J_smooth(J_field(0), rad * (n_stages-0), nested);
   }
   X_field(0) = X * J_field(0);
   
@@ -1089,11 +851,11 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
       J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     } else {
       arma::mat bigmat = bmfuncs::multi_split(pones, bigsplit(j-1), p);
-      J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
+      J_field(j) = bmfuncs::multi_split_nonnested(bigmat, bmfuncs::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
     }
     //J_field(j) = wavelettize(J_field(j));
     if(rad != 0){
-      J_field(j) = J_smooth(J_field(j), rad * (n_stages-j), nested);
+      J_field(j) = bmfuncs::J_smooth(J_field(j), rad * (n_stages-j), nested);
     }
     X_field(j) = X * J_field(j);
   }
@@ -1156,8 +918,6 @@ void ModularLinReg::change_all(arma::field<arma::vec>& new_splitseq){
   cout << "ModularLinReg created " << endl;
 }
 
-
-
 void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
   // the idea is to change the structure of the selected model, 
   // and resample from all new subsequent modules 
@@ -1177,10 +937,10 @@ void ModularLinReg::change_module(int whichone, arma::vec& new_splits){
       J_field(j) = bmfuncs::multi_split(pones, bigsplit(j), p);
     } else {
       arma::mat bigmat = bmfuncs::multi_split(pones, bigsplit(j-1), p);
-      J_field(j) = multi_split_nonnested(bigmat, bmdataman::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
+      J_field(j) = bmfuncs::multi_split_nonnested(bigmat, bmfuncs::bmms_setdiff(bigsplit(j), bigsplit(j-1)), p);
     }
     if(rad != 0){
-      J_field(s) = J_smooth(J_field(s), rad * (n_stages-s), nested);
+      J_field(s) = bmfuncs::J_smooth(J_field(s), rad * (n_stages-s), nested);
     }
     X_field(s) = X * J_field(s);
     
@@ -1294,24 +1054,6 @@ double splitpar_prior(double x, int tot_split, int norp, int ss){
 
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction){
   return 1.0;
-}
-
-arma::mat wavelettize(const arma::mat& J){
-  arma::vec Jcs = bmdataman::col_sums(J)/2;
-  arma::mat Jw = J;
-  for(unsigned int j=0; j<J.n_cols; j++){
-    int cc=0;
-    int i=0;
-    while( (cc < Jcs(j)) & (i < J.n_rows)){
-      //for(unsigned int i=0; i<J.n_rows; i++){
-      if(J(i,j)==1){
-        Jw(i,j) = -1;
-        cc++;
-      } 
-      i++;
-    }
-  }
-  return J;
 }
 
 

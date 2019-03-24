@@ -6,6 +6,7 @@
 
 #include <RcppArmadillo.h>
 #include <bmtools.h>
+//#include "bmmodels2.h"
 
 using namespace std;
 
@@ -185,23 +186,6 @@ public:
   arma::field<arma::mat> gamma_store;
   arma::field<arma::vec> gamma_start;
 };
-class BayesSelect2{
-public:
-  // data
-  bool fix_sigma;
-  int p, n;
-  double icept, g, yty, yPxy, alpha, beta, marglik;
-  arma::vec y, ycenter;
-  
-  void change_X(const arma::mat&);
-  double get_marglik(bool);
-  
-  BayesSelect2();
-  //BayesLMg(const arma::vec&, const arma::mat&, bool);
-  //BayesLMg(arma::vec, arma::mat, double);
-  BayesSelect2(const arma::vec&, const arma::mat&, double, bool);
-  //BayesLMg(arma::vec, arma::mat, arma::mat);
-};
 
 class VarSelOps{
 public:
@@ -272,26 +256,17 @@ public:
 };
 
 
-double ilogit(const double& x, const double& r);
-double tline(const double& x, const double& m);
-
-arma::vec Jcol_ilogitsmooth(const arma::vec& J, double r);
-
-
-arma::vec Jcol_pnormsmooth(const arma::vec& J, double r);
-
-arma::mat J_smooth(const arma::mat& J, double radius, bool nested);
-
-arma::mat multi_split_nonnested(const arma::mat& prevmat, arma::vec newsplits, int p);
-arma::mat div_by_colsum(const arma::mat& J);
-
 double log_mvn_density(arma::vec x, arma::vec mean, arma::mat covar);
 
 double modular_loglik1(arma::vec& y, arma::vec& marglik_mean, arma::mat& varloglik, arma::vec& sigmasq_scales, int n_stages);
 double modular_loglik2(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_post, double a, double b);
 double modular_loglik0(arma::vec& y, double a, double b);
 
-double bdet(const arma::mat& X);
+inline double bdet(const arma::mat& X){
+  double val, sign;
+  arma::log_det(val, sign, X);
+  return val;
+}
 
 double modular_loglikn(const arma::vec& x, const arma::mat& Si);
 double totsplit_prior2_ratio(int tot_split_prop, int tot_split_orig, int norp, int ss, double lambda_prop);
@@ -303,8 +278,6 @@ double totsplit_prior_ratio(int tot_split_prop, int tot_split_orig, int norp, in
 double splitpar_prior(double x, int tot_split, int norp, int ss);
 
 double totstage_prior_ratio(int tot_stage_prop, int tot_stage_orig, int norp, int curr_n_splits, int direction);
-
-arma::mat wavelettize(const arma::mat& J);
 
 
 // log density of mvnormal mean 0 -- only useful in ratios with gpriors

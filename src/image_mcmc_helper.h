@@ -7,6 +7,35 @@
 //#include <RcppArmadillo.h>
 #include "metrop_helper.h"
 
+
+inline double logdet(const arma::mat& X){
+  double val, sign;
+  arma::log_det(val, sign, X);
+  return val;
+}
+
+// log density of mvnormal mean 0
+inline double m0mvnorm_dens(const arma::vec& x, const arma::mat& Si){
+  int p = Si.n_cols;
+  double normcore =  arma::conv_to<double>::from(x.t() * Si * x);
+  double normconst = - p/2.0 * log(2*M_PI) + .5 * logdet(Si);
+  return normconst - 0.5 * (normcore);
+}
+
+// marglik of y ~ N(Xb, e In) with conjugate priors mean 0
+// and gprior for b
+inline double clm_marglik(const arma::vec& y, const arma::mat& Mi,
+                          const arma::mat& Si, double muSimu, double a, double b){
+  int p = Si.n_cols;
+  int n = y.n_elem;
+  double const1 = a * log(b) + lgamma(a + n/2.0) -  n/2.0 * log(2 * M_PI) - lgamma(a);
+  double const2 = 0.5 * logdet(Mi) - 0.5 * logdet(Si);
+  
+  double normcore = -(a+n/2.0) * log(b + 0.5 * arma::conv_to<double>::from(y.t() * y - muSimu));
+  return const1 + const2 + normcore;
+}
+
+
 inline double blm_marglik(arma::vec& y, arma::mat& mean_post, arma::mat& inv_var_post, double a, double b){
   int p1 = inv_var_post.n_cols;
   int n = y.n_elem;
@@ -104,7 +133,9 @@ inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d,
   
   //cout << "[BayesLM2D] fitting flat model" << endl;
   //cout << fix_sigma << " " << sigmasq_sampled << endl;
-  flatmodel = bmmodels::BayesLM(y, X_flat, lambda, fix_sigma, sigmasq_sampled, g); 
+  flatmodel = bmmodels::BayesLM(y, X_flat, arma::zeros(X_flat.n_cols), 
+                                                             2.25, 0.625, 
+                                lambda, fix_sigma, sigmasq_sampled, g); 
   //flatmodel = VSModule(y, X_flat, lambda, fix_sigma);
   
   //cout << "[BayesLM2D] saving" << endl;
@@ -119,13 +150,20 @@ inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d,
   }
   
   beta_sampled = bm2d::unmask_vector(flatmodel.b, regions, groupmask);
+  
+  /*clog << "BayesLM2D >> s: in=" << sigmasqin << 
+    ", mid=" << sigmasq_sampled << 
+      ", out=" << flatmodel.sigmasq << 
+        " logpost:" << flatmodel.logpost << 
+          " fixed? " << fix_sigma << endl;
+  */
+  
   sigmasq_sampled = flatmodel.sigmasq;
   
   Xb = flatmodel.reg_mean;
   residuals = y - Xb;
   icept_sampled = arma::mean(residuals);
-  //clog << "created BLM2D" << endl;
-}
+  }
 
 inline void BayesLM2D::change_splits(arma::field<arma::mat>& splits){
   splitmat = splits;
@@ -137,7 +175,9 @@ inline void BayesLM2D::change_splits(arma::field<arma::mat>& splits){
   X_flat = bm2d::cube_to_mat_by_region(Xcube, groupmask, regions);
   effective_dimension = X_flat.n_cols;
   
-  flatmodel = bmmodels::BayesLM(y, X_flat, lambda, fix_sigma, sigmasq_sampled, g); 
+  flatmodel = bmmodels::BayesLM(y, X_flat, arma::zeros(X_flat.n_cols), 
+                                                             .5, 15, 
+                                lambda, fix_sigma, sigmasq_sampled, g); 
   //flatmodel = VSModule(y, X_flat, lambda, fix_sigma);
   
   if(!fix_sigma){
@@ -160,15 +200,17 @@ inline void BayesLM2D::change_splits(arma::field<arma::mat>& splits){
 }
 
 inline double BayesLM2D::logmarglik(){
+  return flatmodel.logpost;
+  /*
   if(fix_sigma){
     //cout << "[BayesLM2D::logmarglik] calculating" << endl;
-    double tt = modular_loglikn(flatmodel.y - flatmodel.reg_mean, 1.0/flatmodel.sigmasq * (In - flatmodel.Px));
+    double tt = modular_loglikn(flatmodel.ycenter, 1.0/flatmodel.sigmasq * (In - flatmodel.Px));
     //cout << "[BayesLM2D::logmarglik] done " << endl;
     return tt;
   } else {
     return blm_marglik(flatmodel.ycenter, flatmodel.mu, flatmodel.inv_var_post, 
                        flatmodel.alpha, flatmodel.beta);
-  }
+  }*/
 }
 
 class ModularLR2D {
@@ -290,6 +332,9 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
     }
   }
   
+  //clog << "ModularLR2D >> s: in=" << sigmasqin << 
+  //  ", mid=" << sigmasq_sampled.t() << endl;
+  
   //clog << "[ModularLR2D] sigmasq sampled " << sigmasq_sampled.t() << endl;
   
   splitsub = in_splits;
@@ -327,6 +372,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
                             current_split_field, mask_nosplits, lambda*(n_stages-s), 
                             fix_sigma, sigmasq_sampled(s), g);
     modules.push_back(adding_module);
+    //clog << "logmarglik: " << adding_module.logmarglik() << " sigprior: " << sigprior << endl;
     logliks(s) = adding_module.logmarglik() + sigprior;
     //clog << "v1" << endl;
     icept_sampled(s) = adding_module.icept_sampled;
@@ -340,6 +386,9 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
     Xb_sum += adding_module.Xb;
     //cout << "[ModularLR2D] module " << s << " done." << endl;
   }
+  
+  
+  
 }
 
 inline void ModularLR2D::change_module(int which_level, arma::field<arma::mat>& in_splits){
@@ -561,6 +610,130 @@ inline double struct2d_prior_ratio(const arma::field<arma::vec>& proposed, const
     return 1.0;
   }
   
+}
+
+
+
+class PriorVS{
+public:
+  arma::vec y;
+  arma::mat X;
+  int n, p;
+  double alpha, beta;
+  
+  arma::uvec gamma;
+  arma::uvec gamma_proposal;
+  bmmodels::BayesLM model;
+  bmmodels::BayesLM model_proposal;
+  double logpost;
+  
+  arma::vec sampling_order;
+  
+  void chain(int);
+  void change_m(const arma::vec&);
+  int mcmc;
+  
+  arma::vec icept_stored;
+  arma::mat gamma_stored;
+  arma::mat beta_stored;
+  arma::vec sigmasq_stored;
+  
+  arma::vec priormean;
+  
+  bool fix_sigma;
+  double g;
+  double model_prior_par;
+  arma::uvec gammaix;
+  
+  PriorVS(const arma::vec&, const arma::mat&, 
+          const arma::vec&, const arma::vec&, 
+          double, double, bool, int);
+};
+
+inline void PriorVS::chain(int iter){
+  mcmc = iter;
+  icept_stored = arma::zeros(mcmc);
+  beta_stored = arma::zeros(p, mcmc);
+  gamma_stored = arma::zeros(p, mcmc);
+  sigmasq_stored = arma::zeros(mcmc);
+  //clog << mcmc << endl;
+  for(int m=0; m<mcmc; m++){
+    sampling_order = arma::regspace(0, p-1); // bmrandom::rndpp_shuffle(p_indices);
+    for(int j=0; j<p; j++){
+      int ix = sampling_order(j);
+      gamma_proposal = gamma;
+      gamma_proposal(ix) = 1-gamma(ix);
+      arma::uvec gammaix_proposal = arma::find(gamma_proposal);
+      //clog << arma::size(priormean) << endl;
+      //clog << "proposal gamma " << arma::size(gamma_proposal) << " " << arma::size(X.cols(gammaix_proposal)) << endl;
+      //clog << arma::size(priormean.elem(gammaix_proposal)) << endl;
+      model_proposal = bmmodels::BayesLM(y, X.cols(gammaix_proposal), priormean.elem(gammaix_proposal),
+                               alpha, beta, 1.0, fix_sigma, 1.0, g);
+      
+      //clog << "test  mcmc j " << j << endl;
+      double accept_probability = exp(model_proposal.logpost - model.logpost) *
+        exp(model_prior_par * (model.p - model_proposal.p));
+      accept_probability = accept_probability > 1 ? 1.0 : accept_probability;
+      
+      int accepted = bmrandom::rndpp_bern(accept_probability);
+      if(accepted == 1){
+        //clog << "accepted." << endl;
+        model = model_proposal;
+        gamma = gamma_proposal;
+        gammaix = gammaix_proposal;
+      }
+    }
+    
+    arma::vec beta_full = arma::zeros(p);
+    beta_full.elem(gammaix) = model.b;
+    
+    icept_stored(m) = model.icept;
+    beta_stored.col(m) = beta_full;
+    gamma_stored.col(m) = arma::conv_to<arma::vec>::from(gamma);
+    sigmasq_stored(m) = model.sigmasq;
+  }
+}
+
+inline void PriorVS::change_m(const arma::vec& newm){
+  model = bmmodels::BayesLM(y, X.cols(gammaix), newm.elem(gammaix),
+                  alpha, beta, 1.0, fix_sigma, 1.0, g);
+  logpost = model.logpost;
+}
+
+
+inline PriorVS::PriorVS(const arma::vec& yy, 
+                        const arma::mat& XX, 
+                        const arma::vec& priormeanin,
+                        const arma::vec& priorgammain,
+                        double gin=-1.0, double model_prior_par_in=1, bool fixsigma=false, int iter=1){
+  
+  y = yy;
+  X = XX;
+  mcmc = iter;
+  
+  p = X.n_cols;
+  arma::vec p_indices = arma::linspace<arma::vec>(0, p-1, p);
+  n = y.n_elem;
+  
+  g = gin;
+  model_prior_par = model_prior_par_in;
+  fix_sigma = fixsigma;
+  
+  gamma = arma::uvec(p);
+  for(int j=0; j<p; j++){
+    gamma(j) = 1*bmrandom::boolbern(priorgammain(j));
+  }
+  priormean = priormeanin; 
+  
+  gammaix = arma::find(gamma);
+  //clog << gammaix << endl;
+  //clog << arma::size(X) << " " << arma::size(priormean) << endl;
+  model = bmmodels::BayesLM(y, X.cols(gammaix), priormean.elem(gammaix),
+                  alpha, beta, 1.0, fix_sigma, 1.0, g);
+  logpost = model.logpost;
+  //clog << "test  2" << endl;
+  chain(mcmc);
+  //clog << "test ." << endl;
 }
 
 

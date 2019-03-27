@@ -6,24 +6,26 @@ load_splits <- function(maxlevs, sname) {
     .Call('_bmms_load_splits', PACKAGE = 'bmms', maxlevs, sname)
 }
 
-#'@export
-soi_cpp <- function(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = FALSE) {
-    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data)
+square_coord <- function(onesplit, p1, p2, radius_int) {
+    .Call('_bmms_square_coord', PACKAGE = 'bmms', onesplit, p1, p2, radius_int)
+}
+
+split_move2d <- function(mask_of_splits, mask_nosplits, onesplit, to_from_ratio, radius_int = 1L) {
+    .Call('_bmms_split_move2d', PACKAGE = 'bmms', mask_of_splits, mask_nosplits, onesplit, to_from_ratio, radius_int)
+}
+
+insert_empty_levels <- function(splitsub, nctr_at_lev) {
+    .Call('_bmms_insert_empty_levels', PACKAGE = 'bmms', splitsub, nctr_at_lev)
 }
 
 #'@export
-soi2_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = FALSE, save_more_data = FALSE, fixsigma = FALSE, g = -1.0) {
-    .Call('_bmms_soi2_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g)
+soi_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = FALSE, save_more_data = FALSE, fixsigma = FALSE, g = -1.0, try_bubbles = FALSE) {
+    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, try_bubbles)
 }
 
 #'@export
-soi_tester <- function(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, g = -1.0) {
-    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g)
-}
-
-#'@export
-soi_binary_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0) {
-    .Call('_bmms_soi_binary_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g)
+soi_tester <- function(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, g = -1.0, bubbles_radius = -1.0) {
+    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius)
 }
 
 #'@export

@@ -64,6 +64,7 @@ public:
   arma::vec regions;
   
   double lambda;
+  double radius;
   double g;
   
   bmmodels::BayesLM flatmodel; //***
@@ -91,12 +92,12 @@ public:
   arma::vec residuals; 
   arma::vec Xb;
   
-  BayesLM2D(arma::vec&, arma::cube&, arma::field<arma::mat>&, arma::mat&, double, bool, double, double);
+  BayesLM2D(arma::vec&, arma::cube&, arma::field<arma::mat>&, arma::mat&, double, bool, double, double, double);
 };
 
 inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d, 
                      arma::field<arma::mat>& splits, arma::mat& mask_forbid, 
-                     double lambda_in, bool fixed_sigmasq, double sigmasqin = -1.0, double gin=-1){
+                     double lambda_in, bool fixed_sigmasq, double sigmasqin = -1.0, double gin=-1, double radiusin=-1){
   
   //cout << "[BayesLM2D] starting setup" << endl; 
   fix_sigma = fixed_sigmasq;
@@ -116,6 +117,7 @@ inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d,
   
   lambda = lambda_in;
   g = gin;
+  radius = radiusin;
   
   y = yin;
   In = arma::eye(y.n_elem, y.n_elem);
@@ -124,17 +126,23 @@ inline BayesLM2D::BayesLM2D(arma::vec& yin, arma::cube& X2d,
   splitmask = bm2d::splitsub_to_splitmask(splitmat, p1, p2);
   mask_nosplits = mask_forbid;
   
-  groupmask = bm2d::splitsub_to_groupmask(splits, p1, p2);
-  regions = bm2d::mat_unique(groupmask);
+  if(radius != -1){
+    groupmask = bm2d::splitsub_to_groupmask_bubbles(splits, p1, p2, radius);
+    regions = bmfuncs::bmms_setdiff(bm2d::mat_unique(groupmask), arma::zeros(1));
+    //clog << regions << endl;
+  } else {
+    groupmask = bm2d::splitsub_to_groupmask(splits, p1, p2);
+    regions = bm2d::mat_unique(groupmask);
+  }
+  
   Xcube = X2d;
   X_flat = bm2d::cube_to_mat_by_region(X2d, groupmask, regions);
   //clog << col_sums(X_flat) << endl;
   effective_dimension = X_flat.n_cols;
   
-  //cout << "[BayesLM2D] fitting flat model" << endl;
-  //cout << fix_sigma << " " << sigmasq_sampled << endl;
+  
   flatmodel = bmmodels::BayesLM(y, X_flat, arma::zeros(X_flat.n_cols), 
-                                                             2.25, 0.625, 
+                                                             .1, .1, 
                                 lambda, fix_sigma, sigmasq_sampled, g); 
   //flatmodel = VSModule(y, X_flat, lambda, fix_sigma);
   
@@ -169,14 +177,20 @@ inline void BayesLM2D::change_splits(arma::field<arma::mat>& splits){
   splitmat = splits;
   splitmask = bm2d::splitsub_to_splitmask(splitmat, p1, p2);
   
-  groupmask = bm2d::splitsub_to_groupmask(splits, p1, p2);
-  regions = bm2d::mat_unique(groupmask);
+  if(radius != -1){
+    groupmask = bm2d::splitsub_to_groupmask_bubbles(splits, p1, p2, radius);
+    regions = bmfuncs::bmms_setdiff(bm2d::mat_unique(groupmask), arma::zeros(1));
+    //clog << regions << endl;
+  } else {
+    groupmask = bm2d::splitsub_to_groupmask(splits, p1, p2);
+    regions = bm2d::mat_unique(groupmask);
+  }
   
   X_flat = bm2d::cube_to_mat_by_region(Xcube, groupmask, regions);
   effective_dimension = X_flat.n_cols;
   
   flatmodel = bmmodels::BayesLM(y, X_flat, arma::zeros(X_flat.n_cols), 
-                                                             .5, 15, 
+                                                             .1, .1, 
                                 lambda, fix_sigma, sigmasq_sampled, g); 
   //flatmodel = VSModule(y, X_flat, lambda, fix_sigma);
   
@@ -201,16 +215,6 @@ inline void BayesLM2D::change_splits(arma::field<arma::mat>& splits){
 
 inline double BayesLM2D::logmarglik(){
   return flatmodel.logpost;
-  /*
-  if(fix_sigma){
-    //cout << "[BayesLM2D::logmarglik] calculating" << endl;
-    double tt = modular_loglikn(flatmodel.ycenter, 1.0/flatmodel.sigmasq * (In - flatmodel.Px));
-    //cout << "[BayesLM2D::logmarglik] done " << endl;
-    return tt;
-  } else {
-    return blm_marglik(flatmodel.ycenter, flatmodel.mu, flatmodel.inv_var_post, 
-                       flatmodel.alpha, flatmodel.beta);
-  }*/
 }
 
 class ModularLR2D {
@@ -223,6 +227,7 @@ public:
   int p1, p2;
   
   double lambda; // ridge
+  double radius;
   double g;
   
   arma::vec y;
@@ -243,11 +248,6 @@ public:
   void propose_change_module(int, arma::field<arma::mat>&);
   void confirm_change_module(int, arma::field<arma::mat>&);
   
-  //void change_all(arma::field<arma::mat>&);
-  void add_new_module(const arma::field<arma::mat>&);
-  void delete_last_module();
-  //void change_data(const arma::vec&);
-  
   arma::vec ones;
   arma::vec intercept;
   arma::vec icept_sampled;
@@ -260,7 +260,7 @@ public:
   ModularLR2D();
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double);
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double, 
-              bool, double, double);
+              bool, double, double, double);
 };
 
 inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, const arma::field<arma::mat>& in_splits, 
@@ -276,7 +276,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
   X2d = Xin;
   
   lambda = lambda_in;
-  
+  radius = -1.0;
   mask_nosplits = mask_forbid;
   
   n_stages = in_splits.n_elem;
@@ -297,7 +297,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
     for(unsigned int j=0; j<s+1; j++){
       current_split_field(j) = in_splits(j);
     }
-    BayesLM2D adding_module(residuals, X2d, current_split_field, mask_nosplits, lambda*(n_stages-s), fix_sigma);
+    BayesLM2D adding_module(residuals, X2d, current_split_field, mask_nosplits, lambda, fix_sigma, radius);
     modules.push_back(adding_module);
     logliks(s) = adding_module.logmarglik() + sigprior;
     theta_sampled.slice(s) = adding_module.beta_sampled;
@@ -318,7 +318,7 @@ inline ModularLR2D::ModularLR2D(){
 
 inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, const arma::field<arma::mat>& in_splits, 
                          arma::mat& mask_forbid, int set_max_stages=5, double lambda_in = 0.5, 
-                         bool fixed_sigma=false, double sigmasqin=-1.0, double gin = -1){
+                         bool fixed_sigma=false, double sigmasqin=-1.0, double gin = -1, double radiusin=-1.0){
   
   max_stages = set_max_stages;
   fix_sigma = fixed_sigma;
@@ -347,6 +347,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
   
   lambda = lambda_in;
   g = gin;
+  radius = radiusin;
   
   mask_nosplits = mask_forbid;
   
@@ -368,9 +369,10 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
     for(unsigned int j=0; j<s+1; j++){
       current_split_field(j) = in_splits(j);
     }
+    double level_radius = radius==-1? -1 : radius*(n_stages-s); 
     BayesLM2D adding_module(residuals, X2d, 
-                            current_split_field, mask_nosplits, lambda*(n_stages-s), 
-                            fix_sigma, sigmasq_sampled(s), g);
+                            current_split_field, mask_nosplits, lambda, 
+                            fix_sigma, sigmasq_sampled(s), g, level_radius);
     modules.push_back(adding_module);
     //clog << "logmarglik: " << adding_module.logmarglik() << " sigprior: " << sigprior << endl;
     logliks(s) = adding_module.logmarglik() + sigprior;
@@ -514,52 +516,6 @@ inline void ModularLR2D::confirm_change_module(int which_level, arma::field<arma
   }
 }
 
-inline void ModularLR2D::add_new_module(const arma::field<arma::mat>& in_splits){
-  splitsub = in_splits;
-  int s = n_stages;
-  arma::field<arma::mat> current_split_field(s+1);
-  for(unsigned int j=0; j<s+1; j++){
-    current_split_field(j) = in_splits(j);
-  }
-  BayesLM2D adding_module(y, X2d, current_split_field, mask_nosplits, lambda*(n_stages-s+1), fix_sigma, g);
-  modules.push_back(adding_module);
-  n_stages ++;
-  arma::vec old_logliks = logliks;
-  logliks = arma::zeros(n_stages);
-  for(unsigned int s=0; s<n_stages-1; s++){
-    logliks(s) = old_logliks(s);
-  }
-  logliks(n_stages-1) = adding_module.logmarglik();
-  icept_sampled(n_stages-1) = adding_module.icept_sampled;
-  theta_sampled.slice(n_stages-1) = adding_module.beta_sampled;
-  sigmasq_sampled(n_stages-1) = adding_module.sigmasq_sampled;
-  
-  Xb_sum = arma::zeros(n);
-  for(unsigned int s = 0; s<n_stages; s++){
-    Xb_sum += modules[s].Xb;
-  }
-}
-
-inline void ModularLR2D::delete_last_module(){
-  n_stages--;
-  arma::vec old_logliks = logliks;
-  logliks = arma::zeros(n_stages);
-  for(unsigned int s=0; s<n_stages; s++){
-    logliks(s) = old_logliks(s);
-  }
-  
-  modules.pop_back();
-  theta_sampled.slice(n_stages-1) = arma::zeros(p1, p2);
-  icept_sampled(n_stages-1) = 0.0;
-  
-  arma::field<arma::mat> splitsub_new = arma::field<arma::mat>(n_stages);
-  Xb_sum = arma::zeros(n);
-  for(unsigned int s = 0; s<n_stages; s++){
-    Xb_sum += modules[s].Xb;
-    splitsub_new(s) = splitsub(s);
-  }
-  splitsub = splitsub_new;
-}
 
 inline double gammaprior_mhr(double new_val, double old_val, double alpha=100, double beta=.5){
   return (alpha-1) * (log(new_val) - log(old_val)) - 1.0/beta * (new_val - old_val);

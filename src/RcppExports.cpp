@@ -18,32 +18,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// soi_cpp
-Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> splits, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_more_data);
-RcppExport SEXP _bmms_soi_cpp(SEXP ySEXP, SEXP XSEXP, SEXP splitsSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_more_dataSEXP) {
+// square_coord
+arma::mat square_coord(const arma::vec& onesplit, int p1, int p2, int radius_int);
+RcppExport SEXP _bmms_square_coord(SEXP onesplitSEXP, SEXP p1SEXP, SEXP p2SEXP, SEXP radius_intSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type splits(splitsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_centers(lambda_centersSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
-    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
-    Rcpp::traits::input_parameter< int >::type start_movinglev(start_movinglevSEXP);
-    Rcpp::traits::input_parameter< int >::type partnum(partnumSEXP);
-    Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_more_data(save_more_dataSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_cpp(y, X, splits, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data));
+    Rcpp::traits::input_parameter< const arma::vec& >::type onesplit(onesplitSEXP);
+    Rcpp::traits::input_parameter< int >::type p1(p1SEXP);
+    Rcpp::traits::input_parameter< int >::type p2(p2SEXP);
+    Rcpp::traits::input_parameter< int >::type radius_int(radius_intSEXP);
+    rcpp_result_gen = Rcpp::wrap(square_coord(onesplit, p1, p2, radius_int));
     return rcpp_result_gen;
 END_RCPP
 }
-// soi2_cpp
-Rcpp::List soi2_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_more_data, bool fixsigma, double g);
-RcppExport SEXP _bmms_soi2_cpp(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_more_dataSEXP, SEXP fixsigmaSEXP, SEXP gSEXP) {
+// split_move2d
+arma::mat split_move2d(const arma::mat& mask_of_splits, const arma::mat& mask_nosplits, const arma::vec& onesplit, double& to_from_ratio, int radius_int);
+RcppExport SEXP _bmms_split_move2d(SEXP mask_of_splitsSEXP, SEXP mask_nosplitsSEXP, SEXP onesplitSEXP, SEXP to_from_ratioSEXP, SEXP radius_intSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_of_splits(mask_of_splitsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mask_nosplits(mask_nosplitsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type onesplit(onesplitSEXP);
+    Rcpp::traits::input_parameter< double& >::type to_from_ratio(to_from_ratioSEXP);
+    Rcpp::traits::input_parameter< int >::type radius_int(radius_intSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_move2d(mask_of_splits, mask_nosplits, onesplit, to_from_ratio, radius_int));
+    return rcpp_result_gen;
+END_RCPP
+}
+// insert_empty_levels
+arma::field<arma::mat> insert_empty_levels(const arma::field<arma::mat>& splitsub, const arma::vec& nctr_at_lev);
+RcppExport SEXP _bmms_insert_empty_levels(SEXP splitsubSEXP, SEXP nctr_at_levSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type splitsub(splitsubSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nctr_at_lev(nctr_at_levSEXP);
+    rcpp_result_gen = Rcpp::wrap(insert_empty_levels(splitsub, nctr_at_lev));
+    return rcpp_result_gen;
+END_RCPP
+}
+// soi_cpp
+Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_more_data, bool fixsigma, double g, bool try_bubbles);
+RcppExport SEXP _bmms_soi_cpp(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_more_dataSEXP, SEXP fixsigmaSEXP, SEXP gSEXP, SEXP try_bubblesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,13 +80,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type save_more_data(save_more_dataSEXP);
     Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
     Rcpp::traits::input_parameter< double >::type g(gSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi2_cpp(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g));
+    Rcpp::traits::input_parameter< bool >::type try_bubbles(try_bubblesSEXP);
+    rcpp_result_gen = Rcpp::wrap(soi_cpp(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, try_bubbles));
     return rcpp_result_gen;
 END_RCPP
 }
 // soi_tester
-Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double sigmasq, double lambda_ridge, bool fixsigma, double g);
-RcppExport SEXP _bmms_soi_tester(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP sigmasqSEXP, SEXP lambda_ridgeSEXP, SEXP fixsigmaSEXP, SEXP gSEXP) {
+Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double sigmasq, double lambda_ridge, bool fixsigma, double g, double bubbles_radius);
+RcppExport SEXP _bmms_soi_tester(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP sigmasqSEXP, SEXP lambda_ridgeSEXP, SEXP fixsigmaSEXP, SEXP gSEXP, SEXP bubbles_radiusSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -80,32 +99,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
     Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
     Rcpp::traits::input_parameter< double >::type g(gSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_tester(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g));
-    return rcpp_result_gen;
-END_RCPP
-}
-// soi_binary_cpp
-Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_more_data, bool fixsigma, double g);
-RcppExport SEXP _bmms_soi_binary_cpp(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_more_dataSEXP, SEXP fixsigmaSEXP, SEXP gSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type centers(centersSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_centers(lambda_centersSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
-    Rcpp::traits::input_parameter< int >::type mcmc(mcmcSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type radius(radiusSEXP);
-    Rcpp::traits::input_parameter< int >::type start_movinglev(start_movinglevSEXP);
-    Rcpp::traits::input_parameter< int >::type partnum(partnumSEXP);
-    Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_more_data(save_more_dataSEXP);
-    Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type g(gSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_binary_cpp(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g));
+    Rcpp::traits::input_parameter< double >::type bubbles_radius(bubbles_radiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(soi_tester(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -316,10 +311,11 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bmms_load_splits", (DL_FUNC) &_bmms_load_splits, 2},
-    {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 13},
-    {"_bmms_soi2_cpp", (DL_FUNC) &_bmms_soi2_cpp, 15},
-    {"_bmms_soi_tester", (DL_FUNC) &_bmms_soi_tester, 8},
-    {"_bmms_soi_binary_cpp", (DL_FUNC) &_bmms_soi_binary_cpp, 15},
+    {"_bmms_square_coord", (DL_FUNC) &_bmms_square_coord, 4},
+    {"_bmms_split_move2d", (DL_FUNC) &_bmms_split_move2d, 5},
+    {"_bmms_insert_empty_levels", (DL_FUNC) &_bmms_insert_empty_levels, 2},
+    {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 16},
+    {"_bmms_soi_tester", (DL_FUNC) &_bmms_soi_tester, 9},
     {"_bmms_mixed_binary_cpp", (DL_FUNC) &_bmms_mixed_binary_cpp, 18},
     {"_bmms_reshape_mat", (DL_FUNC) &_bmms_reshape_mat, 1},
     {"_bmms_hp_binary_cpp", (DL_FUNC) &_bmms_hp_binary_cpp, 19},

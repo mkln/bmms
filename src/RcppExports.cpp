@@ -60,8 +60,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // soi_cpp
-Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_more_data, bool fixsigma, double g, bool try_bubbles);
-RcppExport SEXP _bmms_soi_cpp(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_more_dataSEXP, SEXP fixsigmaSEXP, SEXP gSEXP, SEXP try_bubblesSEXP) {
+Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double lambda_centers, double lambda_ridge, int mcmc, int burn, int radius, int start_movinglev, int partnum, bool save, bool save_more_data, bool fixsigma, arma::vec gin, bool try_bubbles);
+RcppExport SEXP _bmms_soi_cpp(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP lambda_centersSEXP, SEXP lambda_ridgeSEXP, SEXP mcmcSEXP, SEXP burnSEXP, SEXP radiusSEXP, SEXP start_movinglevSEXP, SEXP partnumSEXP, SEXP saveSEXP, SEXP save_more_dataSEXP, SEXP fixsigmaSEXP, SEXP ginSEXP, SEXP try_bubblesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -79,15 +79,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type save(saveSEXP);
     Rcpp::traits::input_parameter< bool >::type save_more_data(save_more_dataSEXP);
     Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type gin(ginSEXP);
     Rcpp::traits::input_parameter< bool >::type try_bubbles(try_bubblesSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_cpp(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, try_bubbles));
+    rcpp_result_gen = Rcpp::wrap(soi_cpp(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, gin, try_bubbles));
     return rcpp_result_gen;
 END_RCPP
 }
 // soi_tester
-Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::field<arma::mat> to_centers, int levelchg, arma::mat mask_forbid, double sigmasq, double lambda_ridge, bool fixsigma, double g, double bubbles_radius);
-RcppExport SEXP _bmms_soi_tester(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP to_centersSEXP, SEXP levelchgSEXP, SEXP mask_forbidSEXP, SEXP sigmasqSEXP, SEXP lambda_ridgeSEXP, SEXP fixsigmaSEXP, SEXP gSEXP, SEXP bubbles_radiusSEXP) {
+Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::field<arma::mat> to_centers, int levelchg, arma::mat mask_forbid, double sigmasq, double lambda_ridge, bool fixsigma, arma::vec gin, double bubbles_radius);
+RcppExport SEXP _bmms_soi_tester(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP to_centersSEXP, SEXP levelchgSEXP, SEXP mask_forbidSEXP, SEXP sigmasqSEXP, SEXP lambda_ridgeSEXP, SEXP fixsigmaSEXP, SEXP ginSEXP, SEXP bubbles_radiusSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -100,9 +100,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type sigmasq(sigmasqSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
     Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type g(gSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type gin(ginSEXP);
     Rcpp::traits::input_parameter< double >::type bubbles_radius(bubbles_radiusSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_tester(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius));
+    rcpp_result_gen = Rcpp::wrap(soi_tester(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma, gin, bubbles_radius));
     return rcpp_result_gen;
 END_RCPP
 }

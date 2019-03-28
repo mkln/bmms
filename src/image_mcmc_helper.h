@@ -54,6 +54,7 @@ public:
   arma::vec y;
   
   arma::mat In;
+  arma::vec onesn;
   
   int p1, p2;
   
@@ -117,6 +118,7 @@ inline BayesLM2D::BayesLM2D(const arma::vec& yin, const arma::cube& X2d,
   
   y = yin;
   In = arma::eye(y.n_elem, y.n_elem);
+  onesn = arma::ones(y.n_elem);
   
   splitmat = splits;
   splitmask = bm2d::splitsub_to_splitmask(splitmat, p1, p2);
@@ -132,7 +134,7 @@ inline BayesLM2D::BayesLM2D(const arma::vec& yin, const arma::cube& X2d,
   }
   
   Xcube = X2d;
-  X_flat = bm2d::cube_to_mat_by_region(X2d, groupmask, regions);
+  X_flat = arma::join_horiz(onesn, bm2d::cube_to_mat_by_region(Xcube, groupmask, regions));
   //clog << col_sums(X_flat) << endl;
   effective_dimension = X_flat.n_cols;
   
@@ -151,7 +153,7 @@ inline BayesLM2D::BayesLM2D(const arma::vec& yin, const arma::cube& X2d,
     b_post = -1;
   }
   //clog << "done lm. prep beta" << endl; 
-  beta_sampled = bm2d::unmask_vector(flatmodel.b, regions, groupmask);
+  beta_sampled = bm2d::unmask_vector(flatmodel.b.subvec(1, flatmodel.p-1), regions, groupmask);
   //clog << "done beta" << endl;
   /*clog << "BayesLM2D >> s: in=" << sigmasqin << 
     ", mid=" << sigmasq_sampled << 
@@ -162,9 +164,9 @@ inline BayesLM2D::BayesLM2D(const arma::vec& yin, const arma::cube& X2d,
   
   sigmasq_sampled = flatmodel.sigmasq;
   
-  Xb = flatmodel.reg_mean;
+  Xb = flatmodel.linear_predictor;
   residuals = y - Xb;
-  icept_sampled = arma::mean(residuals);
+  icept_sampled = flatmodel.b(0);
   }
 
 inline void BayesLM2D::change_splits(const arma::vec& yin, const arma::field<arma::mat>& splits, bool resample_sigmasq=true){
@@ -182,7 +184,7 @@ inline void BayesLM2D::change_splits(const arma::vec& yin, const arma::field<arm
     regions = bm2d::mat_unique(groupmask);
   }
   
-  X_flat = bm2d::cube_to_mat_by_region(Xcube, groupmask, regions);
+  X_flat = arma::join_horiz(onesn, bm2d::cube_to_mat_by_region(Xcube, groupmask, regions));
   effective_dimension = X_flat.n_cols;
   
   flatmodel = bmmodels::BayesLM(y, X_flat, arma::zeros(X_flat.n_cols), 
@@ -202,12 +204,12 @@ inline void BayesLM2D::change_splits(const arma::vec& yin, const arma::field<arm
   }
   
   //icept_sampled = flatmodel.icept;
-  beta_sampled = bm2d::unmask_vector(flatmodel.b, regions, groupmask);
+  beta_sampled = bm2d::unmask_vector(flatmodel.b.subvec(1, flatmodel.p-1), regions, groupmask);
   sigmasq_sampled = flatmodel.sigmasq;
   
-  Xb = flatmodel.reg_mean;
+  Xb = flatmodel.linear_predictor;
   residuals = y - Xb;
-  icept_sampled = arma::mean(residuals);
+  icept_sampled = flatmodel.b(0);
 }
 
 inline void BayesLM2D::chg_y(const arma::vec& yin){
@@ -225,12 +227,12 @@ inline void BayesLM2D::chg_y(const arma::vec& yin){
     b_post = -1;
   }
   
-  beta_sampled = bm2d::unmask_vector(flatmodel.b, regions, groupmask);
+  beta_sampled = bm2d::unmask_vector(flatmodel.b.subvec(1, flatmodel.p-1), regions, groupmask);
   sigmasq_sampled = flatmodel.sigmasq;
   
-  Xb = flatmodel.reg_mean;
+  Xb = flatmodel.linear_predictor;
   residuals = y - Xb;
-  icept_sampled = arma::mean(residuals);
+  icept_sampled = flatmodel.b(0);
 }
 
 inline double BayesLM2D::logmarglik(){
@@ -249,7 +251,7 @@ public:
   
   double lambda; // ridge
   double radius;
-  double g;
+  arma::vec g;
   
   arma::vec y;
   arma::cube X2d;
@@ -281,7 +283,7 @@ public:
   ModularLR2D();
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double);
   ModularLR2D(const arma::vec&, const arma::cube&, const arma::field<arma::mat>&, arma::mat&, int, double, 
-              bool, bool, double, double, double);
+              bool, bool, double, arma::vec, double);
 };
 
 inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, const arma::field<arma::mat>& in_splits, 
@@ -341,7 +343,7 @@ inline ModularLR2D::ModularLR2D(){
 inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, const arma::field<arma::mat>& in_splits, 
                          arma::mat& mask_forbid, int set_max_stages=5, double lambda_in = 0.5, 
                          bool fixed_sigma=false, bool binary=false,
-                         double sigmasqin=-1.0, double gin = -1, double radiusin=-1.0){
+                         double sigmasqin=-1.0, arma::vec gin = arma::vec(), double radiusin=-1.0){
   
   max_stages = set_max_stages;
   
@@ -378,13 +380,20 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
   y = yin;
   X2d = Xin;
   
-  lambda = lambda_in;
-  g = gin;
+  
   radius = radiusin;
   
   mask_nosplits = mask_forbid;
   
   n_stages = in_splits.n_elem;
+  lambda = lambda_in;
+  
+  if(gin.n_elem == 0){
+    g = -1*arma::ones(n_stages);
+  } else {
+    g = gin.subvec(0, n_stages-1);
+  }
+
   logliks = arma::zeros(n_stages);
   arma::vec residuals = y;
   Xb_sum = arma::zeros(n);
@@ -412,7 +421,7 @@ inline ModularLR2D::ModularLR2D(const arma::vec& yin, const arma::cube& Xin, con
     
     BayesLM2D adding_module(residuals, X2d, 
                             current_split_field, mask_nosplits, lambda, 
-                            fix_sigma_module, sigmasq_sampled(s), g, module_bubbles_radius);
+                            fix_sigma_module, sigmasq_sampled(s), g(s), module_bubbles_radius);
     modules.push_back(adding_module);
     //clog << "logmarglik: " << adding_module.logmarglik() << " sigprior: " << sigprior << endl;
     logliks(s) = adding_module.logmarglik() + sigprior;
@@ -473,7 +482,9 @@ inline void ModularLR2D::change_module(int which_level, const arma::field<arma::
   }
 }
 
-inline void ModularLR2D::propose_change_module(int which_level, const arma::field<arma::mat>& in_splits, bool all=false){
+inline void ModularLR2D::propose_change_module(int which_level, 
+                                               const arma::field<arma::mat>& in_splits, 
+                                               bool all=false){
   // all=true: keep sigmasq fixed, change centers at all levels. less modular but potential for worse mixing.
   splitsub = in_splits;
   
@@ -517,7 +528,9 @@ inline void ModularLR2D::propose_change_module(int which_level, const arma::fiel
   }
 }
 
-inline void ModularLR2D::confirm_change_module(int which_level, const arma::field<arma::mat>& in_splits, bool all=false){
+inline void ModularLR2D::confirm_change_module(int which_level, 
+                                               const arma::field<arma::mat>& in_splits, 
+                                               bool all=false){
   splitsub = in_splits;
   
   double sigprior = 0.0;

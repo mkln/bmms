@@ -241,7 +241,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                    int start_movinglev=0, int partnum=0, 
                    bool save=false, bool save_more_data = false,
                    bool fixsigma = false,
-                   double g = -1.0,
+                   arma::vec gin = arma::vec(),
                    bool try_bubbles = false){
   //former name: model_test
   
@@ -256,6 +256,15 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
   //int radius = 2;
   double mhr = 0.0;
   int max_stages = centers.n_elem;
+  
+  arma::vec g = arma::zeros(max_stages)-1;
+  if(gin.n_elem != 0){
+    if(gin.n_elem == 1){
+      g = arma::ones(max_stages) * gin;
+    } else {
+      g = gin.subvec(0, max_stages-1);
+    }
+  }
   
   arma::vec unique_y = arma::unique(y);
   bool binary = unique_y.n_elem == 2;
@@ -402,7 +411,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
         proposal(move_type)(rnd_moving_lev, m) = 1;
         int num_splits = bmms_t.modules[rnd_moving_lev].splitmat(rnd_moving_lev).n_rows;
         //clog << num_splits << endl;
-        if(num_splits<50){
+        if(num_splits<100){
           propose_splitmask = split_add2d(bmms_t.modules[bmms_t.n_stages-1].splitmask, 
                                           bmms_t.mask_nosplits,
                                           rnd_moving_lev, 
@@ -624,7 +633,7 @@ Rcpp::List soi_tester(arma::vec y, arma::cube X,
                       double sigmasq,
                       double lambda_ridge, 
                       bool fixsigma = false,
-                      double g = -1.0,
+                      arma::vec gin = arma::vec(),
                       double bubbles_radius = -1.0){
   //former name: model_test
   
@@ -641,6 +650,11 @@ Rcpp::List soi_tester(arma::vec y, arma::cube X,
   int max_stages = centers.n_elem;
   arma::vec yunique = arma::unique(y);
   bool binary = yunique.n_elem == 2;
+  
+  arma::vec g = arma::zeros(max_stages)-1;
+  if(gin.n_elem != 0){
+    g = gin.subvec(0, max_stages-1);
+  }
   
   clog << "initalize " << endl;
   ModularLR2D bmms_t = ModularLR2D(y, X, centers, mask_forbid, max_stages, lambda_ridge, 
@@ -799,7 +813,7 @@ Rcpp::List soi_binary_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> cent
         add_proposed ++;
         int num_splits = bmms_t.modules[rnd_moving_lev].splitmat(rnd_moving_lev).n_rows;
         //clog << num_splits << endl;
-        if(num_splits<50){
+        if(num_splits<100){
           propose_splitmask = split_add2d(bmms_t.modules[bmms_t.n_stages-1].splitmask, 
                                           bmms_t.mask_nosplits,
                                           rnd_moving_lev, 
@@ -1030,7 +1044,7 @@ Rcpp::List mixed_binary_cpp(arma::vec y, arma::cube X, arma::mat X_g,
         add_proposed ++;
         int num_splits = bmms_t.modules[rnd_moving_lev].splitmat(rnd_moving_lev).n_rows;
         //clog << num_splits << endl;
-        if(num_splits<50){
+        if(num_splits<100){
           propose_splitmask = split_add2d(bmms_t.modules[bmms_t.n_stages-1].splitmask, 
                                           bmms_t.mask_nosplits,
                                           rnd_moving_lev, 
@@ -1341,7 +1355,7 @@ Rcpp::List hp_binary_cpp(arma::vec y, arma::cube X, arma::mat X_g,
         add_proposed ++;
         int num_splits = bmms_t.modules[rnd_moving_lev].splitmat(rnd_moving_lev).n_rows;
         //clog << num_splits << endl;
-        if(num_splits<50){
+        if(num_splits<100){
           propose_splitmask = split_add2d(bmms_t.modules[bmms_t.n_stages-1].splitmask, 
                                           bmms_t.mask_nosplits,
                                           rnd_moving_lev, 

@@ -19,13 +19,13 @@ insert_empty_levels <- function(splitsub, nctr_at_lev) {
 }
 
 #'@export
-soi_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = FALSE, save_more_data = FALSE, fixsigma = FALSE, g = -1.0, try_bubbles = FALSE) {
-    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, try_bubbles)
+soi_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = FALSE, save_more_data = FALSE, fixsigma = FALSE, gin, try_bubbles = FALSE) {
+    .Call('_bmms_soi_cpp', PACKAGE = 'bmms', y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, gin, try_bubbles)
 }
 
 #'@export
-soi_tester <- function(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, g = -1.0, bubbles_radius = -1.0) {
-    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius)
+soi_tester <- function(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, gin, bubbles_radius = -1.0) {
+    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma, gin, bubbles_radius)
 }
 
 #'@export

@@ -86,21 +86,23 @@ BEGIN_RCPP
 END_RCPP
 }
 // soi_tester
-Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::mat mask_forbid, double sigmasq, double lambda_ridge, bool fixsigma, double g, double bubbles_radius);
-RcppExport SEXP _bmms_soi_tester(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP mask_forbidSEXP, SEXP sigmasqSEXP, SEXP lambda_ridgeSEXP, SEXP fixsigmaSEXP, SEXP gSEXP, SEXP bubbles_radiusSEXP) {
+Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers, arma::field<arma::mat> to_centers, int levelchg, arma::mat mask_forbid, double sigmasq, double lambda_ridge, bool fixsigma, double g, double bubbles_radius);
+RcppExport SEXP _bmms_soi_tester(SEXP ySEXP, SEXP XSEXP, SEXP centersSEXP, SEXP to_centersSEXP, SEXP levelchgSEXP, SEXP mask_forbidSEXP, SEXP sigmasqSEXP, SEXP lambda_ridgeSEXP, SEXP fixsigmaSEXP, SEXP gSEXP, SEXP bubbles_radiusSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::cube >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::field<arma::mat> >::type centers(centersSEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type to_centers(to_centersSEXP);
+    Rcpp::traits::input_parameter< int >::type levelchg(levelchgSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type mask_forbid(mask_forbidSEXP);
     Rcpp::traits::input_parameter< double >::type sigmasq(sigmasqSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_ridge(lambda_ridgeSEXP);
     Rcpp::traits::input_parameter< bool >::type fixsigma(fixsigmaSEXP);
     Rcpp::traits::input_parameter< double >::type g(gSEXP);
     Rcpp::traits::input_parameter< double >::type bubbles_radius(bubbles_radiusSEXP);
-    rcpp_result_gen = Rcpp::wrap(soi_tester(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius));
+    rcpp_result_gen = Rcpp::wrap(soi_tester(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -315,7 +317,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bmms_split_move2d", (DL_FUNC) &_bmms_split_move2d, 5},
     {"_bmms_insert_empty_levels", (DL_FUNC) &_bmms_insert_empty_levels, 2},
     {"_bmms_soi_cpp", (DL_FUNC) &_bmms_soi_cpp, 16},
-    {"_bmms_soi_tester", (DL_FUNC) &_bmms_soi_tester, 9},
+    {"_bmms_soi_tester", (DL_FUNC) &_bmms_soi_tester, 11},
     {"_bmms_mixed_binary_cpp", (DL_FUNC) &_bmms_mixed_binary_cpp, 18},
     {"_bmms_reshape_mat", (DL_FUNC) &_bmms_reshape_mat, 1},
     {"_bmms_hp_binary_cpp", (DL_FUNC) &_bmms_hp_binary_cpp, 19},

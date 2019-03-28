@@ -24,8 +24,8 @@ soi_cpp <- function(y, X, centers, mask_forbid, lambda_centers, lambda_ridge, mc
 }
 
 #'@export
-soi_tester <- function(y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, g = -1.0, bubbles_radius = -1.0) {
-    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius)
+soi_tester <- function(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma = FALSE, g = -1.0, bubbles_radius = -1.0) {
+    .Call('_bmms_soi_tester', PACKAGE = 'bmms', y, X, centers, to_centers, levelchg, mask_forbid, sigmasq, lambda_ridge, fixsigma, g, bubbles_radius)
 }
 
 #'@export

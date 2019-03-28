@@ -66,7 +66,8 @@ arma::mat split_move2d(const arma::mat& mask_of_splits,
   // choose random location among available ones
   // in focused view
   //rand_location = available_locations.elem(rand_location);
-  arma::uword rand_location = bmrandom::rndpp_unif_int(available_locations.n_elem-1);//
+  int rloc = arma::randi<int>(arma::distr_param(0, available_locations.n_elem-1));
+  arma::uword rand_location = rloc;
   rand_location = available_locations(rand_location);
   
   // original location in focused coordinate system
@@ -124,11 +125,12 @@ arma::mat split_add2d(arma::mat mask_of_splits,
   
   // choose random location among available ones
   // in focused view
-  arma::uvec rand_location = bmrandom::sample_index(1, available_locations.n_elem);
-  rand_location = available_locations.elem(rand_location);
+  int rloc = arma::randi<int>(arma::distr_param(0, available_locations.n_elem-1));
+  arma::uword rand_location = rloc; //bmrandom::sample_index(1, available_locations.n_elem);
+  rand_location = available_locations(rand_location);
   
   // change values in the focused view
-  mask_of_splits.elem(rand_location).fill(lev+1);
+  mask_of_splits(rand_location) = (lev+1);
   
   // occupied locations
   available_locations = arma::find(mask_of_splits>0);
@@ -160,8 +162,10 @@ arma::mat split_drop2d(arma::mat mask_of_splits,
   
   //cout << "number of moves TO new: " << avail_to << endl;
   // choose random location among available ones
-  arma::uvec rand_location = bmrandom::sample_index(1, available_locations.n_elem);
-  rand_location = available_locations.elem(rand_location);
+  int rloc = arma::randi<int>(arma::distr_param(0, available_locations.n_elem-1));
+  arma::uword rand_location = rloc;
+  //arma::uvec rand_location = bmrandom::sample_index(1, available_locations.n_elem);
+  rand_location = available_locations(rand_location);
   
   // change values in the focused view
   arma::uvec coord = arma::ind2sub(arma::size(mask_nosplits), rand_location);
@@ -259,11 +263,19 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
   
   int move_proposed = 0;
   int move_accepted = 0;
-  
   int add_proposed = 0;
   int add_accepted = 0;
   int drop_proposed = 0;
   int drop_accepted = 0;
+  
+  // proposal types for centers: move/add/remove
+  int choices = 3;
+  arma::field<arma::mat> proposal(choices);
+  arma::field<arma::mat> acceptance(choices);
+  for(int j=0; j<choices; j++){
+    proposal(j) = arma::zeros(max_stages, mcmc);
+    acceptance(j) = arma::zeros(max_stages, mcmc);
+  }
   
   int p1 = X.n_rows;
   int p2 = X.n_cols;
@@ -276,15 +288,14 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
   int splitpar_proposed = 0;
   int splitpar_accepted = 0;
   
-  double sigmasq_sample = fixsigma?1.0:-1.0;
-  //clog << splits << endl;
-  //arma::vec splitsparam_mcmc(mcmc-burn);
+  double sigmasq_sample = fixsigma? (binary? 1.0 : arma::var(y)) :-1.0;
+
   arma::vec lambda_mcmc;
   arma::cube splitmask_mcmc;
   arma::field<arma::field<arma::mat>> splitsub_mcmc;
   arma::field<arma::field<arma::mat>> proposed_splitsub_mcmc;
   
-  arma::vec sigmasq_mcmc(mcmc-burn);
+  arma::mat sigmasq_mcmc(mcmc-burn, max_stages);
   arma::field<arma::cube> theta_mcmc(mcmc-burn);
   arma::field<arma::vec> icept_mcmc(mcmc-burn);
   
@@ -303,20 +314,27 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
   };
   
   int rnd_moving_split = -1;
+  int rnd_moving_lev = -1;
+  
   arma::vec moved_split = arma::zeros(mcmc-burn);
+  arma::vec moved_lev = arma::zeros(mcmc-burn);
   arma::vec adddrop_split = arma::zeros(mcmc-burn);
   arma::mat movdir = arma::zeros(mcmc-burn, 2);
   // initialize
   arma::mat propose_splitmask;
   arma::field<arma::mat> propose_splitsub;
   
-  clog << "initalize - ";
+  clog << "Initalizing - ";
   if(binary){
     clog << "binomial." << endl;
   } else {
     clog << "gaussian." << endl;
   }
-  ModularLR2D bmms_t = ModularLR2D(y, X, centers, mask_forbid, max_stages, lambda_ridge, fixsigma, sigmasq_sample, g, bubbles_radius);
+  
+  ModularLR2D bmms_t = ModularLR2D(y, X, centers, mask_forbid, max_stages, lambda_ridge, 
+                                   fixsigma, binary,
+                                   sigmasq_sample, g, bubbles_radius);
+
   int num_levs = bmms_t.n_stages;
   if(binary){
     z = bmms_t.modules[0].X_flat * bmms_t.modules[0].flatmodel.b;
@@ -324,15 +342,17 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
     z = y;
   }
   
+  //clog << "Fixing sigmasq at all modules. Deliberate?" << endl;
+  int m_last=0;
   for(unsigned int m = 0; m<mcmc; m++){
     Rcpp::checkUserInterrupt();
     if(m==0){ 
-      clog << "starting mcmc" << endl;
+      clog << "> starting mcmc." << endl;
     }
-    int choices = 3;
+    
     int move_type = arma::randi<int>(arma::distr_param(0, choices-1));
     int accepted_proposal = 0;
-    int rnd_moving_lev = -1;
+    
 
     rnd_moving_lev = arma::randi<int>(arma::distr_param(start_movinglev, num_levs-1));
 
@@ -340,6 +360,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
       if(move_type == 0){
         //clog << "M";
         move_proposed++;
+        proposal(move_type)(rnd_moving_lev, m) = 1;
         
         int num_splits = bmms_t.modules[bmms_t.n_stages-1].splitmat(rnd_moving_lev).n_rows;
         
@@ -350,19 +371,20 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                                          to_from_ratio, radius);
         propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
         
-        
         ModularLR2D proposed_bayeslm = bmms_t;
         proposed_bayeslm.propose_change_module(rnd_moving_lev, propose_splitsub);
         
-        //ModularLR2D proposed_bayeslm(y, X, propose_splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma, sigmasq_sample, g, bubbles_radius);
+        //clog << sigmasq_sample << " " << fixsigma << endl;
+        //ModularLR2D proposed_bayeslm(y, X, propose_splitsub, mask_forbid, 
+         //                            max_stages, lambda_ridge, fixsigma, binary, sigmasq_sample, g, bubbles_radius);
         
         double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                           bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
                                                           propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                           lambda_centers);
         
-        mhr = exp(arma::accu(proposed_bayeslm.logliks(rnd_moving_lev) - bmms_t.logliks(rnd_moving_lev))) * totsplit_prior_mhr;
-        //clog << arma::join_horiz(proposed_bayeslm2.logliks, arma::join_horiz(proposed_bayeslm.logliks, bmms_t.logliks)) << endl;
+        mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * totsplit_prior_mhr;
+        //clog << arma::join_horiz(proposed_bayeslm.logliks, bmms_t.logliks) << endl;
         //clog << totsplit_prior_mhr << ": " << proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p - bmms_t.modules[rnd_moving_lev].flatmodel.p << endl;
         
         mhr = mhr > 1 ? 1 : mhr;
@@ -371,11 +393,13 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
           proposed_bayeslm.confirm_change_module(rnd_moving_lev, propose_splitsub);
           bmms_t = proposed_bayeslm;
           move_accepted++;
+          acceptance(move_type)(rnd_moving_lev, m) = 1;
         } 
       }
       if(move_type == 1){
         //clog << "A";
         add_proposed ++;
+        proposal(move_type)(rnd_moving_lev, m) = 1;
         int num_splits = bmms_t.modules[rnd_moving_lev].splitmat(rnd_moving_lev).n_rows;
         //clog << num_splits << endl;
         if(num_splits<50){
@@ -385,13 +409,8 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                                           to_from_ratio);
           //cout << propose_splitmask << endl;
           propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
-          /*
-           arma::vec prop_nctr_by_lev = nctr_by_lev;
-           prop_nctr_by_lev(rnd_moving_lev)++;
-           if(prop_nctr_by_lev.min() == 0){
-           propose_splitsub = insert_empty_levels(propose_splitsub, prop_nctr_by_lev);
-           }*/
-          
+
+          //ModularLR2D proposed_bayeslm(y, X, propose_splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma, sigmasq_sample, g, bubbles_radius);
           ModularLR2D proposed_bayeslm = bmms_t;
           proposed_bayeslm.propose_change_module(rnd_moving_lev, propose_splitsub);
           
@@ -400,16 +419,20 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                                                             propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                             lambda_centers);
           
-          mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * to_from_ratio * totsplit_prior_mhr;
+          mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * 
+            to_from_ratio * totsplit_prior_mhr;
           
           mhr = mhr > 1 ? 1 : mhr;
-          //cout << mhr << endl;
+          //clog << arma::join_horiz(proposed_bayeslm.logliks, bmms_t.logliks) << endl;
+          //clog << to_from_ratio << " " << totsplit_prior_mhr << endl;
+          
           accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
           if(accepted_proposal == 1){
             //clog << "ADDED " << endl;
             add_accepted ++;
             proposed_bayeslm.confirm_change_module(rnd_moving_lev, propose_splitsub);
             bmms_t = proposed_bayeslm;
+            acceptance(move_type)(rnd_moving_lev, m) = 1;
           } 
           //clog << "add " << totsplit_prior_mhr << endl;
         }
@@ -417,6 +440,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
       if(move_type == 2){
         //clog << "D";
         drop_proposed ++;
+        proposal(move_type)(rnd_moving_lev, m) = 1;
         int num_splits = bmms_t.modules[rnd_moving_lev].splitmat(rnd_moving_lev).n_rows;
         int min_num_splits = try_bubbles ? 1 : 1;
         
@@ -425,32 +449,20 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
                                            bmms_t.mask_nosplits,
                                            rnd_moving_lev,  
                                            to_from_ratio);
-          
-          
+
           propose_splitsub = bm2d::splitmask_to_splitsub(propose_splitmask);
-          /*
-           arma::vec prop_nctr_by_lev = nctr_by_lev;
-           prop_nctr_by_lev(rnd_moving_lev)--;
-           if(prop_nctr_by_lev.min() == 0){
-           propose_splitsub = insert_empty_levels(propose_splitsub, prop_nctr_by_lev);
-           }*/
-          
+
+          //ModularLR2D proposed_bayeslm(y, X, propose_splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma, sigmasq_sample, g, bubbles_radius);
           ModularLR2D proposed_bayeslm = bmms_t;
-          //clog << "changing " << endl;
           proposed_bayeslm.propose_change_module(rnd_moving_lev, propose_splitsub);
           
-          /*
-           double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].splitmat[rnd_moving_lev].n_rows,//propose_splitsub(rnd_moving_lev).n_rows, 
-           bmms_t.modules[rnd_moving_lev].splitmat[rnd_moving_lev].n_rows, n, 
-           propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
-           lambda_centers);
-           */
           double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                             bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
                                                             propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                             lambda_centers);
           
-          mhr = exp(arma::accu(proposed_bayeslm.logliks-bmms_t.logliks)) * to_from_ratio * totsplit_prior_mhr;
+          mhr = exp(arma::accu(proposed_bayeslm.logliks-bmms_t.logliks)) * 
+            to_from_ratio * totsplit_prior_mhr;
           //clog << "drop: " << to_from_ratio << " " << totsplit_prior_mhr << endl;
           mhr = mhr > 1 ? 1 : mhr;
           //clog << "and this " << endl;
@@ -460,116 +472,143 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
             //clog << "DROPPED " << proposed_bayeslm.modules[rnd_moving_lev].splitmat[rnd_moving_lev].n_rows << " from " << bmms_t.modules[rnd_moving_lev].splitmat[rnd_moving_lev].n_rows << endl;
             proposed_bayeslm.confirm_change_module(rnd_moving_lev, propose_splitsub);
             bmms_t = proposed_bayeslm;
+            acceptance(move_type)(rnd_moving_lev, m) = 1;
           }
         }
       }
     } catch(...) {
-      clog << bmms_t.splitsub << endl;
-      clog << "--" << endl;
-      clog << propose_splitsub << endl;
-      clog << rnd_moving_lev << endl;
-      clog << "Skipping failed move. Type: (" << move_type << ")" << endl;
-      throw 1;
-    }
-    if(fixsigma){
-      BayesLM2D lastmodule = bmms_t.modules[bmms_t.n_stages-1];
-      //cout << "[MCMC sampling sigmasq] detPx " << arma::det(Px) << endl;
-      double beta_post = arma::conv_to<double>::from(.5*(lastmodule.y.t() * (lastmodule.In - lastmodule.flatmodel.Px) * lastmodule.y));
-      //cout << "[MCMC sampling sigmasq] beta_post " << beta_post << endl;
-      sigmasq_sample = 1.0 / bmrandom::rndpp_gamma(0.1 + n/2.0, 1.0/(0.1 + beta_post));
+      //clog << bmms_t.splitsub << endl;
+      //clog << "--" << endl;
+      //clog << propose_splitsub << endl;
+      //clog << rnd_moving_lev << endl;
+      clog << "Error. Failed move. Type: (" << move_type << ")" << endl;
+      break;
     }
     
-    // burnin: find smoothing radius
-    if(try_bubbles){
-      try{
-        double rmove = R::rnorm(0,1);
-        double radius_propose = exp( log(bubbles_radius) + rmove*.5 );
-        if(abs(radius_propose) > maxradius){
-          radius_propose = maxradius;
+    try {
+      if(!binary){
+        if(fixsigma){
+          BayesLM2D lastmodule = bmms_t.modules[bmms_t.n_stages-1];
+          //cout << "[MCMC sampling sigmasq] detPx " << arma::det(Px) << endl;
+          double beta_post = arma::conv_to<double>::from(.5*(lastmodule.y.t() * (lastmodule.In - lastmodule.flatmodel.Px) * lastmodule.y));
+          //cout << "[MCMC sampling sigmasq] beta_post " << beta_post << endl;
+          sigmasq_sample = 1.0 / bmrandom::rndpp_gamma(0.1 + n/2.0, 1.0/(0.1 + beta_post));
+          bmms_t = ModularLR2D(y, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, 
+                                  fixsigma, binary,
+                                  sigmasq_sample, g, bubbles_radius);
+        } else {
+          sigmasq_sample = -1.0;
         }
-        if(abs(radius_propose) < 1){
-          radius_propose = 1.0;
-        }
-        if(radius_propose != bubbles_radius){
-          ModularLR2D bmms_t_prop(y, X, bmms_t.splitsub, 
-                                  mask_forbid, max_stages, 
-                                  lambda_ridge, fixsigma, sigmasq_sample, g, radius_propose);
-          
-          double prob = exp(arma::accu(bmms_t_prop.logliks - bmms_t.logliks))* 
-            exp( 5/maxradius*(- radius_propose + bubbles_radius)) * radius_propose / bubbles_radius; //exp(1) prior
-          
-          prob = prob > 1 ? 1 : prob;
-          accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
-          if(accepted_proposal == 1){
-            bubbles_radius = radius_propose;
-            bmms_t = bmms_t_prop;
-          } 
-        } 
-      } catch(...){
-        clog << "Warning, got error in MCMC [bubbles_radius] -- staying at old bubbles radius." << endl;
+      } else {
+        arma::vec w = bmrandom::rpg(arma::ones(y.n_elem), bmms_t.Xb_sum);
+        z = 1.0/w % (y-.5);
+        bmms_t = ModularLR2D(z, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, 
+                             fixsigma, binary, -1.0, g, bubbles_radius);
       }
+    } catch(...){
+      clog << "Error. Failed sampling random component." << endl;
+      break;
     }
     
-    if(binary){
-      arma::vec w = bmrandom::rpg(arma::ones(y.n_elem), bmms_t.Xb_sum);
-      z = 1.0/w % (y-.5);
-      bmms_t = ModularLR2D(z, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, fixsigma, -1.0, g, bubbles_radius);
-    }
-    
-    if(m>burn-1){
-      int i = m-burn;
-      theta_mcmc(i) = bmms_t.theta_sampled;
-      icept_mcmc(i) = bmms_t.icept_sampled;
-      dim_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].effective_dimension;
-      bubbles_mcmc(i) = bubbles_radius;
-      mhr_mcmc(i) = mhr;
-      if(save_more_data == true){
-        splitsub_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].splitmat;
-        proposed_splitsub_mcmc(i) = propose_splitsub;
-        //lambda_mcmc(i) = bmms_t.lambda;
-        //splitsparam_mcmc(i) = lambda_centers;
-        //zsave.col(i) = z;
-        splitmask_mcmc.slice(i) = bmms_t.modules[bmms_t.n_stages-1].splitmask;
-        sigmasq_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].sigmasq_sampled;
-      };
-      //Xflat_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].X_flat;
-    }
+    if(try_bubbles){
+      double radius_propose=1.0;
+      try {
+        //try{
+          double rmove = R::rnorm(0,1);
+          radius_propose = exp( log(bubbles_radius) + rmove*.5 );
+          if(abs(radius_propose) > maxradius){
+            radius_propose = maxradius;
+          }
+          if(abs(radius_propose) < 1){
+            radius_propose = 1.0;
+          }
+          if(radius_propose != bubbles_radius){
+            ModularLR2D bmms_t_prop(y, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, 
+                                    fixsigma, binary,
+                                    sigmasq_sample, g, radius_propose);
+            if(!bmms_t_prop.logliks.has_inf()){
+              double totsplit_prior_mhr = totsplit_prior2_ratio(bmms_t_prop.modules[bmms_t_prop.n_stages-1].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
+                                                                bmms_t.modules[bmms_t.n_stages-1].flatmodel.p+1, n, 
+                                                                bmms_t.n_stages - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                                lambda_centers);
+              
+              double prob = exp(arma::accu(bmms_t_prop.logliks - bmms_t.logliks)) * totsplit_prior_mhr *
+                exp( 5/maxradius*(- radius_propose + bubbles_radius)) * radius_propose / bubbles_radius; //exp(1) prior
+              
+              
+              prob = prob > 1 ? 1 : prob;
+              accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
+              if(accepted_proposal == 1){
+                bubbles_radius = radius_propose;
+                bmms_t = bmms_t_prop;
+              } 
+            }
+          }
+      } catch(...){
+        clog << m << " Failed sampling bubbles radius. Skip. " << radius_propose << endl;
+        bubbles_radius = m>burn? bubbles_mcmc(m-burn) : maxradius/5.0;
+      }
+    } 
+      if(m>burn-1){
+        int i = m-burn;
+        theta_mcmc(i) = bmms_t.theta_sampled;
+        icept_mcmc(i) = bmms_t.icept_sampled;
+        dim_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].effective_dimension;
+        bubbles_mcmc(i) = bubbles_radius;
+        
+        if(save_more_data == true){
+          splitsub_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].splitmat;
+          proposed_splitsub_mcmc(i) = propose_splitsub;
+          moved_split(i) = rnd_moving_split;
+          moved_lev(i) = rnd_moving_lev;
+          mhr_mcmc(i) = mhr;
+          for(int s=0; s<max_stages; s++){
+            sigmasq_mcmc(i,s) = bmms_t.modules[s].sigmasq_sampled;
+          }
+          
+        }
+      }
     
     if(mcmc > 100){
       if(!(m % (mcmc / 10))){
         Rcpp::checkUserInterrupt();
         clog << endl << 
-          partnum << " " << floor(100.0*(m+0.0)/mcmc) << 
-            " " << bmms_t.n_stages << " " << bmms_t.modules[bmms_t.n_stages-1].effective_dimension << 
+          partnum << " [" << floor(100.0*(m+0.0)/mcmc) << 
+            "%] " << bmms_t.n_stages << " " << bmms_t.modules[bmms_t.n_stages-1].effective_dimension << 
               " a:" << add_accepted / (add_proposed+0.0) << " d:" << drop_accepted / (drop_proposed+0.0) << " m:" <<
-                move_accepted / (move_proposed+0.0) << " (s:" <<
-                  splitpar_accepted / (splitpar_proposed+0.0) << ") z " << z.max() << endl;
+                move_accepted / (move_proposed+0.0) << ". z " << z.max() << endl;
         if(save){
           bmms_t.modules[bmms_t.n_stages-1].splitmat.save("bmms_centers.temp");
         }
       } 
     }
-    
-  }
+    m_last++;
+  } // mcmc
   if(save_more_data){
     return Rcpp::List::create(
+      Rcpp::Named("m") = m_last,
+      Rcpp::Named("rnd_moving_lev") = rnd_moving_lev,
+      Rcpp::Named("mhr_mcmc") = mhr_mcmc,
       Rcpp::Named("splitsub") = splitsub_mcmc,
       Rcpp::Named("proposed_splitsub") = proposed_splitsub_mcmc,
       Rcpp::Named("dimension_overall") = dim_mcmc,
       Rcpp::Named("bubbles") = bubbles_mcmc,
-      Rcpp::Named("mask_splits") = bmms_t.modules[bmms_t.n_stages-1].splitmask,
-      Rcpp::Named("mask_nosplits") = bmms_t.mask_nosplits,
+      Rcpp::Named("acceptance") = acceptance,
+      Rcpp::Named("proposal") = proposal,
+      //Rcpp::Named("mask_splits") = bmms_t.modules[bmms_t.n_stages-1].splitmask,
+      //Rcpp::Named("mask_nosplits") = bmms_t.mask_nosplits,
       Rcpp::Named("icept") = icept_mcmc,
       Rcpp::Named("theta_mc") = theta_mcmc,
-      Rcpp::Named("sigmasq_sampled") = sigmasq_mcmc,
-      Rcpp::Named("mhr_mcmc") = mhr_mcmc
+      Rcpp::Named("sigmasq") = sigmasq_mcmc
     );
   } else {
     return Rcpp::List::create(
+      Rcpp::Named("m") = m_last,
       Rcpp::Named("dimension_overall") = dim_mcmc,
       Rcpp::Named("icept") = icept_mcmc,
       Rcpp::Named("theta_mc") = theta_mcmc,
-      Rcpp::Named("moved_split") = moved_split
+      Rcpp::Named("bubbles") = bubbles_mcmc,
+      Rcpp::Named("sigmasq") = sigmasq_mcmc
     );
   }
 }
@@ -577,7 +616,10 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
 
 //'@export
 //[[Rcpp::export]]
-Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
+Rcpp::List soi_tester(arma::vec y, arma::cube X, 
+                      arma::field<arma::mat> centers,
+                      arma::field<arma::mat> to_centers,
+                      int levelchg,
                       arma::mat mask_forbid,
                       double sigmasq,
                       double lambda_ridge, 
@@ -597,17 +639,27 @@ Rcpp::List soi_tester(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
   //int radius = 2;
   double mhr = 0.0;
   int max_stages = centers.n_elem;
+  arma::vec yunique = arma::unique(y);
+  bool binary = yunique.n_elem == 2;
   
   clog << "initalize " << endl;
-  ModularLR2D bmms_t = ModularLR2D(y, X, centers, mask_forbid, max_stages, lambda_ridge, fixsigma, sigmasq, g, bubbles_radius);
+  ModularLR2D bmms_t = ModularLR2D(y, X, centers, mask_forbid, max_stages, lambda_ridge, 
+                                   fixsigma, binary,
+                                   sigmasq, g, bubbles_radius);
+  
+  arma::vec sigmasq_sampled = bmms_t.sigmasq_sampled;
+  arma::vec loglik_before = bmms_t.logliks;
+  bmms_t.propose_change_module(levelchg, to_centers);
   
   return Rcpp::List::create(
-    Rcpp::Named("logpost") = bmms_t.logliks,
+    Rcpp::Named("logpost_before") = loglik_before,
+    Rcpp::Named("logpost_after") = bmms_t.logliks,
     Rcpp::Named("g") = bmms_t.g,
     Rcpp::Named("lambda_ridge") = bmms_t.lambda,
     Rcpp::Named("logpost") = bmms_t.logliks,
     Rcpp::Named("splitsub") = bmms_t.splitsub,
-    Rcpp::Named("sigmasq_sampled") = bmms_t.sigmasq_sampled,
+    Rcpp::Named("sigmasq_sampled") = sigmasq_sampled,
+    Rcpp::Named("sigmasq_sampled_after") = bmms_t.sigmasq_sampled,
     Rcpp::Named("theta") = bmms_t.theta_sampled,
     Rcpp::Named("icept") = bmms_t.icept_sampled,
     Rcpp::Named("Xb_sum") = bmms_t.Xb_sum
@@ -1003,7 +1055,6 @@ Rcpp::List mixed_binary_cpp(arma::vec y, arma::cube X, arma::mat X_g,
             propose_vsmodule.marglik - vsmodule.marglik) * to_from_ratio * totsplit_prior_mhr;
           
           mhr = mhr > 1 ? 1 : mhr;
-          //cout << mhr << endl;
           accepted_proposal = bmrandom::rndpp_discrete({1-mhr, mhr});
           if(accepted_proposal == 1){
             //clog << "ADDED " << endl;

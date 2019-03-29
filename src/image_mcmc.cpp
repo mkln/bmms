@@ -311,6 +311,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
   arma::vec dim_mcmc(mcmc-burn);
   arma::vec bubbles_mcmc(mcmc-burn);
   arma::vec mhr_mcmc(mcmc-burn);
+  arma::vec g_mcmc(mcmc-burn);
   
   if(save_more_data == true){
     splitsub_mcmc = arma::field<arma::field<arma::mat>>(mcmc-burn);
@@ -558,13 +559,54 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
         bubbles_radius = m>burn? bubbles_mcmc(m-burn) : maxradius/5.0;
       }
     } 
+    
+    if(gin.n_elem == 1){
+      double gpropose=1.0;
+      try {
+        //try{
+        double rmove = R::rnorm(0,1);
+        gpropose = exp( log(g(0)) + rmove*.5 );
+        if(abs(gpropose) > (binary? 1 : y.n_elem)){
+          gpropose = (binary? 1.0 : y.n_elem);
+        }
+        if(abs(gpropose) < 0.001){
+          gpropose = 0.001;
+        }
+        arma::vec g_prop = arma::ones(g.n_elem) * gpropose;
+        
+        if(gpropose != g(0)){
+          ModularLR2D bmms_t_prop(y, X, bmms_t.splitsub, mask_forbid, max_stages, lambda_ridge, 
+                                  fixsigma, binary,
+                                  sigmasq_sample, g_prop, bubbles_radius);
+          if(!bmms_t_prop.logliks.has_inf()){
+            double prob = exp(arma::accu(bmms_t_prop.logliks - bmms_t.logliks)) * 
+              exp( 20 * (- gpropose + g(0))) * gpropose / g(0); //exp(10) prior
+            
+            prob = prob > 1 ? 1 : prob;
+            accepted_proposal = bmrandom::rndpp_discrete({1-prob, prob});
+            if(accepted_proposal == 1){
+              g = g_prop;
+              bmms_t = bmms_t_prop;
+            } 
+          }
+        }
+      } catch(...){
+        clog << m << " Failed sampling g. Skip. " << gpropose << endl;
+        throw 1;
+      }
+    } 
+    
       if(m>burn-1){
         int i = m-burn;
         theta_mcmc(i) = bmms_t.theta_sampled;
         icept_mcmc(i) = bmms_t.icept_sampled;
         dim_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].effective_dimension;
         bubbles_mcmc(i) = bubbles_radius;
-        
+        if(gin.n_elem == 1){
+          g_mcmc(i) = g(0);
+        } else {
+          g_mcmc(i) = -1;
+        }
         if(save_more_data == true){
           splitsub_mcmc(i) = bmms_t.modules[bmms_t.n_stages-1].splitmat;
           proposed_splitsub_mcmc(i) = propose_splitsub;
@@ -585,7 +627,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
           partnum << " [" << floor(100.0*(m+0.0)/mcmc) << 
             "%] " << bmms_t.n_stages << " " << bmms_t.modules[bmms_t.n_stages-1].effective_dimension << 
               " a:" << add_accepted / (add_proposed+0.0) << " d:" << drop_accepted / (drop_proposed+0.0) << " m:" <<
-                move_accepted / (move_proposed+0.0) << ". z " << z.max() << endl;
+                move_accepted / (move_proposed+0.0) << ". z " << z.max() << " g " << g.t() << endl;
         if(save){
           bmms_t.modules[bmms_t.n_stages-1].splitmat.save("bmms_centers.temp");
         }
@@ -604,6 +646,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
       Rcpp::Named("bubbles") = bubbles_mcmc,
       Rcpp::Named("acceptance") = acceptance,
       Rcpp::Named("proposal") = proposal,
+      Rcpp::Named("g_mcmc") = g_mcmc,
       //Rcpp::Named("mask_splits") = bmms_t.modules[bmms_t.n_stages-1].splitmask,
       //Rcpp::Named("mask_nosplits") = bmms_t.mask_nosplits,
       Rcpp::Named("icept") = icept_mcmc,

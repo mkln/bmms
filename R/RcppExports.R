@@ -29,17 +29,12 @@ soi_tester <- function(y, X, centers, to_centers, levelchg, mask_forbid, sigmasq
 }
 
 #'@export
-mixed_binary_cpp <- function(y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0, g_vs = 1.0, module_prior_par_vs = 1.0) {
-    .Call('_bmms_mixed_binary_cpp', PACKAGE = 'bmms', y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, g_vs, module_prior_par_vs)
+mixed_binary_cpp <- function(y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, gin = -1.0, g_vs = 1.0, module_prior_par_vs = 1.0) {
+    .Call('_bmms_mixed_binary_cpp', PACKAGE = 'bmms', y, X, X_g, centers, mask_forbid, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, gin, g_vs, module_prior_par_vs)
 }
 
 reshape_mat <- function(X) {
     .Call('_bmms_reshape_mat', PACKAGE = 'bmms', X)
-}
-
-#'@export
-hp_binary_cpp <- function(y, X, X_g, centers, mask_forbid, Xlocations, lambda_centers, lambda_ridge, mcmc, burn, radius = 2L, start_movinglev = 0L, partnum = 0L, save = TRUE, save_more_data = TRUE, fixsigma = FALSE, g = -1.0, g_vs = 1.0, module_prior_par_vs = 1.0) {
-    .Call('_bmms_hp_binary_cpp', PACKAGE = 'bmms', y, X, X_g, centers, mask_forbid, Xlocations, lambda_centers, lambda_ridge, mcmc, burn, radius, start_movinglev, partnum, save, save_more_data, fixsigma, g, g_vs, module_prior_par_vs)
 }
 
 #' @export

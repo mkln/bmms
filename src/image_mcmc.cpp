@@ -387,7 +387,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
         
         double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                           bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
-                                                          1, //propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                          propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                           lambda_centers);
         
         mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * totsplit_prior_mhr;
@@ -423,7 +423,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
           
           double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                             bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
-                                                            1, //propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                            propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                             lambda_centers);
           
           mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * 
@@ -465,7 +465,7 @@ Rcpp::List soi_cpp(arma::vec y, arma::cube X, arma::field<arma::mat> centers,
           
           double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                             bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
-                                                            1, //propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                            propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                             lambda_centers);
           
           mhr = exp(arma::accu(proposed_bayeslm.logliks-bmms_t.logliks)) * 
@@ -875,7 +875,7 @@ Rcpp::List mixed_binary_cpp(arma::vec y, arma::cube X, arma::mat X_g,
         
         double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                           bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
-                                                          1, //propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                          propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                           lambda_centers);
         
         mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * totsplit_prior_mhr;
@@ -911,7 +911,7 @@ Rcpp::List mixed_binary_cpp(arma::vec y, arma::cube X, arma::mat X_g,
           
           double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                             bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
-                                                            1, //propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                            propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                             lambda_centers);
           
           mhr = exp(arma::accu(proposed_bayeslm.logliks - bmms_t.logliks)) * 
@@ -953,7 +953,7 @@ Rcpp::List mixed_binary_cpp(arma::vec y, arma::cube X, arma::mat X_g,
           
           double totsplit_prior_mhr = totsplit_prior2_ratio(proposed_bayeslm.modules[rnd_moving_lev].flatmodel.p+1,//propose_splitsub(rnd_moving_lev).n_rows, 
                                                             bmms_t.modules[rnd_moving_lev].flatmodel.p+1, n, 
-                                                            1, //propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
+                                                            propose_splitsub.n_elem - rnd_moving_lev - 1, //rnd_moving_lev,  
                                                             lambda_centers);
           
           mhr = exp(arma::accu(proposed_bayeslm.logliks-bmms_t.logliks)) * 
